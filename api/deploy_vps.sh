@@ -9,7 +9,7 @@ echo "=========================================="
 echo ""
 
 # Configuration
-PROJECT_PATH="/var/www/isotank-system"
+PROJECT_PATH="/var/www/isotank-system/api"
 WEB_USER="www-data"
 
 echo "Project Path: $PROJECT_PATH"
