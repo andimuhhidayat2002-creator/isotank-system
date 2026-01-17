@@ -87,8 +87,44 @@
                                         <li class="list-group-item d-flex justify-content-between"><span>Level</span> <strong>{{ $log->level_1 ? (float)$log->level_1 : '-' }}</strong></li>
                                     </ul>
                                 </div>
+                            <div class="mt-4">
+                                <h6>Items Condition</h6>
+                                <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                                    <table class="table table-sm table-bordered">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Item Name</th>
+                                                <th>Condition</th>
+                                                <th>Last Checked</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @php
+                                                // Get all item statuses for this isotank
+                                                $statuses = \App\Models\MasterIsotankItemStatus::where('isotank_id', $isotank->id)->get();
+                                            @endphp
+                                            @forelse($statuses as $status)
+                                                <tr>
+                                                    <td>{{ ucwords(str_replace('_', ' ', $status->item_name)) }}</td>
+                                                    <td>
+                                                        @php
+                                                            $cls = 'secondary';
+                                                            $txt = strtoupper($status->condition);
+                                                            if($status->condition == 'good') $cls = 'success';
+                                                            elseif($status->condition == 'not_good') $cls = 'danger';
+                                                            elseif($status->condition == 'need_attention') $cls = 'warning';
+                                                        @endphp
+                                                        <span class="badge bg-{{ $cls }}">{{ $txt }}</span>
+                                                    </td>
+                                                    <td>{{ $status->updated_at->format('Y-m-d') }}</td>
+                                                </tr>
+                                            @empty
+                                                <tr><td colspan="3" class="text-center text-muted">No status data recorded yet.</td></tr>
+                                            @endforelse
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
-                            <div class="mt-3">
                                 <a href="{{ route('admin.reports.inspection.show', \App\Models\InspectionLog::where('isotank_id', $isotank->id)->latest()->first()->id ?? 0) }}" class="btn btn-primary btn-sm">View Full Last Report</a>
                             </div>
                         </div>
