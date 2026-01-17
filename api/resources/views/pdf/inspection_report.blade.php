@@ -107,11 +107,40 @@
                 
                 <div class="section-title">B. GENERAL CONDITION</div>
                 <table class="checklist-table">
-                    @foreach(['surface', 'frame', 'tank_plate', 'venting_pipe', 'explosion_proof_cover', 'grounding_system', 'document_container', 'safety_label', 'valve_box_door', 'valve_box_door_handle'] as $key)
+                    @php
+                        // Standard items
+                        $sectionB = ['surface', 'frame', 'tank_plate', 'venting_pipe', 'explosion_proof_cover', 'grounding_system', 'document_container', 'safety_label', 'valve_box_door', 'valve_box_door_handle'];
+                        
+                        // Merge with dynamic items if inspection_data exists
+                        $dynamicItems = [];
+                        if (!empty($inspection->inspection_data) && is_array($inspection->inspection_data)) {
+                             // This assumes keys in inspection_data are item codes. 
+                             // We should ideally fetch from Master InspectionItem model, but in view we rely on data presence.
+                             foreach($inspection->inspection_data as $k => $v) {
+                                 // Simple logic: if value is a condition string and not a standard column, treat as dynamic item
+                                 // Filter out photos, timestamps, remarks, etc.
+                                 if (in_array($v, ['good', 'not_good', 'need_attention', 'na']) && !in_array($k, array_merge($sectionB, ['valve_condition','valve_position','pipe_joint','air_source_connection','esdv','blind_flange','prv']))) {
+                                     // Also filter out section C items temporarily hardcoded to avoid dupes if logic expands
+                                     $dynamicItems[] = $k; 
+                                 }
+                             }
+                        }
+                        
+                        // Combine and unique
+                        $allItemsB = array_unique(array_merge($sectionB, $dynamicItems));
+                    @endphp
+
+                    @foreach($allItemsB as $key)
+                    @php 
+                        // Get value from column OR json
+                        $val = $inspection->$key ?? ($inspection->inspection_data[$key] ?? null);
+                        if ($val) {
+                    @endphp
                     <tr>
                         <td>{{ ucwords(str_replace('_', ' ', $key)) }}</td>
-                        <td style="text-align: right;">{!! badge($inspection->$key) !!}</td>
+                        <td style="text-align: right;">{!! badge($val) !!}</td>
                     </tr>
+                    @php } @endphp
                     @endforeach
                 </table>
 

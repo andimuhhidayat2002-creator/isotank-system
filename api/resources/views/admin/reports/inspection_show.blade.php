@@ -84,11 +84,30 @@
                     <tbody>
                         <!-- SECTION B -->
                         <tr class="table-secondary"><th colspan="2">B. GENERAL CONDITION</th></tr>
-                        @foreach(['surface', 'frame', 'tank_plate', 'venting_pipe', 'explosion_proof_cover', 'grounding_system', 'document_container', 'safety_label', 'valve_box_door', 'valve_box_door_handle'] as $item)
+                        @php
+                            $sectionB = ['surface', 'frame', 'tank_plate', 'venting_pipe', 'explosion_proof_cover', 'grounding_system', 'document_container', 'safety_label', 'valve_box_door', 'valve_box_door_handle'];
+                            
+                            $dynamicItems = [];
+                            if (!empty($log->inspection_data) && is_array($log->inspection_data)) {
+                                 foreach($log->inspection_data as $k => $v) {
+                                     if (in_array($v, ['good', 'not_good', 'need_attention', 'na']) && !in_array($k, array_merge($sectionB, ['valve_condition','valve_position','pipe_joint','air_source_connection','esdv','blind_flange','prv']))) {
+                                         $dynamicItems[] = $k; 
+                                     }
+                                 }
+                            }
+                            $allItemsB = array_unique(array_merge($sectionB, $dynamicItems));
+                        @endphp
+
+                        @foreach($allItemsB as $item)
+                            @php
+                                $val = $log->$item ?? ($log->inspection_data[$item] ?? null);
+                            @endphp
+                            @if($val)
                             <tr>
                                 <td class="ps-3">{{ ucfirst(str_replace('_', ' ', $item)) }}</td>
-                                <td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->$item])</td>
+                                <td class="text-center">@include('admin.reports.partials.badge', ['status' => $val])</td>
                             </tr>
+                            @endif
                         @endforeach
 
                         <!-- SECTION C -->

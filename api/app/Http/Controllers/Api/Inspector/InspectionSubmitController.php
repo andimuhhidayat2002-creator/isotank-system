@@ -601,7 +601,7 @@ class InspectionSubmitController extends Controller
      */
     private function updateMasterItemStatus($isotankId, $validated, $inspectionLogId)
     {
-        $items = [
+        $standardItems = [
             'surface', 'frame', 'tank_plate', 'venting_pipe', 'explosion_proof_cover',
             'grounding_system', 'document_container', 'safety_label', 'valve_box_door',
             'valve_box_door_handle', 'valve_condition', 'valve_position', 'pipe_joint',
@@ -611,15 +611,38 @@ class InspectionSubmitController extends Controller
             'psv1_condition', 'psv2_condition', 'psv3_condition', 'psv4_condition',
         ];
 
-        foreach ($items as $item) {
-            if (isset($validated[$item])) {
+        // Fetch dynamic items if available
+        $dynamicItems = [];
+        try {
+            if (class_exists(\App\Models\InspectionItem::class)) {
+                $dynamicItems = \App\Models\InspectionItem::where('is_active', true)->pluck('code')->toArray();
+            }
+        } catch (\Exception $e) {
+            // Ignore if model not found or db error
+        }
+
+        $allItems = array_unique(array_merge($standardItems, $dynamicItems));
+
+        foreach ($allItems as $item) {
+            // Check direct column
+            $val = $validated[$item] ?? null;
+            
+            // Or check inside inspection_data JSON
+            if (!$val && isset($validated['inspection_data']) && is_array($validated['inspection_data'])) {
+                $val = $validated['inspection_data'][$item] ?? null;
+            } else if (!$val && isset($validated['inspection_data']) && is_string($validated['inspection_data'])) {
+                 $json = json_decode($validated['inspection_data'], true);
+                 $val = $json[$item] ?? null;
+            }
+
+            if ($val) {
                 MasterIsotankItemStatus::updateOrCreate(
                     [
                         'isotank_id' => $isotankId,
                         'item_name' => $item,
                     ],
                     [
-                        'condition' => $validated[$item],
+                        'condition' => $val,
                         'last_inspection_date' => now(),
                         'last_inspection_log_id' => $inspectionLogId,
                     ]
