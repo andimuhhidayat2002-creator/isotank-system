@@ -129,51 +129,23 @@ class InspectionJobController extends Controller
 
             if ($lastIncomingInspection) {
                 // Map fields from the last incoming inspection
-                $data = [
-                    // B. GENERAL CONDITION
-                    'surface' => $lastIncomingInspection->surface,
-                    'frame' => $lastIncomingInspection->frame,
-                    'tank_plate' => $lastIncomingInspection->tank_plate,
-                    'venting_pipe' => $lastIncomingInspection->venting_pipe,
-                    'explosion_proof_cover' => $lastIncomingInspection->explosion_proof_cover,
-                    'grounding_system' => $lastIncomingInspection->grounding_system,
-                    'document_container' => $lastIncomingInspection->document_container,
-                    'safety_label' => $lastIncomingInspection->safety_label,
-                    'valve_box_door' => $lastIncomingInspection->valve_box_door,
-                    'valve_box_door_handle' => $lastIncomingInspection->valve_box_door_handle,
-                    
-                    // C. VALVE & PIPE SYSTEM
-                    'valve_condition' => $lastIncomingInspection->valve_condition,
-                    'valve_position' => $lastIncomingInspection->valve_position,
-                    'pipe_joint' => $lastIncomingInspection->pipe_joint,
-                    'air_source_connection' => $lastIncomingInspection->air_source_connection,
-                    'esdv' => $lastIncomingInspection->esdv,
-                    'blind_flange' => $lastIncomingInspection->blind_flange,
-                    'prv' => $lastIncomingInspection->prv,
-                    
-                    // D. IBOX SYSTEM (Maps from db column to frontend key)
-                    'ibox_condition' => $lastIncomingInspection->ibox_condition,
-                    'pressure' => $lastIncomingInspection->ibox_pressure,
-                    'temperature' => $lastIncomingInspection->ibox_temperature,
-                    'level' => $lastIncomingInspection->ibox_level,
-                    'battery_percent' => $lastIncomingInspection->ibox_battery_percent,
-                    
-                    // E. INSTRUMENT
-                    'pressure_gauge_condition' => $lastIncomingInspection->pressure_gauge_condition,
-                    'level_gauge_condition' => $lastIncomingInspection->level_gauge_condition,
-                    
-                    // F. VACUUM
-                    'vacuum_value' => $lastIncomingInspection->vacuum_value,
-                    'vacuum_temperature' => $lastIncomingInspection->vacuum_temperature,
-                    'vacuum_gauge_condition' => $lastIncomingInspection->vacuum_gauge_condition,
-                    'vacuum_port_suction_condition' => $lastIncomingInspection->vacuum_port_suction_condition,
-                    
-                    // G. PSV (1-4)
-                    'psv1_condition' => $lastIncomingInspection->psv1_condition,
-                    'psv2_condition' => $lastIncomingInspection->psv2_condition,
-                    'psv3_condition' => $lastIncomingInspection->psv3_condition,
-                    'psv4_condition' => $lastIncomingInspection->psv4_condition,
-                ];
+                // Map fields from the last incoming inspection
+                // UPDATED: Use toArray() to ensure ALL columns (including dynamic ones) are copied
+                $logArray = $lastIncomingInspection->toArray();
+                
+                // Exclude fields that shouldn't be copied
+                $exclude = ['id', 'uuid', 'inspection_job_id', 'created_at', 'updated_at', 
+                           'inspection_date', 'inspector_id', 'signature_path', 'pdf_path',
+                           'is_draft', 'receiver_confirmed_at', 'receiver_name', 'receiver_signature_path'];
+                
+                foreach ($exclude as $field) {
+                    unset($logArray[$field]);
+                }
+                
+                // Merge into data
+                $data = $logArray;
+                // Ensure specific complex mappings are preserved if needed (usually handled by keys matching)
+
 
                 foreach($data as $k => $v) { $defaultValues->$k = $v; }
                 $defaultValues->vacuum_unit = 'mtorr';
