@@ -113,12 +113,17 @@
                                                     'c' => 'C. VALVE & PIPE SYSTEM',
                                                     'valve' => 'C. VALVE & PIPE SYSTEM',
                                                     'piping' => 'C. VALVE & PIPE SYSTEM',
+                                                    'd' => 'D. IBOX',
+                                                    'e' => 'E. INSTRUMENTS',
+                                                    'f' => 'F. VACUUM',
+                                                    'g' => 'G. PSV',
                                                 ];
                                                 
                                                 // Group items by category
                                                 $groupedItems = [];
                                                 foreach($masterItems as $item) {
                                                     $cat = $item->category ? strtolower($item->category) : 'c';
+                                                    // Mapping fallback
                                                     $displayCat = $categoryMap[$cat] ?? 'C. VALVE & PIPE SYSTEM';
                                                     
                                                     if(!isset($groupedItems[$displayCat])) {
@@ -127,11 +132,30 @@
                                                     $groupedItems[$displayCat][] = $item->code;
                                                 }
                                                 
-                                                // Add hardcoded sections (D-G) that don't come from InspectionItem
-                                                $groupedItems['D. IBOX'] = ['ibox_condition'];
-                                                $groupedItems['E. INSTRUMENTS'] = ['pressure_gauge_condition', 'level_gauge_condition'];
-                                                $groupedItems['F. VACUUM'] = ['vacuum_gauge_condition', 'vacuum_port_suction_condition'];
-                                                $groupedItems['G. PSV'] = ['psv1_condition', 'psv2_condition', 'psv3_condition', 'psv4_condition'];
+                                                // Add hardcoded sections (D-G) ONLY if they are NOT in dynamic items
+                                                // But usually we want to merge them.
+                                                // For clean display, let's append hardcoded keys to their respective groups if created above
+                                                
+                                                if(!isset($groupedItems['D. IBOX'])) $groupedItems['D. IBOX'] = [];
+                                                if(!in_array('ibox_condition', $groupedItems['D. IBOX'])) array_unshift($groupedItems['D. IBOX'], 'ibox_condition');
+                                                
+                                                if(!isset($groupedItems['E. INSTRUMENTS'])) $groupedItems['E. INSTRUMENTS'] = [];
+                                                $eKeys = ['pressure_gauge_condition', 'level_gauge_condition'];
+                                                foreach($eKeys as $k) {
+                                                    if(!in_array($k, $groupedItems['E. INSTRUMENTS'])) array_unshift($groupedItems['E. INSTRUMENTS'], $k);
+                                                }
+
+                                                if(!isset($groupedItems['F. VACUUM'])) $groupedItems['F. VACUUM'] = [];
+                                                $fKeys = ['vacuum_gauge_condition', 'vacuum_port_suction_condition'];
+                                                foreach($fKeys as $k) {
+                                                     if(!in_array($k, $groupedItems['F. VACUUM'])) array_unshift($groupedItems['F. VACUUM'], $k);
+                                                }
+
+                                                if(!isset($groupedItems['G. PSV'])) $groupedItems['G. PSV'] = [];
+                                                $gKeys = ['psv1_condition', 'psv2_condition', 'psv3_condition', 'psv4_condition'];
+                                                foreach($gKeys as $k) {
+                                                     if(!in_array($k, $groupedItems['G. PSV'])) array_unshift($groupedItems['G. PSV'], $k);
+                                                }
 
                                                 // Track displayed items to show "Others" at the end
                                                 $displayed = [];
@@ -139,6 +163,7 @@
                                             @endphp
 
                                             @foreach($groupedItems as $catName => $items)
+                                                @if(count($items) > 0)
                                                 <tr class="table-secondary"><th colspan="3">{{ $catName }}</th></tr>
                                                 @foreach($items as $item)
                                                     @if(isset($statuses[$item]))
@@ -162,11 +187,14 @@
                                                         </tr>
                                                     @endif
                                                 @endforeach
+                                                @endif
                                             @endforeach
 
                                             {{-- Others / Dynamic --}}
                                             @php
                                                 $others = $statuses->reject(function($s) use ($displayed) {
+                                                    // Explicitly hide legacy ghosts
+                                                    if(in_array($s->item_name, ['psv_condition', 'vacuum_condition', 'ibox_condition_legacy'])) return true;
                                                     return in_array($s->item_name, $displayed);
                                                 });
                                             @endphp
