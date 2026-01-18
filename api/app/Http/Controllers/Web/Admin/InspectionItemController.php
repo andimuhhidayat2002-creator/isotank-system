@@ -16,12 +16,13 @@ class InspectionItemController extends Controller
         $items = InspectionItem::orderBy('order')->orderBy('label')->get();
         
         $categories = [
-            'external' => 'B. General Condition',
-            'valve' => 'C. Valve & Piping',
-            'measurement' => 'D. IBOX & E. Instruments',
-            'vacuum' => 'F. Vacuum System', // Added missing specific key if needed, though 'measurement' often covers it
-            'safety' => 'G. PSV & Safety',
-            'internal' => 'Internal Inspection (Other)',
+            'b' => 'B. General Condition',
+            'c' => 'C. Valve & Piping',
+            'd' => 'D. IBOX System',
+            'e' => 'E. Instruments',
+            'f' => 'F. Vacuum System',
+            'g' => 'G. PSV & Safety',
+            'other' => 'Other / Internal',
         ];
         
         $inputTypes = [
