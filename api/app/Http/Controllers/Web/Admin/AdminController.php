@@ -685,6 +685,12 @@ class AdminController extends Controller
                             'filling_status_code' => $request->filling_status_code,
                             'filling_status_desc' => $request->filling_status_desc
                         ]);
+                    } elseif ($request->activity_type === 'outgoing_inspection') {
+                        // OUTGOING FLOW (User Request): Update Filling Status immediately
+                        $isotank->update([
+                            'filling_status_code' => $request->filling_status_code,
+                            'filling_status_desc' => $request->filling_status_desc
+                        ]);
                     }
                     break;
 
