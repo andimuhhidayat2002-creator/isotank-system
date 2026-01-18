@@ -183,6 +183,20 @@ class InspectionSubmitController extends Controller
             'inspection_data' => 'nullable|json',
         ];
 
+        // DYNAMIC RULES: Add validation for active InspectionItems
+        $dynamicItemCodes = [];
+        try {
+            if (class_exists(\App\Models\InspectionItem::class)) {
+                $dynamicItemCodes = \App\Models\InspectionItem::where('is_active', true)->pluck('code')->toArray();
+                foreach ($dynamicItemCodes as $code) {
+                    if (!isset($rules[$code])) {
+                         // Default rule for inspection items
+                         $rules[$code] = 'nullable|in:good,not_good,need_attention,na';
+                    }
+                }
+            }
+        } catch (\Exception $e) {}
+
         // Also allow dynamic photos from items if any
         foreach ($request->all() as $key => $value) {
             if (str_starts_with($key, 'photo_') && !isset($rules[$key])) {
@@ -405,7 +419,18 @@ class InspectionSubmitController extends Controller
                 'filling_status_desc' => $validated['filling_status_desc'] ?? $job->filling_status_desc ?? $job->isotank->filling_status_desc,
                 
                 // Dynamic Inspection Items Data
-                'inspection_data' => $request->input('inspection_data'),
+                'inspection_data' => (function() use ($request, $validated, $dynamicItemCodes) {
+                    $data = $request->input('inspection_data') ? json_decode($request->input('inspection_data'), true) : [];
+                    if (!is_array($data)) $data = [];
+                    
+                    // Add top-level dynamic fields to inspection_data
+                    foreach ($dynamicItemCodes as $code) {
+                        if (isset($validated[$code])) {
+                            $data[$code] = $validated[$code];
+                        }
+                    }
+                    return !empty($data) ? json_encode($data) : null;
+                })(),
             ];
 
             if ($inspectionLog) {

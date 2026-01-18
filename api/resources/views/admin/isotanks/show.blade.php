@@ -89,7 +89,7 @@
                                 </div>
                             <div class="mt-4">
                                 <h6>Items Condition</h6>
-                                <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                                <div class="table-responsive">
                                     <table class="table table-sm table-bordered">
                                         <thead class="table-light">
                                             <tr>
