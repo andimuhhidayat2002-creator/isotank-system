@@ -93,127 +93,91 @@
                                     <table class="table table-sm table-bordered">
                                         <thead class="table-light">
                                             <tr>
-                                                <th>Item Name</th>
-                                                <th>Condition</th>
-                                                <th>Last Checked</th>
+                                                <th>Category / Item Name</th>
+                                                <th class="text-center">Condition/Value</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             @php
-                                                // Get all item statuses keyed by name
-                                                $statuses = \App\Models\MasterIsotankItemStatus::where('isotank_id', $isotank->id)->get()->keyBy('item_name');
+                                                $inspectionItems = \App\Models\InspectionItem::where('is_active', true)->orderBy('order')->get();
+                                                $logData = is_array($log->inspection_data) ? $log->inspection_data : json_decode($log->inspection_data, true) ?? [];
                                                 
-                                                // DYNAMIC CATEGORIES: Load from InspectionItem model
-                                                $masterItems = \App\Models\InspectionItem::where('is_active', true)->orderBy('order', 'asc')->get();
-                                                
-                                                $categoryMap = [
-                                                    'b' => 'B. GENERAL CONDITION',
-                                                    'external' => 'B. GENERAL CONDITION',
-                                                    'general' => 'B. GENERAL CONDITION',
-                                                    'c' => 'C. VALVE & PIPE SYSTEM',
-                                                    'valve' => 'C. VALVE & PIPE SYSTEM',
-                                                    'piping' => 'C. VALVE & PIPE SYSTEM',
-                                                    'd' => 'D. IBOX',
-                                                    'e' => 'E. INSTRUMENTS',
-                                                    'f' => 'F. VACUUM',
-                                                    'g' => 'G. PSV',
-                                                ];
-                                                
-                                                // Group items by category
-                                                $groupedItems = [];
-                                                foreach($masterItems as $item) {
-                                                    $cat = $item->category ? strtolower($item->category) : 'c';
-                                                    // Mapping fallback
-                                                    $displayCat = $categoryMap[$cat] ?? 'C. VALVE & PIPE SYSTEM';
-                                                    
-                                                    if(!isset($groupedItems[$displayCat])) {
-                                                        $groupedItems[$displayCat] = [];
+                                                // Unmapped Item Logic (Same as Report)
+                                                $standardCodes = $inspectionItems->pluck('code')->toArray();
+                                                $unmapped = [];
+                                                foreach($logData as $k => $v) {
+                                                    if(!in_array($k, $standardCodes) && 
+                                                       !in_array($k, ['inspection_date', 'inspector_name', 'filling_status', 'remarks', 'signature', 'longitude', 'latitude', 'location_name']) &&
+                                                       is_string($v) && strlen($v) < 50) {
+                                                         if(!str_contains($k, 'ibox') && !str_contains($k, 'vacuum') && !str_contains($k, 'pressure_gauge') && !str_contains($k, 'psv')) {
+                                                             $unmapped[$k] = $v;
+                                                         }
                                                     }
-                                                    $groupedItems[$displayCat][] = $item->code;
                                                 }
-                                                
-                                                // Add hardcoded sections (D-G) ONLY if they are NOT in dynamic items
-                                                // But usually we want to merge them.
-                                                // For clean display, let's append hardcoded keys to their respective groups if created above
-                                                
-                                                if(!isset($groupedItems['D. IBOX'])) $groupedItems['D. IBOX'] = [];
-                                                if(!in_array('ibox_condition', $groupedItems['D. IBOX'])) array_unshift($groupedItems['D. IBOX'], 'ibox_condition');
-                                                
-                                                if(!isset($groupedItems['E. INSTRUMENTS'])) $groupedItems['E. INSTRUMENTS'] = [];
-                                                $eKeys = ['pressure_gauge_condition', 'level_gauge_condition'];
-                                                foreach($eKeys as $k) {
-                                                    if(!in_array($k, $groupedItems['E. INSTRUMENTS'])) array_unshift($groupedItems['E. INSTRUMENTS'], $k);
-                                                }
-
-                                                if(!isset($groupedItems['F. VACUUM'])) $groupedItems['F. VACUUM'] = [];
-                                                $fKeys = ['vacuum_gauge_condition', 'vacuum_port_suction_condition'];
-                                                foreach($fKeys as $k) {
-                                                     if(!in_array($k, $groupedItems['F. VACUUM'])) array_unshift($groupedItems['F. VACUUM'], $k);
-                                                }
-
-                                                if(!isset($groupedItems['G. PSV'])) $groupedItems['G. PSV'] = [];
-                                                $gKeys = ['psv1_condition', 'psv2_condition', 'psv3_condition', 'psv4_condition'];
-                                                foreach($gKeys as $k) {
-                                                     if(!in_array($k, $groupedItems['G. PSV'])) array_unshift($groupedItems['G. PSV'], $k);
-                                                }
-
-                                                // Track displayed items to show "Others" at the end
-                                                $displayed = [];
-                                                foreach($groupedItems as $items) $displayed = array_merge($displayed, $items);
                                             @endphp
 
-                                            @foreach($groupedItems as $catName => $items)
-                                                @if(count($items) > 0)
-                                                <tr class="table-secondary"><th colspan="3">{{ $catName }}</th></tr>
-                                                @foreach($items as $item)
-                                                    @if(isset($statuses[$item]))
-                                                        @php 
-                                                            $status = $statuses[$item];
-                                                        @endphp
-                                                        <tr>
-                                                            <td class="ps-4">{{ ucwords(str_replace('_', ' ', $item)) }}</td>
-                                                            <td>
-                                                                @php
-                                                                    $cls = 'secondary';
-                                                                    $val = $status->condition;
-                                                                    $txt = strtoupper($val);
-                                                                    if(in_array($val, ['good', 'correct', 'yes', 'valid'])) $cls = 'success';
-                                                                    elseif(in_array($val, ['not_good', 'incorrect', 'no', 'expired', 'rejected'])) $cls = 'danger';
-                                                                    elseif($val == 'need_attention') $cls = 'warning';
-                                                                @endphp
-                                                                <span class="badge bg-{{ $cls }}">{{ $txt }}</span>
-                                                            </td>
-                                                            <td>{{ $status->updated_at->format('Y-m-d') }}</td>
-                                                        </tr>
-                                                    @endif
-                                                @endforeach
-                                                @endif
+                                            <!-- SECTION B: GENERAL CONDITION -->
+                                            <tr class="table-secondary"><th colspan="2">B. GENERAL CONDITION</th></tr>
+                                            @php
+                                                 $generalItems = $inspectionItems->filter(fn($i) => 
+                                                    $i->category && (str_starts_with(strtolower($i->category), 'b') || str_contains(strtolower($i->category), 'general') || strtolower($i->category)=='external')
+                                                );
+                                            @endphp
+                                            @foreach($generalItems as $item)
+                                                 @php $code = $item->code; $val = $logData[$code] ?? ($log->$code ?? null); @endphp
+                                                 <tr>
+                                                    <td class="ps-3">{{ $item->label }}</td>
+                                                    <td class="text-center">@include('admin.reports.partials.badge', ['status' => $val ?: '-'])</td>
+                                                 </tr>
+                                            @endforeach
+                                            {{-- Unmapped items go here --}}
+                                            @foreach($unmapped as $k => $v)
+                                                <tr>
+                                                    <td class="ps-3">{{ ucwords(str_replace('_', ' ', $k)) }}</td>
+                                                    <td class="text-center">@include('admin.reports.partials.badge', ['status' => $v])</td>
+                                                </tr>
                                             @endforeach
 
-                                            {{-- Others / Dynamic --}}
+                                            <!-- SECTION C: VALVE & PIPE -->
+                                            <tr class="table-secondary"><th colspan="2">C. VALVE & PIPE SYSTEM</th></tr>
                                             @php
-                                                $others = $statuses->reject(function($s) use ($displayed) {
-                                                    // Explicitly hide legacy ghosts
-                                                    if(in_array($s->item_name, ['psv_condition', 'vacuum_condition', 'ibox_condition_legacy'])) return true;
-                                                    return in_array($s->item_name, $displayed);
-                                                });
+                                                $valveItems = $inspectionItems->filter(fn($i) => 
+                                                    $i->category && (str_starts_with(strtolower($i->category), 'c') || str_contains(strtolower($i->category), 'valve') || str_contains(strtolower($i->category), 'piping'))
+                                                );
                                             @endphp
+                                             @foreach($valveItems as $item)
+                                                 @php $code = $item->code; $val = $logData[$code] ?? ($log->$code ?? null); @endphp
+                                                 <tr>
+                                                    <td class="ps-3">{{ $item->label }}</td>
+                                                    <td class="text-center">@include('admin.reports.partials.badge', ['status' => $val ?: '-'])</td>
+                                                 </tr>
+                                            @endforeach
 
-                                            @if($others->isNotEmpty())
-                                                <tr class="table-secondary"><th colspan="3">OTHERS / DYNAMIC ITEMS</th></tr>
-                                                @foreach($others as $status)
-                                                    <tr>
-                                                        <td class="ps-4">{{ ucwords(str_replace('_', ' ', $status->item_name)) }}</td>
-                                                        <td><span class="badge bg-secondary">{{ strtoupper($status->condition) }}</span></td>
-                                                        <td>{{ $status->updated_at->format('Y-m-d') }}</td>
-                                                    </tr>
-                                                @endforeach
-                                            @endif
-                                            
-                                            @if($statuses->isEmpty())
-                                                 <tr><td colspan="3" class="text-center text-muted">No details recorded yet.</td></tr>
-                                            @endif
+                                            <!-- SECTION D: IBOX -->
+                                            <tr class="table-secondary"><th colspan="2">D. IBOX SYSTEM</th></tr>
+                                            <tr><td class="ps-3">IBOX Condition</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->ibox_condition])</td></tr>
+                                            <tr><td class="ps-3">Pressure (Digital)</td><td class="text-center">{{ $log->ibox_pressure ?? '-' }}</td></tr>
+                                            <tr><td class="ps-3">Temperature</td><td class="text-center">{{ $log->ibox_temperature ?? '-' }}</td></tr>
 
+                                            <!-- SECTION E: INSTRUMENTS -->
+                                            <tr class="table-secondary"><th colspan="2">E. INSTRUMENTS</th></tr>
+                                            <tr><td class="ps-3">Pressure Gauge</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->pressure_gauge_condition])</td></tr>
+                                            <tr><td class="ps-3">Level Gauge</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->level_gauge_condition])</td></tr>
+
+                                            <!-- SECTION F: VACUUM -->
+                                            <tr class="table-secondary"><th colspan="2">F. VACUUM SYSTEM</th></tr>
+                                            <tr><td class="ps-3">Vacuum Gauge</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->vacuum_gauge_condition])</td></tr>
+                                            <tr><td class="ps-3">Port Suction</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->vacuum_port_suction_condition])</td></tr>
+                                            <tr><td class="ps-3">Value</td><td class="text-center fw-bold">{{ $log->vacuum_value ? (float)$log->vacuum_value . ' mTorr' : '-' }}</td></tr>
+
+                                            <!-- SECTION G: PSV -->
+                                            <tr class="table-secondary"><th colspan="2">G. PSV</th></tr>
+                                            @foreach(['psv1', 'psv2', 'psv3', 'psv4'] as $p)
+                                                <tr>
+                                                    <td class="ps-3">{{ strtoupper($p) }} Condition</td>
+                                                    <td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->{$p.'_condition'}])</td>
+                                                </tr>
+                                            @endforeach
                                         </tbody>
                                     </table>
                                 </div>
