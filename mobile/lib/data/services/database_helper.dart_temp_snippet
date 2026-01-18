@@ -1,0 +1,40 @@
+
+  // Vacuum Methods
+  Future<int> savePendingVacuumActivity(int activityId, Map<String, dynamic> data) async {
+    final db = await database;
+    return await db.insert('pending_vacuum_activities', {
+      'activity_id': activityId,
+      'data': _encodeJson(data),
+      'created_at': DateTime.now().toIso8601String(),
+    });
+  }
+  
+  Future<List<Map<String, dynamic>>> getPendingVacuumActivities() async {
+    final db = await database;
+    return await db.query('pending_vacuum_activities', orderBy: 'created_at ASC');
+  }
+  
+  Future<void> deletePendingVacuumActivity(int id) async {
+    final db = await database;
+    await db.delete('pending_vacuum_activities', where: 'id = ?', whereArgs: [id]);
+  }
+
+  // Calibration Methods
+  Future<int> savePendingCalibration(int jobId, Map<String, dynamic> data) async {
+    final db = await database;
+    return await db.insert('pending_calibration_activities', {
+      'job_id': jobId,
+      'data': _encodeJson(data),
+      'created_at': DateTime.now().toIso8601String(),
+    });
+  }
+  
+  Future<List<Map<String, dynamic>>> getPendingCalibrationActivities() async {
+    final db = await database;
+    return await db.query('pending_calibration_activities', orderBy: 'created_at ASC');
+  }
+  
+  Future<void> deletePendingCalibration(int id) async {
+    final db = await database;
+    await db.delete('pending_calibration_activities', where: 'id = ?', whereArgs: [id]);
+  }

@@ -1,0 +1,47 @@
+Running Gradle task 'assembleRelease'...                        
+[=========                              ] 25%                                   
+[=========                              ] 25% Fetch remote repository...        
+[=======================================] 100% Fetch remote repository...       
+
+[=========                              ] 25%                                   
+[=========                              ] 25% Fetch remote repository...        
+[=======================================] 100% Fetch remote repository...       
+
+lib/data/services/api_service.dart:334:18: Error: The method 'decodeJson' isn't defined for the type 'ApiService'.
+ - 'ApiService' is from 'package:isotank_app/data/services/api_service.dart' ('lib/data/services/api_service.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'decodeJson'.
+          return decodeJson(row['data'] as String);
+                 ^^^^^^^^^^
+lib/data/services/api_service.dart:540:28: Error: The method 'decodeJson' isn't defined for the type 'ApiService'.
+ - 'ApiService' is from 'package:isotank_app/data/services/api_service.dart' ('lib/data/services/api_service.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'decodeJson'.
+            final cached = decodeJson(results.first['data'] as String);
+                           ^^^^^^^^^^
+lib/data/services/api_service.dart:567:20: Error: The method 'decodeJson' isn't defined for the type 'ApiService'.
+ - 'ApiService' is from 'package:isotank_app/data/services/api_service.dart' ('lib/data/services/api_service.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'decodeJson'.
+            return decodeJson(results.first['data'] as String);
+                   ^^^^^^^^^^
+lib/data/services/api_service.dart:604:42: Error: The method 'decodeJson' isn't defined for the type 'ApiService'.
+ - 'ApiService' is from 'package:isotank_app/data/services/api_service.dart' ('lib/data/services/api_service.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'decodeJson'.
+             return results.map((row) => decodeJson(row['data'] as String)).toList();
+                                         ^^^^^^^^^^
+Target kernel_snapshot_program failed: Exception
+
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:compileFlutterBuildRelease'.
+> Process 'command 'C:\flutter\flutter\bin\flutter.bat'' finished with non-zero exit value 1
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 31s
+Running Gradle task 'assembleRelease'...                           32.4s
+Gradle task assembleRelease failed with exit code 1
