@@ -40,6 +40,7 @@
                         <th>Serial No</th>
                         <th>Location</th>
                         <th>Product</th>
+                        <th>Filling Status</th>
                         <th>Status</th>
                         <th>Init. Pres. Test</th>
                         <th>CSC Initial Test</th>
@@ -62,6 +63,16 @@
                         <td>{{ $iso->manufacturer_serial_number ?? '-' }}</td>
                         <td>{{ $iso->location ?? '-' }}</td>
                         <td>{{ $iso->product ?? '-' }}</td>
+                        <td>
+                            @php
+                                $fillingBadge = 'secondary';
+                                $fillingText = $iso->filling_status_desc ?? $iso->filling_status_code ?? 'Not Set';
+                                if($iso->filling_status_code === 'filled') $fillingBadge = 'success';
+                                elseif(in_array($iso->filling_status_code, ['ready_to_fill', 'ongoing_inspection'])) $fillingBadge = 'info';
+                                elseif(in_array($iso->filling_status_code, ['under_maintenance', 'class_survey'])) $fillingBadge = 'warning';
+                            @endphp
+                            <span class="badge bg-{{ $fillingBadge }}">{{ $fillingText }}</span>
+                        </td>
                         <td>
                             <span class="badge {{ $iso->status === 'active' ? 'bg-success' : 'bg-secondary' }}">
                                 {{ ucfirst($iso->status) }}
@@ -143,6 +154,7 @@
                         <th>Serial No</th>
                         <th>Location</th>
                         <th>Product</th>
+                        <th>Filling Status</th>
                         <th>Status</th>
                         <th>Init. Pres. Test</th>
                         <th>CSC Initial Test</th>
