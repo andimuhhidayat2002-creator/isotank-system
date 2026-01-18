@@ -162,7 +162,6 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
         _groupedItems = {};
         
         // Group items by category
-        // Group items by category
         for (var item in _dynamicItems) {
            // Backend already filters active items, and API might not return 'is_active' field.
            // if (item['is_active'] != 1 && item['is_active'] != true) continue;
@@ -177,6 +176,25 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
 
            final rawCategory = item['category'] ?? 'General';
            final category = rawCategory.toString().toLowerCase(); // Normalize to lowercase
+           
+           // Filter out items that have specialized hardcoded logic (IBOX, PSV, Vacuum, etc.)
+           // Items in 'external', 'safety', and 'valve' categories are now fully dynamic
+           final hardcodedItems = [
+              // IBOX items (have specialized reading stages and locking logic)
+              'ibox_condition', 'ibox_pressure', 'ibox_temperature', 'ibox_level', 'ibox_battery_percent',
+              // Instrument items (have calibration cards and reading stages)
+              'pressure_gauge_condition', 'level_gauge_condition',
+              // Vacuum items (have specialized warning logic and unit conversion)
+              'vacuum_gauge_condition', 'vacuum_port_suction_condition', 'vacuum_value', 'vacuum_temperature',
+              // PSV items (have specialized calibration cards per PSV)
+              'psv1_condition', 'psv2_condition', 'psv3_condition', 'psv4_condition',
+              'psv1_serial', 'psv2_serial', 'psv3_serial', 'psv4_serial',
+              // Outgoing specific items
+              'destination', 'receiver_name'
+           ];
+           
+           if (hardcodedItems.contains(item['code'])) continue;
+
            if (!_groupedItems.containsKey(category)) {
              _groupedItems[category] = [];
            }
@@ -214,6 +232,22 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
           final key = item['code'];
           final label = item['label'];
           final type = item['input_type'];
+          
+          // Special case: valve_position uses correct/incorrect dropdown
+          if (key == 'valve_position') {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 16.0),
+              child: DropdownButtonFormField<String>(
+                decoration: InputDecoration(labelText: label, border: const OutlineInputBorder()),
+                value: _formData[key]?.toString(),
+                items: ['correct', 'incorrect'].map((v) => DropdownMenuItem(
+                  value: v, 
+                  child: Text(v.toUpperCase()),
+                )).toList(),
+                onChanged: (v) => setState(() => _formData[key] = v),
+              ),
+            );
+          }
           
           if (type == 'condition') {
             return _buildConditionButtons(label, key);
@@ -259,6 +293,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
         'status': asDraft ? 'draft' : 'completed',
         'activity_type': activityType,
         'filled_at': DateTime.now().toIso8601String(),
+        'inspection_date': DateTime.now().toLocal().toString().split(' ')[0], // Ensure date is sent
       };
 
       await _apiService.submitInspection(widget.jobId, data);
@@ -381,49 +416,12 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                 const SizedBox(height: 16),
 
                 // Dynamic Sections (Replacing B, C, D, E)
-                 // B. General Condition
-                 _buildSectionHeader('B. General Condition'),
-                 _buildConditionButtons('Surface', 'surface'),
-                 _buildConditionButtons('Frame', 'frame'),
-                 _buildConditionButtons('Tank Plate', 'tank_plate'),
-                 _buildConditionButtons('Venting Pipe', 'venting_pipe'),
-                 _buildConditionButtons('Explosion Proof Cover', 'explosion_proof_cover'),
-                 _buildConditionButtons('Grounding System', 'grounding_system'),
-                 _buildConditionButtons('Document Container', 'document_container'),
-                 _buildConditionButtons('Safety Label', 'safety_label'),
-                 _buildConditionButtons('Valve Box Door', 'valve_box_door'),
-                 _buildConditionButtons('Valve Box Door Handle', 'valve_box_door_handle'),
-                 
-                 // Dynamic Items (Appended)
-                 _buildDynamicSection('external', 'Additional General Items'),
+                 // B. General Condition (Dynamic from Database)
+                 _buildDynamicSection('external', 'B. General Condition'),
+                 _buildDynamicSection('safety', 'B. Safety Equipment'),
 
-                 // C. Valve & Piping
-                 _buildSectionHeader('C. Valve & Piping'),
-                 _buildConditionButtons('Valve Condition', 'valve_condition'),
-                 
-                 // Valve Position (Specific Selector)
-                 Padding(
-                   padding: const EdgeInsets.only(bottom: 16.0),
-                   child: DropdownButtonFormField<String>(
-                     decoration: const InputDecoration(labelText: 'Valve Position', border: OutlineInputBorder()),
-                     value: _formData['valve_position']?.toString(),
-                     items: ['correct', 'incorrect'].map((v) => DropdownMenuItem(
-                       value: v, 
-                       child: Text(v.toUpperCase()),
-                     )).toList(),
-                     onChanged: (v) => setState(() => _formData['valve_position'] = v),
-                   ),
-                 ),
-
-                 _buildConditionButtons('Pipe Joint', 'pipe_joint'),
-                 _buildConditionButtons('Air Source Connection', 'air_source_connection'),
-                 _buildConditionButtons('ESDV', 'esdv'),
-                 _buildConditionButtons('Blind Flange', 'blind_flange'),
-                 _buildConditionButtons('PRV', 'prv'),
-                 
-                 // Dynamic Items (Appended)
-                 _buildDynamicSection('valve', 'Additional Valve Items'),
-                 _buildDynamicSection('safety', 'Additional Safety Items'),
+                 // C. Valve & Piping (Dynamic from Database)
+                 _buildDynamicSection('valve', 'C. Valve & Piping'),
                  
                  // Catch-all: Render any other dynamic categories not yet shown (e.g. internal)
                  ..._groupedItems.keys

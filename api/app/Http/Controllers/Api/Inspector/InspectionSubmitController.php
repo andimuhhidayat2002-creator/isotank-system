@@ -204,6 +204,12 @@ class InspectionSubmitController extends Controller
             }
         }
 
+        // CRITICAL FIX: Ensure inspection_date is always present
+        // If not provided by Flutter, use current date
+        if (!$request->has('inspection_date') || empty($request->inspection_date)) {
+            $request->merge(['inspection_date' => now()->toDateString()]); // YYYY-MM-DD format
+        }
+
         $validated = $request->validate($rules);
         $allInput = $request->all(); // Ensure $allInput is available
 

@@ -33,7 +33,7 @@ class InspectionItemApiController extends Controller
                 'category' => $item->category,
                 'input_type' => $item->input_type,
                 'description' => $item->description,
-                // 'order' => $item->order, // Already ordered by query
+                'order' => $item->order,
                 'is_required' => $item->is_required,
                 'applies_to' => $item->applies_to,
                 'options' => $item->options,
