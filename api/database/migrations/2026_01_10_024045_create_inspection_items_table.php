@@ -16,12 +16,13 @@ return new class extends Migration
             $table->string('code')->unique(); // e.g., 'surface', 'frame', 'tank_plate'
             $table->string('label'); // Display name: 'Surface Condition', 'Frame Structure'
             $table->string('category')->nullable(); // 'external', 'internal', 'safety', 'measurement'
-            $table->enum('input_type', ['condition', 'text', 'number', 'date', 'boolean'])->default('condition');
+            $table->enum('input_type', ['condition', 'text', 'number', 'date', 'boolean', 'dropdown'])->default('condition');
             // condition = good/not_good/need_attention/na
             // text = free text
             // number = numeric input
             // date = date picker
             // boolean = yes/no
+            // dropdown = custom dropdown with options
             $table->text('description')->nullable();
             $table->integer('order')->default(0); // Display order
             $table->boolean('is_required')->default(false);
