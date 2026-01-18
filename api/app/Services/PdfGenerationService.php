@@ -124,7 +124,7 @@ class PdfGenerationService
      */
     public static function getGeneralConditionItems(): array
     {
-        return [
+        $items = [
             'surface',
             'frame',
             'tank_plate',
@@ -136,6 +136,21 @@ class PdfGenerationService
             'valve_box_door',
             'valve_box_door_handle',
         ];
+
+        // ADD DYNAMIC ITEMS
+        try {
+            if (class_exists(\App\Models\InspectionItem::class)) {
+                $dynamicItems = \App\Models\InspectionItem::where('is_active', true)
+                    ->where('category', 'b') // Only General Condition items
+                    ->pluck('code')
+                    ->toArray();
+                $items = array_merge($items, $dynamicItems);
+            }
+        } catch (\Exception $e) {
+            // Fallback (ignore)
+        }
+
+        return $items;
     }
     
     /**

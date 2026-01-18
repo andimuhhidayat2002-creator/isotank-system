@@ -86,41 +86,74 @@
                         <!-- SECTION B -->
                         <tr class="table-secondary"><th colspan="2">B. GENERAL CONDITION</th></tr>
                         @php
-                            $sectionB = ['surface', 'frame', 'tank_plate', 'venting_pipe', 'explosion_proof_cover', 'grounding_system', 'document_container', 'safety_label', 'valve_box_door', 'valve_box_door_handle'];
+                            $masterItems = \App\Models\InspectionItem::where('is_active', true)->orderBy('order', 'asc')->get();
                             
-                            $dynamicItems = [];
                             $data = is_string($log->inspection_data) ? json_decode($log->inspection_data, true) : $log->inspection_data;
-                            if (!empty($data) && is_array($data)) {
-                                 foreach($data as $k => $v) {
-                                     if (in_array($v, ['good', 'not_good', 'need_attention', 'na']) && !in_array($k, array_merge($sectionB, ['valve_condition','valve_position','pipe_joint','air_source_connection','esdv','blind_flange','prv']))) {
-                                         $dynamicItems[] = $k; 
-                                     }
-                                 }
-                            }
-                            $allItemsB = array_unique(array_merge($sectionB, $dynamicItems));
+                            if (!is_array($data)) $data = [];
                         @endphp
 
-                        @foreach($allItemsB as $item)
+                        @foreach($masterItems->filter(function($i){ return in_array($i->category, ['b', 'external', 'general']); }) as $item)
                             @php
-                                $data = is_string($log->inspection_data) ? json_decode($log->inspection_data, true) : $log->inspection_data;
-                                $val = $log->$item ?? ($data[$item] ?? null);
+                                $code = $item->code;
+                                $val = $log->$code ?? ($data[$code] ?? null);
                             @endphp
-                            @if($val)
                             <tr>
-                                <td class="ps-3">{{ ucfirst(str_replace('_', ' ', $item)) }}</td>
-                                <td class="text-center">@include('admin.reports.partials.badge', ['status' => $val])</td>
+                                <td class="ps-3">{{ $item->label }}</td>
+                                <td class="text-center">
+                                    @if($val)
+                                        @include('admin.reports.partials.badge', ['status' => $val])
+                                    @else
+                                        <span class="text-muted">-</span>
+                                    @endif
+                                </td>
                             </tr>
-                            @endif
                         @endforeach
 
                         <!-- SECTION C -->
                         <tr class="table-secondary"><th colspan="2">C. VALVE & PIPE SYSTEM</th></tr>
-                        @foreach(['valve_condition', 'valve_position', 'pipe_joint', 'air_source_connection', 'esdv', 'blind_flange', 'prv'] as $item)
+                        @foreach($masterItems->filter(function($i){ return in_array($i->category, ['c', 'valve', 'piping']) || empty($i->category); }) as $item)
+                            @php
+                                $code = $item->code;
+                                $val = $log->$code ?? ($data[$code] ?? null);
+                            @endphp
                             <tr>
-                                <td class="ps-3">{{ ucfirst(str_replace('_', ' ', $item)) }}</td>
-                                <td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->$item])</td>
+                                <td class="ps-3">{{ $item->label }}</td>
+                                <td class="text-center">
+                                    @if($val)
+                                        @include('admin.reports.partials.badge', ['status' => $val])
+                                    @else
+                                        <span class="text-muted">-</span>
+                                    @endif
+                                </td>
                             </tr>
                         @endforeach
+
+
+
+                        {{-- Fallback for Unmapped Dynamic Items --}}
+                        @php
+                            $mappedCodes = $masterItems->pluck('code')->toArray();
+                            $unmapped = [];
+                            foreach($data as $k => $v) {
+                                // Filter readable conditions only, exclude mapped codes and standard fields
+                                if(!in_array($k, $mappedCodes) && 
+                                   is_string($v) && 
+                                   !in_array($k, ['inspection_date', 'inspector_name', 'filling_status', 'cleanliness_status', 'remarks', 'signature', 'longitude', 'latitude', 'location_name']) &&
+                                   in_array(strtolower($v), ['good','not_good','na','need_attention','yes','correct','incorrect','valid','expired'])) {
+                                   $unmapped[$k] = $v;
+                                }
+                            }
+                        @endphp
+                        
+                        @if(!empty($unmapped))
+                            <tr class="table-warning"><th colspan="2">ADDITIONAL / DYNAMIC ITEMS</th></tr>
+                            @foreach($unmapped as $k => $v)
+                                <tr>
+                                    <td class="ps-3">{{ ucwords(str_replace('_', ' ', $k)) }}</td>
+                                    <td class="text-center">@include('admin.reports.partials.badge', ['status' => $v])</td>
+                                </tr>
+                            @endforeach
+                        @endif
 
                         <!-- SECTION D -->
                         <tr class="table-secondary"><th colspan="2">D. IBOX SYSTEM</th></tr>

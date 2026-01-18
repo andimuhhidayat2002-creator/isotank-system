@@ -68,6 +68,13 @@ class InspectionImport
                          if (!$destination) {
                              throw new \Exception("Destination required for outgoing inspection.");
                          }
+                         
+                         // UPDATE ISOTANK FILLING STATUS (User Request)
+                         // When admin plans outgoing, status should reflect immediately (e.g. "Filled")
+                         $isotank->update([
+                             'filling_status_code' => $fillingStatusCode,
+                             'filling_status_desc' => $fillingStatusDesc
+                         ]);
                     }
 
                     $plannedDate = now();

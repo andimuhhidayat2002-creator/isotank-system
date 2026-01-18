@@ -81,8 +81,33 @@
         }
     @endphp
 
-    {{-- LAYOUT SPLIT (COMPACT) --}}
+    <div class="header-title" style="background-color: #f0f0f0; margin-bottom: 5px; text-align: center; font-weight: bold; border: 1px solid #ddd;">
+        INCOMING INSPECTION REPORT
+    </div>
+
     @if($type !== 'outgoing')
+    
+    @php
+        // ... (existing logic)
+        $jsonData = [];
+        if (!empty($inspection->inspection_data)) {
+            $jsonData = is_string($inspection->inspection_data) ? json_decode($inspection->inspection_data, true) : $inspection->inspection_data;
+            if (!is_array($jsonData)) $jsonData = [];
+        }
+
+        // 2. Fetch Master Items from DB
+        $masterItems = \App\Models\InspectionItem::where('is_active', true)->orderBy('order', 'asc')->get();
+        // SECTION B: Includes 'b', 'external' (like safety_label, tank_plate)
+        $itemsB = $masterItems->filter(function($item) {
+            return in_array($item->category, ['b', 'external', 'general']);
+        });
+        
+        // SECTION C: Includes 'c', 'valve' (like pipe_joint, Pressure_regulator), and NULL/Empty (fallback)
+        $itemsC = $masterItems->filter(function($item) {
+             return in_array($item->category, ['c', 'valve', 'piping']) || empty($item->category);
+        });
+    @endphp
+
     <table style="width: 100%; border-collapse: collapse;">
         <tr>
             <!-- LEFT COLUMN (Section B) -->
@@ -90,56 +115,22 @@
                 
                 <div class="section-title">B. GENERAL CONDITION</div>
                 <table class="checklist-table">
-                    @php
-                        $sectionB = ['surface', 'frame', 'tank_plate', 'venting_pipe', 'explosion_proof_cover', 'grounding_system', 'document_container', 'safety_label', 'valve_box_door', 'valve_box_door_handle'];
-                        
-                        // Merge dynamic items safely
-                        $dynamicItems = [];
-                         if (!empty($inspection->inspection_data)) {
-                             $data = is_string($inspection->inspection_data) ? json_decode($inspection->inspection_data, true) : $inspection->inspection_data;
-                             if(is_array($data)) {
-                                 foreach($data as $k => $v) {
-                                     // Filter items to include in General if valid condition and not in B or C
-                                    if (in_array($v, ['good', 'not_good', 'need_attention', 'na']) && 
-                                        !in_array($k, array_merge($sectionB, ['valve_condition','valve_position','pipe_joint','air_source_connection','esdv','blind_flange','prv']))) {
-                                        $dynamicItems[] = $k; 
-                                    }
-                                 }
-                             }
-                        }
-                        $allItemsB = array_unique(array_merge($sectionB, $dynamicItems));
-                    @endphp
-
-                    @foreach($allItemsB as $key)
-                    @php 
-                        $val = $inspection->$key ?? (is_array($inspection->inspection_data) ? ($inspection->inspection_data[$key] ?? null) : null);
-                        if ($val) {
-                    @endphp
-                    <tr>
-                        <td style="width: 70%;">{{ ucwords(str_replace('_', ' ', $key)) }}</td>
-                        <td style="text-align: right;">{!! badge($val) !!}</td>
-                    </tr>
-                    @php } @endphp
-                    @endforeach
+                    @forelse($itemsB as $item)
+                        @php 
+                            $key = $item->code;
+                            $val = $inspection->$key ?? ($jsonData[$key] ?? null);
+                        @endphp
+                        <tr>
+                            <td style="width: 70%;">{{ $item->label }}</td>
+                            <td style="text-align: right;">{!! $val ? badge($val) : '<span style="color:#aaa">-</span>' !!}</td>
+                        </tr>
+                    @empty
+                        <tr><td colspan="2">No items.</td></tr>
+                    @endforelse
                 </table>
-
-            </td>
-            
-            <!-- RIGHT COLUMN (Section C, D, E, F, G) -->
-            <td style="width: 49%; vertical-align: top; padding-left: 10px; border: none;">
                 
-                 <div class="section-title">C. VALVES & PIPING</div>
-                 <table class="checklist-table">
-                    @foreach(['valve_condition', 'valve_position', 'pipe_joint', 'air_source_connection', 'esdv', 'blind_flange', 'prv'] as $key)
-                    <tr>
-                        <td style="width: 70%;">{{ ucwords(str_replace('_', ' ', $key)) }}</td>
-                        <td style="text-align: right;">{!! badge($inspection->$key) !!}</td>
-                    </tr>
-                    @endforeach
-                </table>
-
-                 @if($inspection->ibox_condition)
-                 <div class="section-title">D. IBOX SYSTEM</div>
+                @if($inspection->ibox_condition)
+                 <div class="section-title" style="margin-top: 5px;">D. IBOX SYSTEM</div>
                  <table class="checklist-table">
                     <tr><td style="width: 70%;">Condition</td><td style="text-align:right">{!! badge($inspection->ibox_condition) !!}</td></tr>
                     <tr><td>Battery</td><td style="text-align:right">{{ $inspection->ibox_battery_percent ?? '-' }} %</td></tr>
@@ -147,7 +138,7 @@
                 </table>
                 @endif
 
-                 <div class="section-title">E. INSTRUMENTS</div>
+                 <div class="section-title" style="margin-top: 5px;">E. INSTRUMENTS</div>
                  <table class="checklist-table">
                     <tr>
                         <td style="border-bottom:none;"><b>Pressure Gauge</b></td>
@@ -161,6 +152,29 @@
                     </tr>
                     <tr><td colspan="2" style="font-size: 7pt; color: #555; padding-left: 5px;">Reading: {{ $inspection->level_1 ?? '-' }} %</td></tr>
                  </table>
+
+            </td>
+            
+            <!-- RIGHT COLUMN (Section C) -->
+            <td style="width: 49%; vertical-align: top; padding-left: 10px; border: none;">
+                
+                 <div class="section-title">C. VALVES & PIPING</div>
+                 <table class="checklist-table">
+                    @forelse($itemsC as $item)
+                        @php 
+                            $key = $item->code;
+                            $val = $inspection->$key ?? ($jsonData[$key] ?? null);
+                        @endphp
+                        <tr>
+                            <td style="width: 70%;">{{ $item->label }}</td>
+                            <td style="text-align: right;">{!! $val ? badge($val) : '<span style="color:#aaa">-</span>' !!}</td>
+                        </tr>
+                    @empty
+                         <tr><td colspan="2">No items.</td></tr>
+                    @endforelse
+                </table>
+
+
 
                  <div class="section-title">F. VACUUM SYSTEM</div>
                  <table class="checklist-table">

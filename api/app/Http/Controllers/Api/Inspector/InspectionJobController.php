@@ -272,6 +272,17 @@ class InspectionJobController extends Controller
             $defaultValues->vacuum_check_datetime = $latestVacuum->check_datetime ? $latestVacuum->check_datetime->format('Y-m-d H:i:s') : null;
         }
 
+        // CRITICAL: Ensure destination and receiver from the JOB (Admin Input) are propagated to default values
+        // This ensures that when Admin sets 'Destination' and 'Receiver' in the Activity Plan, 
+        // the Inspector sees them pre-filled in validity/form fields.
+        if (!empty($job->destination)) {
+            $defaultValues->destination = $job->destination;
+        }
+        if (!empty($job->receiver_name)) {
+            $defaultValues->receiver_name = $job->receiver_name;
+            $defaultValues->receiver = $job->receiver_name; // frontend compatibility alias
+        }
+
         // Get open maintenance jobs for this isotank (READ ONLY)
         $openMaintenance = $job->isotank->maintenanceJobs()
             ->whereIn('status', ['open', 'on_progress', 'not_complete'])
