@@ -90,13 +90,28 @@
                             }
                             
                             $logData = is_array($log->inspection_data) ? $log->inspection_data : json_decode($log->inspection_data, true) ?? [];
+                            
+                            // CALCULATE UNMAPPED ITEMS HERE
+                            $standardCodes = $inspectionItems->pluck('code')->toArray();
+                            $unmapped = [];
+                            foreach($logData as $k => $v) {
+                                // Exclude standard codes (already shown in B & C) and known system fields
+                                if(!in_array($k, $standardCodes) && 
+                                   !in_array($k, ['inspection_date', 'inspector_name', 'filling_status', 'remarks', 'signature', 'longitude', 'latitude', 'location_name']) &&
+                                   is_string($v) && strlen($v) < 50) {
+                                     // Also exclude hardcoded legacy fields if they appear in JSON
+                                     if(!str_contains($k, 'ibox') && !str_contains($k, 'vacuum') && !str_contains($k, 'pressure_gauge') && !str_contains($k, 'psv')) {
+                                         $unmapped[$k] = $v;
+                                     }
+                                }
+                            }
                         @endphp
 
-                        <!-- SECTION B: GENERAL CONDITION (Dynamic + Hybrid) -->
+                        <!-- SECTION B: GENERAL CONDITION (Dynamic + Hybrid + Unmapped) -->
                         <tr class="table-secondary"><th colspan="2">B. GENERAL CONDITION</th></tr>
                         @php
                             // Filter items that are 'b', 'general', or 'external'
-                            $generalItems = $inspectionItems->filter(fn($i) => 
+                             $generalItems = $inspectionItems->filter(fn($i) => 
                                 $i->category && (
                                     str_starts_with(strtolower($i->category), 'b') || 
                                     str_contains(strtolower($i->category), 'general') ||
@@ -114,6 +129,16 @@
                                 </td>
                              </tr>
                         @endforeach
+                        
+                        {{-- RENDER UNMAPPED / EXTRA ITEMS HERE INSIDE SECTION B --}}
+                        @if(!empty($unmapped))
+                             @foreach($unmapped as $k => $v)
+                                <tr>
+                                    <td class="ps-3">{{ ucwords(str_replace('_', ' ', $k)) }}</td>
+                                    <td class="text-center">@include('admin.reports.partials.badge', ['status' => $v])</td>
+                                </tr>
+                             @endforeach
+                        @endif
 
                         <!-- SECTION C: VALVE & PIPE SYSTEM (Dynamic + Hybrid) -->
                         <tr class="table-secondary"><th colspan="2">C. VALVE & PIPE SYSTEM</th></tr>
@@ -177,33 +202,6 @@
                                 <td class="text-center small">Valid Until: {{ $log->{$p.'_valid_until'} ? $log->{$p.'_valid_until'}->format('Y-m-d') : '-' }}</td>
                             </tr>
                         @endforeach
-                        
-                        <!-- SECTION H: ADDITIONAL DYNAMIC ITEMS (Catch-all) -->
-                         @php
-                            $standardCodes = $inspectionItems->pluck('code')->toArray();
-                            $unmapped = [];
-                            foreach($logData as $k => $v) {
-                                // Exclude standard codes (already shown in B & C) and known system fields
-                                if(!in_array($k, $standardCodes) && 
-                                   !in_array($k, ['inspection_date', 'inspector_name', 'filling_status', 'remarks', 'signature', 'longitude', 'latitude', 'location_name']) &&
-                                   is_string($v) && strlen($v) < 50) {
-                                     // Also exclude hardcoded legacy fields if they appear in JSON
-                                     if(!str_contains($k, 'ibox') && !str_contains($k, 'vacuum') && !str_contains($k, 'pressure_gauge') && !str_contains($k, 'psv')) {
-                                         $unmapped[$k] = $v;
-                                     }
-                                }
-                            }
-                        @endphp
-                        
-                        @if(!empty($unmapped))
-                             <tr class="table-warning"><th colspan="2">ADDITIONAL ITEMS</th></tr>
-                             @foreach($unmapped as $k => $v)
-                                <tr>
-                                    <td class="ps-3">{{ ucwords(str_replace('_', ' ', $k)) }}</td>
-                                    <td class="text-center">@include('admin.reports.partials.badge', ['status' => $v])</td>
-                                </tr>
-                             @endforeach
-                        @endif
 
                     </tbody>
                 </table>
