@@ -103,27 +103,47 @@
                                                 // Get all item statuses keyed by name
                                                 $statuses = \App\Models\MasterIsotankItemStatus::where('isotank_id', $isotank->id)->get()->keyBy('item_name');
                                                 
-                                                $categories = [
-                                                    'B. GENERAL CONDITION' => ['surface', 'frame', 'tank_plate', 'venting_pipe', 'explosion_proof_cover', 'grounding_system', 'document_container', 'safety_label', 'valve_box_door', 'valve_box_door_handle'],
-                                                    'C. VALVES & PIPING' => ['valve_condition', 'valve_position', 'pipe_joint', 'air_source_connection', 'esdv', 'blind_flange', 'prv'],
-                                                    'D. IBOX' => ['ibox_condition'],
-                                                    'E. INSTRUMENTS' => ['pressure_gauge_condition', 'level_gauge_condition'],
-                                                    'F. VACUUM' => ['vacuum_gauge_condition', 'vacuum_port_suction_condition'],
-                                                    'G. PSV' => ['psv1_condition', 'psv2_condition', 'psv3_condition', 'psv4_condition']
+                                                // DYNAMIC CATEGORIES: Load from InspectionItem model
+                                                $masterItems = \App\Models\InspectionItem::where('is_active', true)->orderBy('order', 'asc')->get();
+                                                
+                                                $categoryMap = [
+                                                    'b' => 'B. GENERAL CONDITION',
+                                                    'external' => 'B. GENERAL CONDITION',
+                                                    'general' => 'B. GENERAL CONDITION',
+                                                    'c' => 'C. VALVE & PIPE SYSTEM',
+                                                    'valve' => 'C. VALVE & PIPE SYSTEM',
+                                                    'piping' => 'C. VALVE & PIPE SYSTEM',
                                                 ];
+                                                
+                                                // Group items by category
+                                                $groupedItems = [];
+                                                foreach($masterItems as $item) {
+                                                    $cat = $item->category ? strtolower($item->category) : 'c';
+                                                    $displayCat = $categoryMap[$cat] ?? 'C. VALVE & PIPE SYSTEM';
+                                                    
+                                                    if(!isset($groupedItems[$displayCat])) {
+                                                        $groupedItems[$displayCat] = [];
+                                                    }
+                                                    $groupedItems[$displayCat][] = $item->code;
+                                                }
+                                                
+                                                // Add hardcoded sections (D-G) that don't come from InspectionItem
+                                                $groupedItems['D. IBOX'] = ['ibox_condition'];
+                                                $groupedItems['E. INSTRUMENTS'] = ['pressure_gauge_condition', 'level_gauge_condition'];
+                                                $groupedItems['F. VACUUM'] = ['vacuum_gauge_condition', 'vacuum_port_suction_condition'];
+                                                $groupedItems['G. PSV'] = ['psv1_condition', 'psv2_condition', 'psv3_condition', 'psv4_condition'];
 
                                                 // Track displayed items to show "Others" at the end
                                                 $displayed = [];
-                                                foreach($categories as $items) $displayed = array_merge($displayed, $items);
+                                                foreach($groupedItems as $items) $displayed = array_merge($displayed, $items);
                                             @endphp
 
-                                            @foreach($categories as $catName => $items)
+                                            @foreach($groupedItems as $catName => $items)
                                                 <tr class="table-secondary"><th colspan="3">{{ $catName }}</th></tr>
                                                 @foreach($items as $item)
                                                     @if(isset($statuses[$item]))
                                                         @php 
                                                             $status = $statuses[$item];
-                                                            $displayed[] = $item;
                                                         @endphp
                                                         <tr>
                                                             <td class="ps-4">{{ ucwords(str_replace('_', ' ', $item)) }}</td>
