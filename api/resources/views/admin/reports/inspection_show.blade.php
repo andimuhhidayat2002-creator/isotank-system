@@ -83,135 +83,108 @@
                         <tr><th>Category / Item Name</th><th class="text-center" width="150">Condition/Value</th></tr>
                     </thead>
                     <tbody>
-                        <!-- SECTION B -->
-                        <tr class="table-secondary"><th colspan="2">B. GENERAL CONDITION</th></tr>
                         @php
-                            $masterItems = \App\Models\InspectionItem::where('is_active', true)->orderBy('order', 'asc')->get();
+                            // Decode JSON data once
+                            $logData = [];
+                            if($log->inspection_data) {
+                                $logData = is_array($log->inspection_data) ? $log->inspection_data : json_decode($log->inspection_data, true);
+                            }
                             
-                            $data = is_string($log->inspection_data) ? json_decode($log->inspection_data, true) : $log->inspection_data;
-                            if (!is_array($data)) $data = [];
+                            // Define Sections Order
+                            $sections = [
+                                'b' => 'B. GENERAL CONDITION',
+                                'c' => 'C. VALVE & PIPE SYSTEM',
+                                'd' => 'D. IBOX SYSTEM',
+                                'e' => 'E. INSTRUMENTS',
+                                'f' => 'F. VACUUM SYSTEM',
+                                'g' => 'G. PSV (PRESSURE SAFETY VALVES)',
+                                'external' => 'EXTERNAL',
+                            ];
+                            
+                            // Map items to categories
+                            // Ensure inspectionItems is available (passed from controller)
+                            if(!isset($inspectionItems)) {
+                                $inspectionItems = \App\Models\InspectionItem::where('is_active', true)->orderBy('order')->get();
+                            }
                         @endphp
 
-                        @foreach($masterItems->filter(function($i){ return in_array($i->category, ['b', 'external', 'general']); }) as $item)
+                        @foreach($sections as $catCode => $catLabel)
                             @php
-                                $code = $item->code;
-                                $val = $log->$code ?? ($data[$code] ?? null);
+                                $itemsInCat = $inspectionItems->where('category', $catCode);
                             @endphp
-                            <tr>
-                                <td class="ps-3">{{ $item->label }}</td>
-                                <td class="text-center">
-                                    @if($val)
-                                        @include('admin.reports.partials.badge', ['status' => $val])
-                                    @else
-                                        <span class="text-muted">-</span>
+                            
+                            @if($itemsInCat->count() > 0)
+                                <tr class="table-secondary"><th colspan="2">{{ $catLabel }}</th></tr>
+                                @foreach($itemsInCat as $item)
+                                    @php
+                                        $code = $item->code;
+                                        // Priority: JSON -> Physical
+                                        $val = $logData[$code] ?? ($log->$code ?? null);
+                                    @endphp
+                                    <tr>
+                                        <td class="ps-3">{{ $item->label }}</td>
+                                        <td class="text-center">
+                                            @if($val)
+                                                @include('admin.reports.partials.badge', ['status' => $val])
+                                            @else
+                                                <span class="text-muted">-</span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                    
+                                    {{-- Magic Logic: Check for implicit extra fields (Serial, Date) often associated with items --}}
+                                    @php
+                                        // Try find serial number or date associated with this code
+                                        // e.g. psv1_condition -> psv1_serial_number
+                                        // e.g. pressure_gauge_condition -> pressure_gauge_serial_number
+                                        $baseCode = str_replace('_condition', '', $code);
+                                        $serialKey = $baseCode . '_serial_number';
+                                        $dateKey = $baseCode . '_calibration_date';
+                                        
+                                        $serialVal = $log->$serialKey ?? ($logData[$serialKey] ?? null);
+                                        $dateVal = $log->$dateKey ?? ($logData[$dateKey] ?? null);
+                                        
+                                        // Fallback for PSV naming
+                                        if (!$serialVal && str_starts_with($code, 'psv') && str_ends_with($code, '_condition')) {
+                                             $psvPrefix = substr($code, 0, 4); // psv1
+                                             $serialVal = $log->{$psvPrefix.'_serial_number'} ?? null;
+                                             $dateVal = $log->{$psvPrefix.'_calibration_date'} ?? null;
+                                        }
+                                    @endphp
+                                    
+                                    @if($serialVal || $dateVal)
+                                        <tr class="bg-light">
+                                            <td colspan="2" class="ps-4 small text-muted">
+                                                @if($serialVal) SERIAL: <strong>{{ $serialVal }}</strong> @endif
+                                                @if($dateVal) | DATE: <strong>{{ \Carbon\Carbon::parse($dateVal)->format('Y-m-d') }}</strong> @endif
+                                            </td>
+                                        </tr>
                                     @endif
-                                </td>
-                            </tr>
+                                @endforeach
+                            @endif
                         @endforeach
-
-                        <!-- SECTION C -->
-                        <tr class="table-secondary"><th colspan="2">C. VALVE & PIPE SYSTEM</th></tr>
-                        @foreach($masterItems->filter(function($i){ return in_array($i->category, ['c', 'valve', 'piping']) || empty($i->category); }) as $item)
-                            @php
-                                $code = $item->code;
-                                $val = $log->$code ?? ($data[$code] ?? null);
-                            @endphp
-                            <tr>
-                                <td class="ps-3">{{ $item->label }}</td>
-                                <td class="text-center">
-                                    @if($val)
-                                        @include('admin.reports.partials.badge', ['status' => $val])
-                                    @else
-                                        <span class="text-muted">-</span>
-                                    @endif
-                                </td>
-                            </tr>
-                        @endforeach
-
-
-
-                        {{-- Fallback for Unmapped Dynamic Items --}}
+                        
+                        {{-- Handle Unmapped / Extra Items in JSON that are not in database items list --}}
                         @php
-                            $mappedCodes = $masterItems->pluck('code')->toArray();
+                            $mappedCodes = $inspectionItems->pluck('code')->toArray();
                             $unmapped = [];
-                            foreach($data as $k => $v) {
-                                // Filter readable conditions only, exclude mapped codes and standard fields
-                                if(!in_array($k, $mappedCodes) && 
-                                   is_string($v) && 
-                                   !in_array($k, ['inspection_date', 'inspector_name', 'filling_status', 'cleanliness_status', 'remarks', 'signature', 'longitude', 'latitude', 'location_name']) &&
-                                   in_array(strtolower($v), ['good','not_good','na','need_attention','yes','correct','incorrect','valid','expired'])) {
-                                   $unmapped[$k] = $v;
+                            foreach($logData as $k => $v) {
+                                if(!in_array($k, $mappedCodes) && is_string($v) && strlen($v) < 50) {
+                                     // Basic heuristic to avoid showing huge text or system fields
+                                     $unmapped[$k] = $v;
                                 }
                             }
                         @endphp
                         
                         @if(!empty($unmapped))
-                            <tr class="table-warning"><th colspan="2">ADDITIONAL / DYNAMIC ITEMS</th></tr>
-                            @foreach($unmapped as $k => $v)
+                             <tr class="table-warning"><th colspan="2">ADDITIONAL ITEMS</th></tr>
+                             @foreach($unmapped as $k => $v)
                                 <tr>
                                     <td class="ps-3">{{ ucwords(str_replace('_', ' ', $k)) }}</td>
                                     <td class="text-center">@include('admin.reports.partials.badge', ['status' => $v])</td>
                                 </tr>
-                            @endforeach
+                             @endforeach
                         @endif
-
-                        <!-- SECTION D -->
-                        <tr class="table-secondary"><th colspan="2">D. IBOX SYSTEM</th></tr>
-                        <tr>
-                            <td class="ps-3">IBOX Condition</td>
-                            <td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->ibox_condition])</td>
-                        </tr>
-                         <tr><td class="ps-3">Battery</td><td class="text-center">{{ $log->ibox_battery_percent ? $log->ibox_battery_percent.'%' : '-' }}</td></tr>
-                        <tr><td class="ps-3">Pressure (Digital)</td><td class="text-center">{{ $log->ibox_pressure ?? '-' }}</td></tr>
-                        <tr><td class="ps-3">Temperature (Digital)</td><td class="text-center">{{ $log->ibox_temperature ?? '-' }}</td></tr>
-                        <tr><td class="ps-3">Level (Digital)</td><td class="text-center">{{ $log->ibox_level ?? '-' }}</td></tr>
-                        
-                        <!-- SECTION E -->
-                         <tr class="table-secondary"><th colspan="2">E. INSTRUMENTS</th></tr>
-                        <tr>
-                            <td class="ps-3">Pressure Gauge Condition</td>
-                            <td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->pressure_gauge_condition])</td>
-                        </tr>
-                        <tr><td class="ps-3 text-muted ms-3">Serial Number</td><td class="text-center">{{ $log->pressure_gauge_serial_number ?? '-' }}</td></tr>
-                        <tr><td class="ps-3 text-muted ms-3">Calibration Date</td><td class="text-center">{{ $log->pressure_gauge_calibration_date ? $log->pressure_gauge_calibration_date->format('Y-m-d') : '-' }}</td></tr>
-                        <tr><td class="ps-3 text-muted ms-3">Reading (Pressure 1)</td><td class="text-center">{{ $log->pressure_1 ? (float)$log->pressure_1.' Bar' : '-' }}</td></tr>
-                        <tr><td class="ps-3 text-muted ms-3">Reading (Pressure 2)</td><td class="text-center">{{ $log->pressure_2 ? (float)$log->pressure_2.' Bar' : '-' }}</td></tr>
-                        
-                        <tr>
-                            <td class="ps-3">Level Gauge Condition</td>
-                            <td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->level_gauge_condition])</td>
-                        </tr>
-                        <tr><td class="ps-3 text-muted ms-3">Reading (Level 1)</td><td class="text-center">{{ $log->level_1 ? (float)$log->level_1.' %' : '-' }}</td></tr>
-
-                         <!-- SECTION F -->
-                        <tr class="table-secondary"><th colspan="2">F. VACUUM SYSTEM</th></tr>
-                        <tr>
-                            <td class="ps-3">Vacuum Gauge Condition</td>
-                            <td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->vacuum_gauge_condition])</td>
-                        </tr>
-                         <tr>
-                            <td class="ps-3">Port Suction Condition</td>
-                            <td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->vacuum_port_suction_condition])</td>
-                        </tr>
-                        <tr><td class="ps-3">Vacuum Value</td><td class="text-center fw-bold">{{ $log->vacuum_value ? (float)$log->vacuum_value . ' ' . ($log->vacuum_unit ?? 'mTorr') : '-' }}</td></tr>
-                        <tr><td class="ps-3">Vacuum Temperature</td><td class="text-center">{{ $log->vacuum_temperature ? $log->vacuum_temperature . ' C' : '-' }}</td></tr>
-                        <tr><td class="ps-3">Check Datetime</td><td class="text-center">{{ $log->vacuum_check_datetime ? $log->vacuum_check_datetime->format('Y-m-d H:i') : '-' }}</td></tr>
-
-                         <!-- SECTION G -->
-                        <tr class="table-secondary"><th colspan="2">G. PSV (PRESSURE SAFETY VALVES)</th></tr>
-                        @foreach(['psv1', 'psv2', 'psv3', 'psv4'] as $p)
-                            <tr>
-                                <td class="ps-3 fw-bold">{{ strtoupper($p) }} Condition</td>
-                                <td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->{$p.'_condition'}])</td>
-                            </tr>
-                            <tr>
-                                <td class="ps-3 text-muted small">
-                                    STATUS: {{ strtoupper($log->{$p.'_status'} ?? '-') }} | SN: {{ $log->{$p.'_serial_number'} ?? '-' }}
-                                    <br>Cal. Date: {{ $log->{$p.'_calibration_date'} ? $log->{$p.'_calibration_date'}->format('Y-m-d') : '-' }}
-                                </td>
-                                <td class="text-center small">Valid Until: {{ $log->{$p.'_valid_until'} ? $log->{$p.'_valid_until'}->format('Y-m-d') : '-' }}</td>
-                            </tr>
-                        @endforeach
 
                     </tbody>
                 </table>

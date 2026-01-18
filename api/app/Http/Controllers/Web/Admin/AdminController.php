@@ -764,7 +764,8 @@ class AdminController extends Controller
 
     public function showInspectionLog($id) {
         $log = InspectionLog::with(['isotank', 'inspector'])->findOrFail($id);
-        return view('admin.reports.inspection_show', compact('log'));
+        $inspectionItems = \App\Models\InspectionItem::where('is_active', true)->orderBy('order')->get();
+        return view('admin.reports.inspection_show', compact('log', 'inspectionItems'));
     }
     
     public function maintenanceJobs() {
@@ -852,8 +853,11 @@ class AdminController extends Controller
     }
 
     public function latestInspections() {
-        $logs = MasterLatestInspection::with(['isotank.components', 'inspector'])->get();
-        return view('admin.reports.latest_inspections', compact('logs'));
+        $logs = MasterLatestInspection::with(['isotank.components', 'inspector', 'lastInspectionLog'])->get();
+        $inspectionItems = \App\Models\InspectionItem::where('is_active', true)->orderBy('order')->get();
+        // Group items by category for the table header structure
+        $groupedItems = $inspectionItems->groupBy('category');
+        return view('admin.reports.latest_inspections', compact('logs', 'inspectionItems', 'groupedItems'));
     }
 
     public function calibrationLogs() {

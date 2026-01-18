@@ -5,6 +5,24 @@
     <h2 class="mb-0">Latest Condition Master</h2>
 </div>
 
+@php
+    // Mapping Category Codes to Readable Labels & Colors
+    // Keys should match the 'category' column in inspection_items
+    $catMap = [
+        'b' => ['label' => 'GENERAL CONDITION', 'class' => 'bg-primary'],
+        'c' => ['label' => 'VALVE & PIPE SYSTEM', 'class' => 'bg-success'],
+        'd' => ['label' => 'IBOX SYSTEM', 'class' => 'bg-warning text-dark'],
+        'e' => ['label' => 'INSTRUMENT', 'class' => 'bg-info text-dark'],
+        'f' => ['label' => 'VACUUM', 'class' => 'bg-danger'],
+        'g' => ['label' => 'PSV', 'class' => 'bg-secondary'],
+        'external' => ['label' => 'EXTERNAL', 'class' => 'bg-primary'],
+        'general' => ['label' => 'GENERAL', 'class' => 'bg-primary'],
+        'valve' => ['label' => 'VALVE', 'class' => 'bg-success'],
+        'internal' => ['label' => 'INTERNAL', 'class' => 'bg-secondary'],
+        'safety' => ['label' => 'SAFETY', 'class' => 'bg-danger'],
+    ];
+@endphp
+
 <div class="card shadow-sm">
     <div class="card-body">
         <div class="table-responsive">
@@ -13,184 +31,112 @@
                     <tr>
                         <th rowspan="2" class="align-middle bg-secondary" style="width: 120px;">ISO NUMBER</th>
                         <th rowspan="2" class="align-middle bg-secondary" style="width: 100px;">UPDATED AT</th>
-                        <th colspan="10" class="bg-primary text-white">GENERAL CONDITION</th>
-                        <th colspan="7" class="bg-success text-white">VALVE & PIPE</th>
-                        <th colspan="5" class="bg-warning text-dark">IBOX</th>
-                        <th colspan="6" class="bg-info text-dark">INSTRUMENTS</th>
-                        <th colspan="5" class="bg-danger text-white">VACUUM</th>
-                        <th colspan="12" class="bg-secondary text-white">PSV</th>
+                        
+                        {{-- Loop Categories Groups for Main Headers --}}
+                        @if(isset($groupedItems) && $groupedItems->count() > 0)
+                            @foreach($groupedItems as $cat => $items)
+                                @php 
+                                    $catCode = strtolower($cat ?? 'other');
+                                    // Use mapped label or fallback to category name
+                                    $info = $catMap[$catCode] ?? ['label' => strtoupper($cat ?? 'OTHER'), 'class' => 'bg-secondary'];
+                                @endphp
+                                <th colspan="{{ $items->count() }}" class="{{ $info['class'] }} text-white">{{ $info['label'] }}</th>
+                            @endforeach
+                        @else
+                           <th class="bg-danger text-white">NO ITEMS DEFINED</th>
+                        @endif
                     </tr>
                     <tr class="vertical-headers">
-                        <!-- General -->
-                        <th><div>Surface</div></th>
-                        <th><div>Frame</div></th>
-                        <th><div>Tank Plate</div></th>
-                        <th><div>Venting Pipe</div></th>
-                        <th><div>Expl. Cover</div></th>
-                        <th><div>Grounding</div></th>
-                        <th><div>Doc. Cont</div></th>
-                        <th><div>Safety Label</div></th>
-                        <th><div>Valve Door</div></th>
-                        <th><div>Handle</div></th>
-                        
-                        <!-- Valve -->
-                        <th><div>Valve Cond.</div></th>
-                        <th><div>Position</div></th>
-                        <th><div>Pipe Joint</div></th>
-                        <th><div>Air Source</div></th>
-                        <th><div>ESDV</div></th>
-                        <th><div>Blind Flange</div></th>
-                        <th><div>PRV</div></th>
-                        
-                        <!-- IBOX -->
-                        <th><div>Condition</div></th>
-                        <th><div>Battery</div></th>
-                        <th><div>Pressure</div></th>
-                        <th><div>Temperature</div></th>
-                        <th><div>Level</div></th>
-                        
-                        <!-- Instruments -->
-                        <th><div>PG Cond.</div></th>
-                        <th><div>PG Serial</div></th>
-                        <th><div>PG Calib.</div></th>
-                        <th><div>Pressure</div></th>
-                        <th><div>LG Cond.</div></th>
-                        <th><div>Level</div></th>
-                        
-                        <!-- Vacuum -->
-                        <th><div>VG Cond.</div></th>
-                        <th><div>Port Suction</div></th>
-                        <th><div>Value</div></th>
-                        <th><div>Temp</div></th>
-                        <th><div>Check Date</div></th>
-                        
-                        <!-- PSV -->
-                        <th><div>PSV1 Cond</div></th><th><div>Serial</div></th><th><div>Date</div></th>
-                        <th><div>PSV2 Cond</div></th><th><div>Serial</div></th><th><div>Date</div></th>
-                        <th><div>PSV3 Cond</div></th><th><div>Serial</div></th><th><div>Date</div></th>
-                        <th><div>PSV4 Cond</div></th><th><div>Serial</div></th><th><div>Date</div></th>
+                        {{-- Loop All Items for Sub Headers --}}
+                         @if(isset($groupedItems))
+                            @foreach($groupedItems as $cat => $items)
+                                @foreach($items as $item)
+                                    <th><div>{{ $item->label }}</div></th>
+                                @endforeach
+                            @endforeach
+                        @endif
                     </tr>
                 </thead>
                 <tbody>
                     @foreach($logs as $log)
+                    @php 
+                        $iLog = $log->lastInspectionLog; 
+                        // Cached JSON data array if available
+                        $logData = ($iLog && $iLog->inspection_data) 
+                            ? (is_array($iLog->inspection_data) ? $iLog->inspection_data : json_decode($iLog->inspection_data, true))
+                            : [];
+                    @endphp
                     <tr class="text-center">
-                        <td class="fw-bold text-start bg-light sticky-col">
+                         <td class="fw-bold text-start bg-light sticky-col">
                             <a href="{{ route('admin.isotanks.show', $log->isotank->id) }}" class="text-decoration-none text-dark" target="_blank">
                                 {{ $log->isotank->iso_number }} <i class="bi bi-box-arrow-up-right small text-muted" style="font-size:0.7em"></i>
                             </a>
                         </td>
                         <td class="small">{{ $log->updated_at ? $log->updated_at->format('Y-m-d') : '-' }}</td>
                         
-                        <!-- B. General -->
-                        <td>@include('admin.reports.partials.badge', ['status' => $log->surface])</td>
-                        <td>@include('admin.reports.partials.badge', ['status' => $log->frame])</td>
-                        <td>@include('admin.reports.partials.badge', ['status' => $log->tank_plate])</td>
-                        <td>@include('admin.reports.partials.badge', ['status' => $log->venting_pipe])</td>
-                        <td>@include('admin.reports.partials.badge', ['status' => $log->explosion_proof_cover])</td>
-                        <td>@include('admin.reports.partials.badge', ['status' => $log->grounding_system])</td>
-                        <td>@include('admin.reports.partials.badge', ['status' => $log->document_container])</td>
-                        <td>@include('admin.reports.partials.badge', ['status' => $log->safety_label])</td>
-                        <td>@include('admin.reports.partials.badge', ['status' => $log->valve_box_door])</td>
-                        <td>@include('admin.reports.partials.badge', ['status' => $log->valve_box_door_handle])</td>
-    
-                        <!-- C. Valve -->
-                        <td>@include('admin.reports.partials.badge', ['status' => $log->valve_condition])</td>
-                        <td><small>{{ $log->valve_position }}</small></td>
-                        <td>@include('admin.reports.partials.badge', ['status' => $log->pipe_joint])</td>
-                        <td>@include('admin.reports.partials.badge', ['status' => $log->air_source_connection])</td>
-                        <td>@include('admin.reports.partials.badge', ['status' => $log->esdv])</td>
-                        <td>@include('admin.reports.partials.badge', ['status' => $log->blind_flange])</td>
-                        <td>@include('admin.reports.partials.badge', ['status' => $log->prv])</td>
+                         @if(isset($groupedItems))
+                            @foreach($groupedItems as $cat => $items)
+                                @foreach($items as $item)
+                                    @php
+                                        $code = $item->code;
+                                        $val = null;
+                                        
+                                        // Priority 1: Check JSON data from the actual log
+                                        if (isset($logData[$code])) {
+                                            $val = $logData[$code];
+                                        }
+                                        
+                                        // Priority 2: Check physical column in InspectionLog (legacy)
+                                        if (!$val && $iLog && isset($iLog->$code)) {
+                                            $val = $iLog->$code;
+                                        }
+                                        
+                                        // Priority 3: Fallback to Master table physical column
+                                        if (!$val && isset($log->$code)) {
+                                            $val = $log->$code;
+                                        }
 
-                        <!-- D. IBOX -->
-                        <td>@include('admin.reports.partials.badge', ['status' => $log->ibox_condition])</td>
-                        <td>{{ $log->ibox_battery_percent ? $log->ibox_battery_percent.'%' : '-' }}</td>
-                        <td>{{ $log->ibox_pressure ?? '-' }}</td>
-                        <td>{{ $log->ibox_temperature_1 ?? ($log->ibox_temperature ?? '-') }}</td>
-                        <td>{{ $log->ibox_level ?? '-' }}</td>
-
-                        <!-- E. Instruments -->
-                        <td>@include('admin.reports.partials.badge', ['status' => $log->pressure_gauge_condition])</td>
-                        @php
-                            $comps = $log->isotank->components ?? collect();
-                            $pgComp = $comps->where('component_type', 'PG')->first();
-                            $pgDate = $log->pressure_gauge_calibration_date 
-                                ? \Carbon\Carbon::parse($log->pressure_gauge_calibration_date)->format('y-m-d')
-                                : ($pgComp && $pgComp->last_calibration_date ? $pgComp->last_calibration_date->format('y-m-d') : '-');
-                            $pgSerial = $log->pressure_gauge_serial_number ?: ($pgComp ? $pgComp->serial_number : '-');
-                        @endphp
-                        <td class="small">{{ $pgSerial }}</td>
-                        <td class="small">{{ $pgDate }}</td>
-                        <td>{{ $log->pressure_1 ? (float)$log->pressure_1 : '' }}</td>
-                        <td>@include('admin.reports.partials.badge', ['status' => $log->level_gauge_condition])</td>
-                        <td>{{ $log->level_1 ? (float)$log->level_1 : '' }}</td>
-
-                        <!-- F. Vacuum -->
-                        @php
-                             // Try Master Status if log is empty
-                             $vacVal = $log->vacuum_value ? (float)$log->vacuum_value : null;
-                             $vacTemp = $log->vacuum_temperature;
-                             $vacDate = $log->vacuum_check_datetime ? \Carbon\Carbon::parse($log->vacuum_check_datetime)->format('y-m-d') : '-';
-                             // If log empty, could check master table, but for now stick to log structure or fallback if needed
-                        @endphp
-                        <td>@include('admin.reports.partials.badge', ['status' => $log->vacuum_gauge_condition])</td>
-                        <td>@include('admin.reports.partials.badge', ['status' => $log->vacuum_port_suction_condition])</td>
-                        <td>{{ $vacVal ?? '-' }}</td>
-                        <td>{{ $vacTemp }}</td>
-                        <td class="small">{{ $vacDate }}</td>
-
-                        <!-- G. PSV -->
-                        @php
-                            $getPsv = function($pos) use ($log, $comps) {
-                                $psvLogCond = $log->{"psv{$pos}_condition"};
-                                $psvLogSerial = $log->{"psv{$pos}_serial_number"};
-                                $psvLogDate = $log->{"psv{$pos}_calibration_date"};
-                                
-                                $comp = $comps->where('component_type', 'PSV')->where('position_code', $pos)->first();
-                                
-                                $serial = $psvLogSerial ?: ($comp->serial_number ?? '-');
-                                $date = $psvLogDate 
-                                    ? \Carbon\Carbon::parse($psvLogDate)->format('y-m-d')
-                                    : ($comp && $comp->last_calibration_date ? $comp->last_calibration_date->format('y-m-d') : '-');
-                                    
-                                return [$psvLogCond, $serial, $date];
-                            };
-                            
-                            $p1 = $getPsv(1); $p2 = $getPsv(2); $p3 = $getPsv(3); $p4 = $getPsv(4);
-                        @endphp
-                        <td>@include('admin.reports.partials.badge', ['status' => $p1[0]])</td>
-                        <td class="small">{{ $p1[1] }}</td>
-                        <td class="small">{{ $p1[2] }}</td>
-                        
-                        <td>@include('admin.reports.partials.badge', ['status' => $p2[0]])</td>
-                        <td class="small">{{ $p2[1] }}</td>
-                        <td class="small">{{ $p2[2] }}</td>
-                        
-                        <td>@include('admin.reports.partials.badge', ['status' => $p3[0]])</td>
-                        <td class="small">{{ $p3[1] }}</td>
-                        <td class="small">{{ $p3[2] }}</td>
-                        
-                        <td>@include('admin.reports.partials.badge', ['status' => $p4[0]])</td>
-                        <td class="small">{{ $p4[1] }}</td>
-                        <td class="small">{{ $p4[2] }}</td>
+                                        // Normalize value
+                                        $displayVal = $val;
+                                        $isBadge = false;
+                                        
+                                        if ($val) {
+                                            $lowerVal = strtolower($val);
+                                            if (in_array($lowerVal, ['good', 'not_good', 'need_attention', 'fair', 'poor', 'na', 'yes', 'no', 'correct', 'incorrect', 'valid', 'expired', 'active', 'inactive'])) {
+                                                $isBadge = true;
+                                            } elseif (str_ends_with($code, '_date') || str_contains($code, 'date')) {
+                                                 // Try format date
+                                                 try {
+                                                    $displayVal = \Carbon\Carbon::parse($val)->format('y-m-d');
+                                                 } catch(\Exception $e) {}
+                                            }
+                                        }
+                                    @endphp
+                                    <td>
+                                        @if($isBadge)
+                                            @include('admin.reports.partials.badge', ['status' => $val])
+                                        @else
+                                            {{ $displayVal ?? '-' }}
+                                        @endif
+                                    </td>
+                                @endforeach
+                            @endforeach
+                        @endif
                     </tr>
                     @endforeach
                 </tbody>
-                <tfoot class="bg-light">
+                 <tfoot class="bg-light">
                     <tr>
                         <th>ISO</th><th>Upd</th>
-                        <th>Srf</th><th>Frm</th><th>Plt</th><th>Vnt</th><th>Exp</th><th>Grd</th><th>Doc</th><th>Lbl</th><th>Dor</th><th>Hnd</th>
-                        <th>Vlv</th><th>Pos</th><th>Jnt</th><th>Air</th><th>ESD</th><th>Bld</th><th>PRV</th>
-                         <th>IB.C</th><th>IB.B</th><th>IB.P</th><th>IB.T</th><th>IB.L</th>
-                         <th>PG.C</th><th>PG.SN</th><th>PG.Cal</th><th>P.Val</th><th>LG.C</th><th>L.Val</th>
-                         <th>VG.C</th><th>VP.C</th><th>Vac</th><th>V.tmp</th><th>Date</th>
-                         <th>P1</th><th>SN</th><th>Dt</th>
-                         <th>P2</th><th>SN</th><th>Dt</th>
-                         <th>P3</th><th>SN</th><th>Dt</th>
-                         <th>P4</th><th>SN</th><th>Dt</th>
+                         @if(isset($groupedItems))
+                            @foreach($groupedItems as $cat => $items)
+                                @foreach($items as $item)
+                                    <th>{{ Illuminate\Support\Str::limit($item->label, 3) }}</th>
+                                @endforeach
+                            @endforeach
+                        @endif
                     </tr>
                 </tfoot>
-                <style>.dataTables_scrollBody { min-height: 400px; }</style>
             </table>
         </div>
     </div>
@@ -199,25 +145,28 @@
 @push('scripts')
 <script>
 $(document).ready(function() {
+    // Initialize Footer Filters
     $('#latestConditionTable tfoot th').each(function() {
-        $(this).html('<input type="text" class="form-control form-control-sm" style="min-width: 40px;" placeholder="Filter" />');
+        $(this).html('<input type="text" class="form-control form-control-sm" style="min-width: 40px;" placeholder="" />');
     });
 
-    $('#latestConditionTable').DataTable({
+    // Initialize DataTable
+    var table = $('#latestConditionTable').DataTable({
         dom: 'Bfrtip',
         buttons: [
             {
                 extend: 'excelHtml5',
                 text: '<i class="bi bi-file-earmark-excel"></i> Export Excel',
                 className: 'btn btn-success btn-sm mb-3',
-                title: 'Latest_Isotank_Condition'
+                title: 'Latest_Isotank_Condition_Master'
             },
             {
                 extend: 'pdfHtml5',
                 text: '<i class="bi bi-file-earmark-pdf"></i> PDF',
                 className: 'btn btn-danger btn-sm mb-3',
                 orientation: 'landscape',
-                pageSize: 'A3'
+                pageSize: 'LEGAL', // Use LEGAL or A3 for wide tables
+                title: 'Details'
             }
         ],
         pageLength: 50,
@@ -255,7 +204,16 @@ $(document).ready(function() {
         white-space: nowrap;
         margin: 0 auto;
         width: 100%;
-        text-align: left; /* Becomes bottom alignment after rotation */
+        text-align: left; 
+    }
+    
+    /* Sticky First Column */
+    .sticky-col {
+        position: sticky;
+        left: 0;
+        z-index: 10;
+        background-color: #f8f9fa !important;
+        border-right: 2px solid #dee2e6 !important;
     }
 </style>
 @endsection
