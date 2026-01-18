@@ -110,8 +110,8 @@
                                                         @php
                                                             $cls = 'secondary';
                                                             $txt = strtoupper($status->condition);
-                                                            if($status->condition == 'good') $cls = 'success';
-                                                            elseif($status->condition == 'not_good') $cls = 'danger';
+                                                            if(in_array($status->condition, ['good', 'correct', 'yes', 'valid'])) $cls = 'success';
+                                                            elseif(in_array($status->condition, ['not_good', 'incorrect', 'no', 'expired', 'rejected'])) $cls = 'danger';
                                                             elseif($status->condition == 'need_attention') $cls = 'warning';
                                                         @endphp
                                                         <span class="badge bg-{{ $cls }}">{{ $txt }}</span>
