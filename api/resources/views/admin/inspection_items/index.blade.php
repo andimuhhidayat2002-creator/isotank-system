@@ -3,7 +3,7 @@
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
-        <h2 class="fw-bold">Inspection Items Management</h2>
+        <h2 class="fw-bold">Inspection Items Management (V2)</h2>
         <p class="text-muted">Manage dynamic inspection checklist items</p>
     </div>
     <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addItemModal">
