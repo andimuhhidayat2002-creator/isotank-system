@@ -506,6 +506,9 @@ class InspectionSubmitController extends Controller
                 // 9. UPDATE MASTER LATEST INSPECTION (SNAPSHOT)
                 $this->updateMasterLatestInspection($job->isotank_id, $inspectionLog);
                 
+                // 9b. UPDATE MASTER ITEM STATUSES (SYNC WITH INSPECTION LOG)
+                $this->updateMasterItemStatuses($job->isotank_id, $validated, $inspectionLog);
+                
                 // 10. AUTO-GENERATE PDF (Extension Requirement)
                 try {
                     $pdfService = new PdfGenerationService();
@@ -854,6 +857,78 @@ class InspectionSubmitController extends Controller
             ['isotank_id' => $isotankId],
             $data
         );
+    }
+
+    /**
+     * UPDATE MASTER ITEM STATUSES
+     * Sync all inspection items (including dynamic) to master_isotank_item_statuses
+     */
+    private function updateMasterItemStatuses($isotankId, $validated, $inspectionLog)
+    {
+        // Get all active inspection items from database
+        $masterItems = \App\Models\InspectionItem::where('is_active', true)->get();
+        
+        // Get inspection_data if exists
+        $inspectionData = $inspectionLog->inspection_data;
+        if (is_string($inspectionData)) {
+            $inspectionData = json_decode($inspectionData, true);
+        }
+        if (!is_array($inspectionData)) {
+            $inspectionData = [];
+        }
+        
+        // Collect all items to sync
+        $itemsToSync = [];
+        
+        // 1. Sync dynamic items from InspectionItem model
+        foreach ($masterItems as $item) {
+            $code = $item->code;
+            $value = $validated[$code] ?? $inspectionLog->$code ?? $inspectionData[$code] ?? null;
+            
+            if ($value && in_array(strtolower($value), ['good', 'not_good', 'need_attention', 'na', 'correct', 'incorrect', 'yes', 'no', 'valid', 'expired'])) {
+                $itemsToSync[$code] = $value;
+            }
+        }
+        
+        // 2. Sync hardcoded items (D-G sections)
+        $hardcodedItems = [
+            'ibox_condition',
+            'pressure_gauge_condition',
+            'level_gauge_condition',
+            'vacuum_gauge_condition',
+            'vacuum_port_suction_condition',
+            'psv1_condition',
+            'psv2_condition',
+            'psv3_condition',
+            'psv4_condition',
+        ];
+        
+        foreach ($hardcodedItems as $code) {
+            $value = $validated[$code] ?? $inspectionLog->$code ?? $inspectionData[$code] ?? null;
+            
+            if ($value && in_array(strtolower($value), ['good', 'not_good', 'need_attention', 'na', 'correct', 'incorrect', 'yes', 'no', 'valid', 'expired'])) {
+                $itemsToSync[$code] = $value;
+            }
+        }
+        
+        // 3. Update or create records in master_isotank_item_statuses
+        foreach ($itemsToSync as $itemName => $condition) {
+            \App\Models\MasterIsotankItemStatus::updateOrCreate(
+                [
+                    'isotank_id' => $isotankId,
+                    'item_name' => $itemName,
+                ],
+                [
+                    'condition' => $condition,
+                    'updated_at' => now(),
+                ]
+            );
+        }
+        
+        \Log::info("Master Item Statuses synced", [
+            'isotank_id' => $isotankId,
+            'items_count' => count($itemsToSync),
+        ]);
     }
 
     /**
