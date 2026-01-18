@@ -82,11 +82,10 @@
     @endphp
 
     <div class="header-title" style="background-color: #f0f0f0; margin-bottom: 5px; text-align: center; font-weight: bold; border: 1px solid #ddd;">
-        INCOMING INSPECTION REPORT
+        {{ strtoupper($type == 'outgoing' ? 'OUTGOING' : 'INCOMING') }} INSPECTION REPORT
     </div>
 
-    @if($type !== 'outgoing')
-    
+    {{-- MAIN INSPECTION DATA (Shown for BOTH Incoming and Outgoing) --}}
     @php
         // ... (existing logic)
         $jsonData = [];
@@ -200,14 +199,57 @@
             </td>
         </tr>
     </table>
-    @endif
 
-    {{-- OUTGOING FALLBACK (FULL WIDTH 2 COLS FOR ITEMS) --}}
+    {{-- OUTGOING RECEIVER CONFIRMATION --}}
     @if($type === 'outgoing')
-        <div class="section-title">B. GENERAL CONDITION</div>
-        {{-- ... outgoing specific ... --}}
+        <div style="page-break-inside: avoid;">
+            <div class="header-title" style="background-color: #e8f5e9; margin: 10px 0 5px 0; text-align: center; font-weight: bold; border: 1px solid #ddd;">
+                RECEIVER CONFIRMATION (GENERAL CONDITION)
+            </div>
+        <table class="checklist-table">
+            <thead>
+                <tr style="background-color: #eee;">
+                    <th style="text-align: left; padding: 4px; border-bottom: 1px solid #999;">Item</th>
+                    <th style="text-align: center; padding: 4px; border-bottom: 1px solid #999;">Inspector Cond.</th>
+                    <th style="text-align: center; padding: 4px; border-bottom: 1px solid #999;">Receiver Decision</th>
+                    <th style="text-align: left; padding: 4px; border-bottom: 1px solid #999;">Remark</th>
+                </tr>
+            </thead>
+            <tbody>
+                @php
+                    // Get standard + dynamic items using the service
+                    $generalItems = \App\Services\PdfGenerationService::getGeneralConditionItems();
+                @endphp
+                @foreach($generalItems as $key)
+                    @php
+                        $label = \App\Services\PdfGenerationService::getItemDisplayName($key);
+                        $inspectorVal = $inspection->$key ?? null;
+                        
+                        // Get receiver confirmation data
+                        $conf = $receiverConfirmations[$key] ?? null;
+                        $decision = $conf ? $conf->receiver_decision : '-';
+                        $remark = $conf ? $conf->receiver_remark : '-';
+                        
+                        $decisionBadge = '-';
+                        if($decision === 'ACCEPT') {
+                            $decisionBadge = '<span class="status-badge bg-green">ACCEPT</span>';
+                        } elseif($decision === 'REJECT') {
+                            $decisionBadge = '<span class="status-badge bg-red">REJECT</span>';
+                        }
+                    @endphp
+                    <tr>
+                        <td style="padding: 4px;">{{ $label }}</td>
+                        <td style="text-align: center; padding: 4px;">{!! badge($inspectorVal) !!}</td>
+                        <td style="text-align: center; padding: 4px;">{!! $decisionBadge !!}</td>
+                        <td style="padding: 4px; font-style: italic; color: #555;">{{ $remark }}</td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+        </div>
     @endif
 
+    <!-- SIGNATURES (Compact) -->
     <!-- SIGNATURES (Compact) -->
     <div class="signature-section clearfix">
         <div class="sig-box">
@@ -217,6 +259,16 @@
                 Date: {{ $inspection->inspection_date ? $inspection->inspection_date->format('d M Y') : '-' }}
             </div>
         </div>
+        
+        @if($type === 'outgoing')
+        <div class="sig-box">
+            Receiver Signature
+            <div class="sig-line">
+                <b>{{ $job->receiver_name ?? '.......................' }}</b><br>
+                Date: {{ isset($generatedAt) ? $generatedAt->format('d M Y') : date('d M Y') }}
+            </div>
+        </div>
+        @endif
     </div>
 
 </body>

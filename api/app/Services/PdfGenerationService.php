@@ -124,7 +124,26 @@ class PdfGenerationService
      */
     public static function getGeneralConditionItems(): array
     {
-        $items = [
+        // 1. Try to fetch DYNAMIC items from Database first (Single Source of Truth)
+        try {
+            if (class_exists(\App\Models\InspectionItem::class)) {
+                $dynamicItems = \App\Models\InspectionItem::where('is_active', true)
+                    ->whereIn('category', ['b', 'general', 'external']) // Match Blade Template Section B
+                    ->orderBy('order', 'asc')
+                    ->pluck('code')
+                    ->toArray();
+
+                // If we found items in DB, utilize them strictly to match Inspector's view
+                if (!empty($dynamicItems)) {
+                    return $dynamicItems;
+                }
+            }
+        } catch (\Exception $e) {
+            \Log::error('Failed to fetch dynamic inspection items: ' . $e->getMessage());
+        }
+
+        // 2. Fallback to Hardcoded List (Only if DB is empty or fails)
+        return [
             'surface',
             'frame',
             'tank_plate',
@@ -136,21 +155,6 @@ class PdfGenerationService
             'valve_box_door',
             'valve_box_door_handle',
         ];
-
-        // ADD DYNAMIC ITEMS
-        try {
-            if (class_exists(\App\Models\InspectionItem::class)) {
-                $dynamicItems = \App\Models\InspectionItem::where('is_active', true)
-                    ->where('category', 'b') // Only General Condition items
-                    ->pluck('code')
-                    ->toArray();
-                $items = array_merge($items, $dynamicItems);
-            }
-        } catch (\Exception $e) {
-            // Fallback (ignore)
-        }
-
-        return $items;
     }
     
     /**
