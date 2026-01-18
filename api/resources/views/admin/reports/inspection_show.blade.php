@@ -4,15 +4,16 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>Inspection Detail: {{ $log->isotank->iso_number }}</h2>
     <div>
-        @if($log->pdf_path)
-            <a href="{{ asset('storage/' . $log->pdf_path) }}" target="_blank" class="btn btn-danger me-2">
-                <i class="bi bi-file-earmark-pdf"></i> Download PDF Report
+        <div class="btn-group me-2">
+            @if($log->pdf_path)
+                <a href="{{ asset('storage/' . $log->pdf_path) }}" target="_blank" class="btn btn-outline-danger" title="View previously saved PDF">
+                    <i class="bi bi-eye"></i> View Saved
+                </a>
+            @endif
+            <a href="{{ route('admin.reports.inspection.pdf', $log->id) }}" class="btn btn-danger">
+                <i class="bi bi-file-earmark-pdf"></i> {{ $log->pdf_path ? 'Regenerate PDF' : 'Generate PDF' }}
             </a>
-        @else
-            <a href="{{ route('admin.reports.inspection.pdf', $log->id) }}" class="btn btn-danger me-2">
-                <i class="bi bi-file-earmark-pdf"></i> Generate PDF Report
-            </a>
-        @endif
+        </div>
         <a href="{{ route('admin.reports.inspection') }}" class="btn btn-secondary">Back to Logs</a>
     </div>
 </div>

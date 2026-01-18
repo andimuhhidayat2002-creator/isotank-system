@@ -100,27 +100,72 @@
                                         </thead>
                                         <tbody>
                                             @php
-                                                // Get all item statuses for this isotank
-                                                $statuses = \App\Models\MasterIsotankItemStatus::where('isotank_id', $isotank->id)->get();
+                                                // Get all item statuses keyed by name
+                                                $statuses = \App\Models\MasterIsotankItemStatus::where('isotank_id', $isotank->id)->get()->keyBy('item_name');
+                                                
+                                                $categories = [
+                                                    'B. GENERAL CONDITION' => ['surface', 'frame', 'tank_plate', 'venting_pipe', 'explosion_proof_cover', 'grounding_system', 'document_container', 'safety_label', 'valve_box_door', 'valve_box_door_handle'],
+                                                    'C. VALVES & PIPING' => ['valve_condition', 'valve_position', 'pipe_joint', 'air_source_connection', 'esdv', 'blind_flange', 'prv'],
+                                                    'D. IBOX' => ['ibox_condition'],
+                                                    'E. INSTRUMENTS' => ['pressure_gauge_condition', 'level_gauge_condition'],
+                                                    'F. VACUUM' => ['vacuum_gauge_condition', 'vacuum_port_suction_condition'],
+                                                    'G. PSV' => ['psv1_condition', 'psv2_condition', 'psv3_condition', 'psv4_condition']
+                                                ];
+
+                                                // Track displayed items to show "Others" at the end
+                                                $displayed = [];
+                                                foreach($categories as $items) $displayed = array_merge($displayed, $items);
                                             @endphp
-                                            @forelse($statuses as $status)
-                                                <tr>
-                                                    <td>{{ ucwords(str_replace('_', ' ', $status->item_name)) }}</td>
-                                                    <td>
-                                                        @php
-                                                            $cls = 'secondary';
-                                                            $txt = strtoupper($status->condition);
-                                                            if(in_array($status->condition, ['good', 'correct', 'yes', 'valid'])) $cls = 'success';
-                                                            elseif(in_array($status->condition, ['not_good', 'incorrect', 'no', 'expired', 'rejected'])) $cls = 'danger';
-                                                            elseif($status->condition == 'need_attention') $cls = 'warning';
+
+                                            @foreach($categories as $catName => $items)
+                                                <tr class="table-secondary"><th colspan="3">{{ $catName }}</th></tr>
+                                                @foreach($items as $item)
+                                                    @if(isset($statuses[$item]))
+                                                        @php 
+                                                            $status = $statuses[$item];
+                                                            $displayed[] = $item;
                                                         @endphp
-                                                        <span class="badge bg-{{ $cls }}">{{ $txt }}</span>
-                                                    </td>
-                                                    <td>{{ $status->updated_at->format('Y-m-d') }}</td>
-                                                </tr>
-                                            @empty
-                                                <tr><td colspan="3" class="text-center text-muted">No status data recorded yet.</td></tr>
-                                            @endforelse
+                                                        <tr>
+                                                            <td class="ps-4">{{ ucwords(str_replace('_', ' ', $item)) }}</td>
+                                                            <td>
+                                                                @php
+                                                                    $cls = 'secondary';
+                                                                    $val = $status->condition;
+                                                                    $txt = strtoupper($val);
+                                                                    if(in_array($val, ['good', 'correct', 'yes', 'valid'])) $cls = 'success';
+                                                                    elseif(in_array($val, ['not_good', 'incorrect', 'no', 'expired', 'rejected'])) $cls = 'danger';
+                                                                    elseif($val == 'need_attention') $cls = 'warning';
+                                                                @endphp
+                                                                <span class="badge bg-{{ $cls }}">{{ $txt }}</span>
+                                                            </td>
+                                                            <td>{{ $status->updated_at->format('Y-m-d') }}</td>
+                                                        </tr>
+                                                    @endif
+                                                @endforeach
+                                            @endforeach
+
+                                            {{-- Others / Dynamic --}}
+                                            @php
+                                                $others = $statuses->reject(function($s) use ($displayed) {
+                                                    return in_array($s->item_name, $displayed);
+                                                });
+                                            @endphp
+
+                                            @if($others->isNotEmpty())
+                                                <tr class="table-secondary"><th colspan="3">OTHERS / DYNAMIC ITEMS</th></tr>
+                                                @foreach($others as $status)
+                                                    <tr>
+                                                        <td class="ps-4">{{ ucwords(str_replace('_', ' ', $status->item_name)) }}</td>
+                                                        <td><span class="badge bg-secondary">{{ strtoupper($status->condition) }}</span></td>
+                                                        <td>{{ $status->updated_at->format('Y-m-d') }}</td>
+                                                    </tr>
+                                                @endforeach
+                                            @endif
+                                            
+                                            @if($statuses->isEmpty())
+                                                 <tr><td colspan="3" class="text-center text-muted">No details recorded yet.</td></tr>
+                                            @endif
+
                                         </tbody>
                                     </table>
                                 </div>
