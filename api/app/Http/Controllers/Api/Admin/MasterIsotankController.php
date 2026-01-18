@@ -7,32 +7,12 @@ use App\Models\MasterIsotank;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
+use App\Models\InspectionItem;
+use App\Models\MasterIsotankItemStatus;
+
 class MasterIsotankController extends Controller
 {
-    /**
-     * Display a listing of isotanks
-     */
-    public function index(Request $request)
-    {
-        $query = MasterIsotank::query();
-
-        // Filter by status
-        if ($request->has('status')) {
-            $query->where('status', $request->status);
-        }
-
-        // Search by iso_number
-        if ($request->has('search')) {
-            $query->where('iso_number', 'like', '%' . $request->search . '%');
-        }
-
-        $isotanks = $query->orderBy('iso_number')->paginate(50);
-
-        return response()->json([
-            'success' => true,
-            'data' => $isotanks,
-        ]);
-    }
+    // ... index ...
 
     /**
      * Store a newly created isotank
@@ -50,6 +30,18 @@ class MasterIsotankController extends Controller
         ]);
 
         $isotank = MasterIsotank::create($validated);
+
+        // AUTO-GENERATE ITEM STATUSES for the new Isotank
+        // Fetch all active inspection items
+        $items = InspectionItem::where('is_active', true)->get();
+        foreach ($items as $item) {
+            MasterIsotankItemStatus::create([
+                'isotank_id' => $isotank->id,
+                'item_name' => $item->code, // Using 'code' as 'item_name' for consistency
+                'condition' => 'na',        // Default to 'na' (Not Available)
+                'description' => $item->label,
+            ]);
+        }
 
         return response()->json([
             'success' => true,
