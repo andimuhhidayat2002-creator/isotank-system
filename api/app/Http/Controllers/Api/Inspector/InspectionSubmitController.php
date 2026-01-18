@@ -1131,18 +1131,48 @@ class InspectionSubmitController extends Controller
         $existingConfirmations = ReceiverConfirmation::where('inspection_log_id', $inspectionLog->id)->count();
         $alreadyConfirmed = $existingConfirmations > 0;
 
-        // Get general condition items
-        $generalConditionItems = PdfGenerationService::getGeneralConditionItems();
-        $items = [];
+        // Get general condition items DYNAMICALLY from Master Data
+    // Matches the logic in Inspection Form and Report View for Category B
+    $dynamicItems = \App\Models\InspectionItem::where('is_active', true)
+        ->where(function($q) {
+             $q->where('category', 'like', 'b%')
+               ->orWhere('category', 'like', '%general%')
+               ->orWhere('category', 'external')
+               // Also include formerly 'safety' items if they are now mapped to G but user wants 'General' consistency
+               // But usually we just follow 'General'. If safety were moved to B, they are covered.
+               ;
+        })
+        ->orderBy('order')
+        ->get();
+
+    $items = [];
+    // Ensure inspection_data is accessible as array
+    $logData = $inspectionLog->inspection_data;
+    if (is_string($logData)) {
+        $logData = json_decode($logData, true) ?? [];
+    }
+    if (!is_array($logData)) $logData = [];
+
+    foreach ($dynamicItems as $dItem) {
+        $key = $dItem->code;
+        // Check availability in log (try json first, then column fallback)
+        $val = $logData[$key] ?? ($inspectionLog->$key ?? 'na');
         
-        foreach ($generalConditionItems as $itemKey) {
-            $items[] = [
-                'key' => $itemKey,
-                'name' => PdfGenerationService::getItemDisplayName($itemKey),
-                'inspector_condition' => $inspectionLog->$itemKey ?? 'na',
-                'inspector_condition_formatted' => PdfGenerationService::formatCondition($inspectionLog->$itemKey),
-            ];
+        // Skip null values if desired? No, receiver should see everything inspector saw.
+        // Format condition
+        $fmt = strtoupper(str_replace('_', ' ', $val));
+        if ($val === null || $val === '') {
+             $val = 'na';
+             $fmt = 'N/A';
         }
+
+        $items[] = [
+            'key' => $key,
+            'name' => $dItem->label,
+            'inspector_condition' => $val,
+            'inspector_condition_formatted' => $fmt,
+        ];
+    }
 
         return response()->json([
             'success' => true,
