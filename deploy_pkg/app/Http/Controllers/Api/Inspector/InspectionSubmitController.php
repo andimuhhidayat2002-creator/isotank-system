@@ -184,29 +184,15 @@ class InspectionSubmitController extends Controller
         ];
 
         // DYNAMIC RULES: Add validation for active InspectionItems
-        $dynamicItems = []; // Store full objects for type checking
+        $dynamicItemCodes = [];
         try {
             if (class_exists(\App\Models\InspectionItem::class)) {
-                $dynamicItems = \App\Models\InspectionItem::where('is_active', true)->get();
-                foreach ($dynamicItems as $item) {
-                     $code = $item->code;
-                     // PHP replaces spaces and dots with underscores in request keys. 
-                     // Also handle slashes which are common in our item codes.
-                     $inputKey = str_replace([' ', '.', '/'], '_', $code);
-                     
-                     if (!isset($rules[$inputKey]) && !isset($rules[$code])) {
-                         // Determine rule based on input_type
-                         if ($item->input_type === 'number') {
-                             $rules[$inputKey] = 'nullable|numeric';
-                         } elseif ($item->input_type === 'date') {
-                             $rules[$inputKey] = 'nullable|date';
-                         } elseif ($item->input_type === 'text') {
-                             $rules[$inputKey] = 'nullable|string|max:1000';
-                         } else {
-                             // condition (enum) or boolean
-                             $rules[$inputKey] = 'nullable|string'; // Allow string to support flexible inputs, specific validation optional
-                         }
-                     }
+                $dynamicItemCodes = \App\Models\InspectionItem::where('is_active', true)->pluck('code')->toArray();
+                foreach ($dynamicItemCodes as $code) {
+                    if (!isset($rules[$code])) {
+                         // Default rule for inspection items
+                         $rules[$code] = 'nullable|in:good,not_good,need_attention,na';
+                    }
                 }
             }
         } catch (\Exception $e) {}
@@ -439,19 +425,14 @@ class InspectionSubmitController extends Controller
                 'filling_status_desc' => $validated['filling_status_desc'] ?? $job->filling_status_desc ?? $job->isotank->filling_status_desc,
                 
                 // Dynamic Inspection Items Data
-                'inspection_data' => (function() use ($request, $validated, $dynamicItems) {
+                'inspection_data' => (function() use ($request, $validated, $dynamicItemCodes) {
                     $data = $request->input('inspection_data') ? json_decode($request->input('inspection_data'), true) : [];
                     if (!is_array($data)) $data = [];
                     
                     // Add top-level dynamic fields to inspection_data
-                    foreach ($dynamicItems as $item) {
-                        $code = $item->code;
-                        $inputKey = str_replace([' ', '.', '/'], '_', $code);
-                        
-                        if (isset($validated[$inputKey])) {
-                            $data[$code] = $validated[$inputKey];
-                        } elseif (isset($validated[$code])) {
-                             $data[$code] = $validated[$code];
+                    foreach ($dynamicItemCodes as $code) {
+                        if (isset($validated[$code])) {
+                            $data[$code] = $validated[$code];
                         }
                     }
                     return !empty($data) ? json_encode($data) : null;
@@ -532,8 +513,6 @@ class InspectionSubmitController extends Controller
                 // For INCOMING: Generate immediately.
                 // For OUTGOING: Generate ONLY after Receiver Confirmation (to include receiver notes).
                 try {
-                    // ONLY generate PDF immediately for incoming inspections.
-                    // Outgoing inspections must wait for receiver confirmation.
                     if ($job->activity_type === 'incoming_inspection') {
                         $pdfService = new PdfGenerationService();
                         $pdfPath = $pdfService->generateIncomingPdf($inspectionLog);
@@ -1045,24 +1024,9 @@ class InspectionSubmitController extends Controller
                 }
             }
 
-            // Handle Receiver Signature (REQUIRED for Outgoing Inspection)
-            $receiverSignaturePath = null;
-            if ($request->hasFile('receiver_signature')) {
-                $receiverSignaturePath = $request->file('receiver_signature')->store('receiver_signatures', 'public');
-            } else {
-                 throw new \Exception("Receiver signature is required.");
-            }
-
-            // Update inspection log with receiver confirmation timestamp and signature
+            // Update inspection log with receiver confirmation timestamp
             $inspectionLog->update([
                 'receiver_confirmed_at' => now(),
-                'receiver_signature_path' => $receiverSignaturePath,
-                'receiver_signed_at' => now(),
-            ]);
-
-            // UDPATE RECEIVER NAME FROM LOGGED IN USER (User Request)
-            $job->update([
-                'receiver_name' => $request->user()->name
             ]);
 
             // ALWAYS mark job as done (The process is finished, result is either Accepted or Rejected)

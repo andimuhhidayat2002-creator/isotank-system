@@ -257,6 +257,57 @@
                             </tr>
                         @endforeach
 
+                        <!-- SIGNATURES -->
+                        <tr class="table-dark"><th colspan="2">SIGNATURES</th></tr>
+                        
+                        <!-- Inspector Signature -->
+                        <tr>
+                            <td class="ps-3 fw-bold">Inspector Signature</td>
+                            <td class="text-center">
+                                @php
+                                    // Inspector Signature Logic
+                                    $inspSigPath = $log->inspector->signature_path ?? null;
+                                    $inspSigUrl = null;
+                                    if ($inspSigPath && \Storage::disk('public')->exists($inspSigPath)) {
+                                        $inspSigUrl = asset('storage/' . $inspSigPath);
+                                    }
+                                @endphp
+                                
+                                @if($inspSigUrl)
+                                    <img src="{{ $inspSigUrl }}" alt="Inspector Signature" style="max-height: 80px; max-width: 200px; border: 1px solid #eee;">
+                                @else
+                                    <span class="text-muted fst-italic">No Digital Signature</span>
+                                @endif
+                                <br>
+                                <small class="text-muted">{{ $log->inspector->name ?? 'Unknown Inspector' }}</small>
+                            </td>
+                        </tr>
+
+                        <!-- Receiver Signature (Outgoing Only) -->
+                        @if($log->inspection_type === 'outgoing_inspection')
+                        <tr>
+                            <td class="ps-3 fw-bold">Receiver Signature</td>
+                            <td class="text-center">
+                                @php
+                                    // Receiver Signature Logic (One-time event)
+                                    $recvSigPath = $log->receiver_signature_path ?? null;
+                                    $recvSigUrl = null;
+                                    if ($recvSigPath && \Storage::disk('public')->exists($recvSigPath)) {
+                                        $recvSigUrl = asset('storage/' . $recvSigPath);
+                                    }
+                                @endphp
+                                
+                                @if($recvSigUrl)
+                                    <img src="{{ $recvSigUrl }}" alt="Receiver Signature" style="max-height: 80px; max-width: 200px; border: 1px solid #eee;">
+                                @else
+                                    <span class="text-muted fst-italic">{{ $log->receiver_confirmed_at ? 'Confirmed but no signature' : 'Waiting for confirmation...' }}</span>
+                                @endif
+                                <br>
+                                <small class="text-muted">{{ $log->receiver_name ?? 'Unknown Receiver' }}</small>
+                            </td>
+                        </tr>
+                        @endif
+
                     </tbody>
                 </table>
             </div>
