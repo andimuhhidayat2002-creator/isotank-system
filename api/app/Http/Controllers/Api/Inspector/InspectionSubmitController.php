@@ -976,8 +976,17 @@ class InspectionSubmitController extends Controller
             ], 400);
         }
 
-        // Validate confirmations for all 10 general condition items
-        $generalConditionItems = PdfGenerationService::getGeneralConditionItems();
+        // Validate confirmations based on ACTIVE DYNAMIC ITEMS (Single Source of Truth)
+        $dynamicItems = \App\Models\InspectionItem::where('is_active', true)
+            ->where(function($q) {
+                 $q->where('category', 'like', 'b%')
+                   ->orWhere('category', 'like', '%general%')
+                   ->orWhere('category', 'external');
+            })
+            ->orderBy('order')
+            ->get();
+
+        $generalConditionItems = $dynamicItems->pluck('code')->toArray();
         
         $rules = [];
         foreach ($generalConditionItems as $item) {
