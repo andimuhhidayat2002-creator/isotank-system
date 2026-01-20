@@ -15,7 +15,7 @@ return new class extends Migration
         // 1. Add 'tank_category' to master_isotanks
         Schema::table('master_isotanks', function (Blueprint $table) {
             // Defaulting to T75 for all existing tanks
-            $table->string('tank_category')->default('T75')->after('part_number')->comment('T75, T11, T50, etc.');
+            $table->string('tank_category')->default('T75')->after('iso_number')->comment('T75, T11, T50, etc.');
         });
 
         // 2. Add 'applicable_categories' to inspection_items
