@@ -25,6 +25,18 @@ class InspectionItemApiController extends Controller
             $query->forType($type);
         }
 
+        // T75 PATENT / CATEGORY FILTER
+        // Default to T75 if not specified (Backward Compatibility for current App)
+        $tankCategory = $request->query('tank_category', 'T75'); 
+        
+        // Filter items where applicable_categories JSON contains the requested category
+        // Note: applicable_categories is nullable, so we assume NULL means 'Universal' or handle it 
+        // But per migration we set all existing to ["T75"].
+        $query->where(function($q) use ($tankCategory) {
+            $q->whereJsonContains('applicable_categories', $tankCategory)
+              ->orWhereNull('applicable_categories'); // Safety fallback
+        });
+
         $items = $query->get()->map(function ($item) {
             return [
                 'id' => $item->id,
