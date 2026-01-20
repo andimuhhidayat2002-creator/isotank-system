@@ -7,6 +7,7 @@ use App\Models\ExcelUploadLog;
 use App\Models\InspectionJob;
 use App\Models\InspectionLog;
 use App\Models\MaintenanceJob;
+use App\Models\ReceiverConfirmation;
 use App\Models\MasterIsotank;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -32,7 +33,8 @@ class AdminController extends Controller
         // 1) Global summary (all locations combined)
         $globalStats = [
              'total_active' => MasterIsotank::where('status', 'active')->count(),
-             'open_maintenance' => MaintenanceJob::where('status', '!=', 'closed')->count(),
+             'open_maintenance' => MaintenanceJob::whereIn('status', ['open', 'on_progress'])->count(),
+             'deferred_maintenance' => MaintenanceJob::where('status', 'deferred')->count(),
              'open_inspections' => InspectionJob::whereIn('status', ['open', 'in_progress'])->count(),
              'calibration_alerts' => MasterIsotankCalibrationStatus::where('status', '!=', 'valid')
                   ->orWhere('valid_until', '<', now()->addMonth())
@@ -643,7 +645,7 @@ class AdminController extends Controller
             'iso_number' => 'required|exists:master_isotanks,iso_number',
             'planned_date' => 'nullable|date',
             'destination' => 'required_if:activity_type,outgoing_inspection',
-            'receiver_name' => 'required_if:activity_type,outgoing_inspection',
+// 'receiver_name' => 'required_if:activity_type,outgoing_inspection', // REMOVED as per user request (load from login)
             'item_name' => 'required_if:activity_type,maintenance',
             'item_names' => 'required_if:activity_type,calibration|array',
             'item_names.*' => 'string',
@@ -672,7 +674,7 @@ class AdminController extends Controller
                         'activity_type' => $request->activity_type,
                         'planned_date' => $request->planned_date ?? now(),
                         'destination' => $request->destination,
-                        'receiver_name' => $request->activity_type === 'outgoing_inspection' ? $request->receiver_name : null,
+                        'receiver_name' => null, // Will be filled during Confirmation by the logged-in user
                         'filling_status_code' => $request->filling_status_code,
                         'filling_status_desc' => $request->filling_status_desc,
                         'status' => 'open'
@@ -769,8 +771,23 @@ class AdminController extends Controller
     }
     
     public function maintenanceJobs() {
-        $jobs = MaintenanceJob::with(['isotank', 'assignee'])->latest()->get();
-        return view('admin.reports.maintenance', compact('jobs'));
+        $activeJobs = MaintenanceJob::with(['isotank', 'assignee'])
+            ->whereIn('status', ['open', 'on_progress'])
+            ->latest()
+            ->get();
+            
+        $deferredJobs = MaintenanceJob::with(['isotank', 'assignee'])
+            ->where('status', 'deferred')
+            ->latest()
+            ->get();
+            
+        $closedJobs = MaintenanceJob::with(['isotank', 'assignee'])
+            ->where('status', 'closed')
+            ->latest()
+            ->limit(100) // Limit for performance
+            ->get();
+            
+        return view('admin.reports.maintenance', compact('activeJobs', 'deferredJobs', 'closedJobs'));
     }
 
     public function showMaintenanceJob($id) {
@@ -934,22 +951,23 @@ class AdminController extends Controller
         // 4. Maintenance Updates
         $completedMaintenance = MaintenanceJob::with(['isotank', 'completedBy'])
             ->whereDate('updated_at', $date)
-            ->where('status', 'completed')
+            ->where('status', 'closed')
             ->get();
         
         // Outstanding is "current state", not really historical. 
-        // But for a report of DAY X, we probably still want "What was outstanding on DAY X?"
-        // However, calculating historical state is hard. We will stick to "Currently Outstanding" or "Created before X and still open".
-        // For simplicity, let's keep "Currently Outstanding" regardless of report date, or maybe "Created before Report Date and Still Open".
-        // Let's stick to current outstanding logic for now as 'Snapshot'.
+        // We track 'Action Required' (open, on_progress) separately from 'Deferred'
         $outstandingMaintenance = MaintenanceJob::with('isotank')
-            ->where('status', 'open')
-            ->where('created_at', '<', Carbon::now()->subDays(3))
+            ->whereIn('status', ['open', 'on_progress'])
+            ->get();
+
+        $deferredMaintenance = MaintenanceJob::with('isotank')
+            ->where('status', 'deferred')
             ->get();
 
         $maintenance = [
             'completed' => $completedMaintenance,
             'outstanding' => $outstandingMaintenance,
+            'deferred' => $deferredMaintenance,
         ];
         
         return compact('dateFormatted', 'summary', 'issues', 'inspectionLogs', 'maintenance');
@@ -1014,11 +1032,78 @@ class AdminController extends Controller
         $inspection = InspectionLog::with(['isotank', 'inspector', 'inspectionJob'])->findOrFail($id);
         $isotank = $inspection->isotank;
         $inspector = $inspection->inspector;
+        $job = $inspection->inspectionJob; // Ensure $job variable is available
         $type = ($inspection->inspection_type == 'incoming_inspection') ? 'incoming' : 'outgoing';
 
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.inspection_report', compact('inspection', 'isotank', 'inspector', 'type'));
+        // Prepare additional data for report
+        $receiverConfirmations = null;
+        $allAccepted = false;
+        if ($type === 'outgoing') {
+            $receiverConfirmations = ReceiverConfirmation::where('inspection_log_id', $inspection->id)
+                ->get()
+                ->keyBy('item_name');
+            
+            $allAccepted = $receiverConfirmations->isNotEmpty() && $receiverConfirmations->every(function ($confirmation) {
+                return $confirmation->receiver_decision === 'ACCEPT';
+            });
+        }
+
+        $openMaintenance = MaintenanceJob::where('isotank_id', $inspection->isotank_id)
+            ->where('status', 'open')
+            ->with('triggeredByInspection')
+            ->get();
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.inspection_report', compact('inspection', 'isotank', 'inspector', 'job', 'type', 'receiverConfirmations', 'openMaintenance', 'allAccepted'));
         $pdf->setPaper('a4', 'portrait');
         
         return $pdf->download('Inspection_' . $isotank->iso_number . '_' . $inspection->created_at->format('Ymd') . '.pdf');
+    }
+
+    public function exportLocationInventory($location)
+    {
+        $location = urldecode($location);
+        $fileName = 'Inventory_' . \Illuminate\Support\Str::slug($location) . '_' . date('Y-m-d') . '.csv';
+
+        $isotanks = MasterIsotank::where('location', $location)
+            ->where('status', 'active')
+            ->orderBy('iso_number')
+            ->get();
+
+        $headers = array(
+            "Content-type"        => "text/csv",
+            "Content-Disposition" => "attachment; filename=$fileName",
+            "Pragma"              => "no-cache",
+            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+            "Expires"             => "0"
+        );
+
+        $columns = array('ISO Number', 'Status', 'Filling Status', 'Description', 'Capacity', 'Owner', 'Type');
+
+        $callback = function() use($isotanks, $columns) {
+            $file = fopen('php://output', 'w');
+            
+            // Add BOM for Excel compatibility
+            fwrite($file, "\xEF\xBB\xBF");
+            
+            // Use semicolon delimiter for better Excel Parsing in some regions
+            fputcsv($file, $columns, ';');
+
+            foreach ($isotanks as $tank) {
+                $row = [];
+                $row[]  = $tank->iso_number;
+                $row[]    = $tank->status;
+                $row[]    = $tank->filling_status_code ?? '-';
+                $row[]  = $tank->filling_status_desc ?? '-';
+                $row[]  = $tank->capacity;
+                $row[]  = $tank->owner;
+                $row[]  = $tank->type;
+
+                fputcsv($file, $row, ';');
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 }

@@ -65,7 +65,7 @@ class MaintenanceJobController extends Controller
         $job = MaintenanceJob::findOrFail($id);
 
         $validated = $request->validate([
-            'status' => 'required|in:open,on_progress,not_complete,closed',
+            'status' => 'required|in:open,on_progress,not_complete,closed,deferred',
             'work_description' => 'required_if:status,closed|string',
             'after_photo' => 'nullable|image|max:5120', // Max 5MB
             'completed_by' => 'nullable|integer|exists:users,id',

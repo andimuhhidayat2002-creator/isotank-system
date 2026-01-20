@@ -2,39 +2,52 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Inspection Report - {{ $isotank->iso_number }}</title>
+    <title>Inspection Report - {{ $isotank->iso_number ?? 'UNKNOWN' }}</title>
     <style>
-        body { font-family: sans-serif; font-size: 8pt; margin: 0; padding: 0; color: #333; }
+        @page { margin: 20px 25px; }
+        body { font-family: sans-serif; font-size: 8pt; margin: 0; padding: 0; color: #333; line-height: 1.1; }
         
-        .header { text-align: center; margin-bottom: 5px; }
-        .header img { width: 100%; height: auto; max-height: 50px; object-fit: contain; } 
+        .header { text-align: center; margin-bottom: 2px; }
+        .header img { width: 100%; height: auto; max-height: 45px; object-fit: contain; } 
         
-        .title-box { text-align: center; color: black; font-weight: bold; padding: 4px; font-size: 10pt; margin-bottom: 10px; border: 1px solid #ccc; background-color: #e0f7fa; }
+        .title-box { text-align: center; color: black; font-weight: bold; padding: 3px; font-size: 10pt; margin-bottom: 5px; border: 1px solid #ccc; background-color: #e0f7fa; }
         .title-box.outgoing { background-color: #e8f5e9; }
         
-        .info-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 8pt; }
-        .info-table td { border: 1px solid #ddd; padding: 3px 6px; }
+        .info-table { width: 100%; border-collapse: collapse; margin-bottom: 3px; font-size: 7.5pt; }
+        .info-table td { border: 1px solid #ddd; padding: 2px 4px; }
         .label { background-color: #f5f5f5; font-weight: bold; width: 15%; }
         
-        .section-title { background-color: #eee; font-weight: bold; font-size: 9pt; padding: 3px 5px; margin-bottom: 4px; border-left: 4px solid #333; margin-top: 8px; }
+        .section-title { background-color: #eee; font-weight: bold; font-size: 8.5pt; padding: 2px 5px; margin-bottom: 2px; border-left: 4px solid #333; margin-top: 4px; }
         
-        .checklist-table { width: 100%; border-collapse: collapse; font-size: 8pt; margin-bottom: 5px; }
-        .checklist-table td { border-bottom: 1px solid #eee; padding: 2px 4px; vertical-align: middle; }
+        .checklist-table { width: 100%; border-collapse: collapse; font-size: 7.5pt; margin-bottom: 2px; }
+        .checklist-table td { border-bottom: 1px solid #eee; padding: 1px 3px; vertical-align: middle; }
+        .checklist-table th { background-color: #f0f0f0; padding: 2px 3px; font-weight: bold; border-bottom: 1px solid #ccc; text-align: left; font-size: 7.5pt; }
         
-        .status-badge { padding: 2px 4px; border-radius: 3px; color: white; font-weight: bold; font-size: 7pt; display: inline-block; min-width: 40px; text-align: center; }
+        .status-badge { padding: 1px 3px; border-radius: 2px; color: white; font-weight: bold; font-size: 6.5pt; display: inline-block; min-width: 35px; text-align: center; text-transform: uppercase; }
         .bg-green { background-color: #2e7d32; }
         .bg-red { background-color: #c62828; }
         .bg-orange { background-color: #ef6c00; }
         .bg-grey { background-color: #9e9e9e; }
         
-        .signature-section { margin-top: 20px; width: 100%; page-break-inside: avoid; }
+        .signature-section { margin-top: 10px; width: 100%; page-break-inside: avoid; }
         .sig-box { float: left; width: 45%; margin-right: 5%; }
-        .sig-line { border-top: 1px solid #000; margin-top: 40px; padding-top: 5px; line-height: 1.2; }
-
+        .sig-line { border-top: 1px solid #000; margin-top: 30px; padding-top: 2px; font-weight: bold; font-size: 8pt; }
+        .sig-label { font-size: 7.5pt; margin-bottom: 2px; }
+        
+        .page-break { page-break-after: always; }
         .clearfix::after { content: ""; clear: both; display: table; }
+
+        /* Photo Grid */
+        .photo-page-title { text-align: center; font-weight: bold; font-size: 11pt; margin-bottom: 15px; padding: 5px; border-bottom: 2px solid #333; }
+        .photo-grid { width: 100%; text-align: center; }
+        .photo-item { width: 48%; display: inline-block; vertical-align: top; margin-bottom: 15px; margin-right: 1%; margin-left:1%; box-sizing: border-box; border: 1px solid #ddd; padding: 5px; background: #fff; border-radius: 4px; }
+        .photo-item img { width: 100%; height: 180px; object-fit: contain; background-color: #fcfcfc; border: 1px solid #eee; margin-bottom: 5px; }
+        .photo-label { font-weight: bold; font-size: 8.5pt; color: #444; }
     </style>
 </head>
 <body>
+    
+    {{-- PAGE 1: DETAILS & CHECKLIST --}}
     
     <!-- HEADER -->
     <div class="header">
@@ -54,15 +67,17 @@
     <div class="section-title" style="margin-top: 0;">A. DATA OF TANK</div>
     <table class="info-table">
         <tr>
-            <td class="label">ISO Number</td><td><b>{{ $isotank->iso_number }}</b></td>
+            <td class="label">ISO Number</td><td style="font-size: 9pt;"><b>{{ $isotank->iso_number ?? '-' }}</b></td>
             <td class="label">Product</td><td>{{ $isotank->product ?? '-' }}</td>
             <td class="label">Filling Status</td>
-            <td><b>{{ $inspection->filling_status_desc ?? ($isotank->filling_status_desc ?? '-') }}</b></td>
+            <td style="font-weight: bold; color: #0056b3;">
+                {{ $inspection->filling_status_desc ?? ($isotank->filling_status_desc ?? '-') }}
+            </td>
         </tr>
         <tr>
             <td class="label">Owner</td><td>{{ $isotank->owner ?? '-' }}</td>
             <td class="label">Location</td><td>{{ $isotank->location ?? '-' }}</td>
-            <td class="label">Insp. Date</td><td>{{ $inspection->inspection_date ? $inspection->inspection_date->format('d M Y') : '-' }}</td>
+            <td class="label">Insp. Date</td><td>{{ $inspection->inspection_date ? \Carbon\Carbon::parse($inspection->inspection_date)->format('d M Y') : '-' }}</td>
         </tr>
     </table>
 
@@ -70,118 +85,165 @@
     @php
         function badge($val) {
             $val = strtolower($val ?? '');
-            $cls = 'grey'; $txt = 'N/A';
-            if ($val == 'good') { $cls = 'green'; $txt = 'GOOD'; }
-            elseif ($val == 'not_good' || $val == 'bad') { $cls = 'red'; $txt = 'NOT GOOD'; }
-            elseif ($val == 'need_attention') { $cls = 'orange'; $txt = 'ATTN'; }
-            elseif ($val == 'correct') { $cls = 'green'; $txt = 'CORRECT'; }
-            elseif ($val == 'incorrect') { $cls = 'red'; $txt = 'INCORRECT'; }
-            elseif (!empty($val) && $val != 'na' && $val != 'null') { $cls = 'grey'; $txt = strtoupper($val); }
+            if (!$val || $val == 'null') return "<span class='status-badge bg-grey'>-</span>";
+            
+            $map = [
+                'good' => ['green', 'GOOD'],
+                'not_good' => ['red', 'NOT GOOD'], 'bad' => ['red', 'BAD'],
+                'need_attention' => ['orange', 'ATTN'],
+                'correct' => ['green', 'CORRECT'], 'incorrect' => ['red', 'INCORRECT'],
+                'yes' => ['green', 'YES'], 'no' => ['red', 'NO'],
+                'valid' => ['green', 'VALID'], 'expired' => ['red', 'EXPIRED'],
+                'na' => ['grey', 'N/A']
+            ];
+            
+            [$cls, $txt] = $map[$val] ?? ['grey', strtoupper($val)];
             return "<span class='status-badge bg-$cls'>$txt</span>";
         }
-    @endphp
 
-    <div class="header-title" style="background-color: #f0f0f0; margin-bottom: 5px; text-align: center; font-weight: bold; border: 1px solid #ddd;">
-        {{ strtoupper($type == 'outgoing' ? 'OUTGOING' : 'INCOMING') }} INSPECTION REPORT
-    </div>
-
-    {{-- MAIN INSPECTION DATA (Shown for BOTH Incoming and Outgoing) --}}
-    @php
-        // ... (existing logic)
+        // Parse Inspection Data
         $jsonData = [];
         if (!empty($inspection->inspection_data)) {
             $jsonData = is_string($inspection->inspection_data) ? json_decode($inspection->inspection_data, true) : $inspection->inspection_data;
             if (!is_array($jsonData)) $jsonData = [];
         }
 
-        // 2. Fetch Master Items from DB
+        // Fetch Items
         $masterItems = \App\Models\InspectionItem::where('is_active', true)->orderBy('order', 'asc')->get();
-        // SECTION B: Includes 'b', 'external' (like safety_label, tank_plate)
-        $itemsB = $masterItems->filter(function($item) {
-            return in_array($item->category, ['b', 'external', 'general']);
-        });
-        
-        // SECTION C: Includes 'c', 'valve' (like pipe_joint, Pressure_regulator), and NULL/Empty (fallback)
-        $itemsC = $masterItems->filter(function($item) {
-             return in_array($item->category, ['c', 'valve', 'piping']) || empty($item->category);
-        });
+        // B: General/External
+        $itemsB = $masterItems->filter(fn($i) => in_array($i->category, ['b', 'external', 'general']));
+        // C: Valves/Piping
+        $itemsC = $masterItems->filter(fn($i) => in_array($i->category, ['c', 'valve', 'piping']) || empty($i->category));
     @endphp
 
-    <table style="width: 100%; border-collapse: collapse;">
+    <table style="width: 100%; border-collapse: collapse; margin-top: 0;">
         <tr>
-            <!-- LEFT COLUMN (Section B) -->
-            <td style="width: 49%; vertical-align: top; padding-right: 10px; border: none;">
+            <!-- LEFT COLUMN: B (General), D (IBOX), F (Vacuum) -->
+            <td style="width: 49%; vertical-align: top; padding-right: 5px; border: none;">
                 
                 <div class="section-title">B. GENERAL CONDITION</div>
                 <table class="checklist-table">
                     @forelse($itemsB as $item)
-                        @php 
-                            $key = $item->code;
-                            $val = $inspection->$key ?? ($jsonData[$key] ?? null);
-                        @endphp
+                        @php $val = $inspection->{$item->code} ?? ($jsonData[$item->code] ?? null); @endphp
                         <tr>
                             <td style="width: 70%;">{{ $item->label }}</td>
-                            <td style="text-align: right;">{!! $val ? badge($val) : '<span style="color:#aaa">-</span>' !!}</td>
+                            <td style="text-align: right;">{!! badge($val) !!}</td>
                         </tr>
                     @empty
-                        <tr><td colspan="2">No items.</td></tr>
+                        <tr><td colspan="2" style="color: grey;">No items defined.</td></tr>
                     @endforelse
+
+                    {{-- UNMAPPED ITEMS LOGIC --}}
+                    @php
+                        $standardCodes = $masterItems->pluck('code')->toArray();
+                        foreach($jsonData as $k => $v) {
+                            if(!in_array($k, $standardCodes) && 
+                               !in_array($k, ['inspection_date', 'inspector_name', 'filling_status', 'remarks', 'signature', 'longitude', 'latitude', 'location_name']) &&
+                               is_string($v) && strlen($v) < 50) {
+                                 // Exclude hardcoded legacy fields
+                                 if(!str_contains($k, 'ibox') && !str_contains($k, 'vacuum') && !str_contains($k, 'pressure_gauge') && !str_contains($k, 'psv')) {
+                    @endphp
+                        <tr>
+                            <td style="width: 70%;">{{ ucwords(str_replace('_', ' ', $k)) }}</td>
+                            <td style="text-align: right;">{!! badge($v) !!}</td>
+                        </tr>
+                    @php
+                                 }
+                            }
+                        }
+                    @endphp
                 </table>
                 
-                @if($inspection->ibox_condition)
-                 <div class="section-title" style="margin-top: 5px;">D. IBOX SYSTEM</div>
-                 <table class="checklist-table">
+                <div class="section-title">D. IBOX SYSTEM</div>
+                <table class="checklist-table">
                     <tr><td style="width: 70%;">Condition</td><td style="text-align:right">{!! badge($inspection->ibox_condition) !!}</td></tr>
-                    <tr><td>Battery</td><td style="text-align:right">{{ $inspection->ibox_battery_percent ?? '-' }} %</td></tr>
-                    <tr><td>Press/Temp</td><td style="text-align:right">{{ $inspection->ibox_pressure ?? '-' }} / {{ $inspection->ibox_temperature ?? '-' }}</td></tr>
+                    <tr><td>Battery</td><td style="text-align:right">{{ $inspection->ibox_battery_percent ? $inspection->ibox_battery_percent.'%' : '-' }}</td></tr>
+                    <tr><td>Pressure (Digital)</td><td style="text-align:right">{{ $inspection->ibox_pressure ?? '-' }}</td></tr>
+                    <tr>
+                         <td>Temp #1 (Digital)</td>
+                         <td style="text-align:right">
+                             {{ $inspection->ibox_temperature_1 ?? $inspection->ibox_temperature ?? '-' }}
+                             @if($inspection->ibox_temperature_1_timestamp)
+                             <br><small style="color:#666; font-size:6pt;">({{ \Carbon\Carbon::parse($inspection->ibox_temperature_1_timestamp)->format('H:i') }})</small>
+                             @endif
+                         </td>
+                    </tr>
+                    <tr>
+                         <td>Temp #2 (Digital)</td>
+                         <td style="text-align:right">
+                             {{ $inspection->ibox_temperature_2 ?? '-' }}
+                             @if($inspection->ibox_temperature_2_timestamp)
+                             <br><small style="color:#666; font-size:6pt;">({{ \Carbon\Carbon::parse($inspection->ibox_temperature_2_timestamp)->format('H:i') }})</small>
+                             @endif
+                         </td>
+                    </tr>
+                    <tr><td>Level (Digital)</td><td style="text-align:right">{{ $inspection->ibox_level ?? '-' }}</td></tr>
                 </table>
-                @endif
 
-                 <div class="section-title" style="margin-top: 5px;">E. INSTRUMENTS</div>
+                 <div class="section-title">F. VACUUM SYSTEM</div>
                  <table class="checklist-table">
-                    <tr>
-                        <td style="border-bottom:none;"><b>Pressure Gauge</b></td>
-                        <td style="text-align: right; border-bottom:none;">{!! badge($inspection->pressure_gauge_condition) !!}</td>
-                    </tr>
-                    <tr><td colspan="2" style="font-size: 7pt; color: #555; padding-left: 5px;">Reading: {{ $inspection->pressure_1 ?? '-' }} MPa</td></tr>
-                    
-                    <tr>
-                        <td style="border-bottom:none;"><b>Level Gauge</b></td>
-                        <td style="text-align: right; border-bottom:none;">{!! badge($inspection->level_gauge_condition) !!}</td>
-                    </tr>
-                    <tr><td colspan="2" style="font-size: 7pt; color: #555; padding-left: 5px;">Reading: {{ $inspection->level_1 ?? '-' }} %</td></tr>
+                    <tr><td>Gauge / Port</td><td style="text-align:right">{!! badge($inspection->vacuum_gauge_condition) !!} / {!! badge($inspection->vacuum_port_suction_condition) !!}</td></tr>
+                    <tr><td colspan="2" style="color: #666; padding-left: 5px;">
+                        Value: {{ $inspection->vacuum_value ? number_format((float)$inspection->vacuum_value, 2) : '-' }} {{ $inspection->vacuum_unit ?? 'mtorr' }}
+                        ({{ $inspection->vacuum_temperature ?? '-' }} °C)
+                    </td></tr>
+                    <tr><td colspan="2" style="color: #666; padding-left: 5px;">
+                        Check Date: {{ $inspection->vacuum_check_datetime ? \Carbon\Carbon::parse($inspection->vacuum_check_datetime)->format('d M Y H:i') : '-' }}
+                    </td></tr>
                  </table>
 
             </td>
             
-            <!-- RIGHT COLUMN (Section C) -->
-            <td style="width: 49%; vertical-align: top; padding-left: 10px; border: none;">
+            <!-- RIGHT COLUMN: C (Valves), E (Instruments), G (PSV) -->
+            <td style="width: 49%; vertical-align: top; padding-left: 5px; border: none;">
                 
-                 <div class="section-title">C. VALVES & PIPING</div>
+                <div class="section-title">C. VALVES & PIPING</div>
                  <table class="checklist-table">
                     @forelse($itemsC as $item)
-                        @php 
-                            $key = $item->code;
-                            $val = $inspection->$key ?? ($jsonData[$key] ?? null);
-                        @endphp
+                        @php $val = $inspection->{$item->code} ?? ($jsonData[$item->code] ?? null); @endphp
                         <tr>
                             <td style="width: 70%;">{{ $item->label }}</td>
-                            <td style="text-align: right;">{!! $val ? badge($val) : '<span style="color:#aaa">-</span>' !!}</td>
+                            <td style="text-align: right;">{!! badge($val) !!}</td>
                         </tr>
                     @empty
                          <tr><td colspan="2">No items.</td></tr>
                     @endforelse
                 </table>
 
-
-
-                 <div class="section-title">F. VACUUM SYSTEM</div>
-                 <table class="checklist-table">
-                    <tr><td>Gauge / Port</td><td style="text-align:right">{!! badge($inspection->vacuum_gauge_condition) !!} / {!! badge($inspection->vacuum_port_suction_condition) !!}</td></tr>
-                    <tr><td colspan="2" style="font-size: 7pt; color: #555; padding-left: 5px;">
-                        Value: {{ $inspection->vacuum_value ?? '-' }} {{ $inspection->vacuum_unit ?? 'torr' }} ({{ $inspection->vacuum_temperature ?? '-' }} °C)
+                <div class="section-title">E. INSTRUMENTS</div>
+                <table class="checklist-table">
+                    <tr>
+                        <td><b>Pressure Gauge</b></td>
+                        <td style="text-align: right;">{!! badge($inspection->pressure_gauge_condition) !!}</td>
+                    </tr>
+                    <tr><td colspan="2" style="color: #666; padding-left: 5px;">
+                        #1: {{ $inspection->pressure_1 ? $inspection->pressure_1.' MPa' : '-' }}
+                        @if($inspection->pressure_1_timestamp)
+                            <small>({{ \Carbon\Carbon::parse($inspection->pressure_1_timestamp)->format('H:i') }})</small>
+                        @endif
+                        <br>
+                        #2: {{ $inspection->pressure_2 ? $inspection->pressure_2.' MPa' : '-' }}
+                        @if($inspection->pressure_2_timestamp)
+                            <small>({{ \Carbon\Carbon::parse($inspection->pressure_2_timestamp)->format('H:i') }})</small>
+                        @endif
                     </td></tr>
-                 </table>
+                    
+                    <tr>
+                        <td><b>Level Gauge</b></td>
+                        <td style="text-align: right;">{!! badge($inspection->level_gauge_condition) !!}</td>
+                    </tr>
+                    <tr><td colspan="2" style="color: #666; padding-left: 5px;">
+                         #1: {{ $inspection->level_1 ? $inspection->level_1.' %' : '-' }}
+                        @if($inspection->level_1_timestamp)
+                            <small>({{ \Carbon\Carbon::parse($inspection->level_1_timestamp)->format('H:i') }})</small>
+                        @endif
+                        <br>
+                         #2: {{ $inspection->level_2 ? $inspection->level_2.' %' : '-' }}
+                        @if($inspection->level_2_timestamp)
+                            <small>({{ \Carbon\Carbon::parse($inspection->level_2_timestamp)->format('H:i') }})</small>
+                        @endif
+                    </td></tr>
+                </table>
 
                  <div class="section-title">G. SAFETY VALVES (PSV)</div>
                  <table class="checklist-table">
@@ -189,8 +251,8 @@
                         @php $cond = $inspection->{"psv{$i}_condition"}; @endphp
                         @if($cond)
                         <tr>
-                            <td style="border-bottom:none;"><b>PSV #{{ $i }}</b> <span style="font-size:7pt; color:#666">({{ $inspection->{"psv{$i}_serial_number"} ?? '-' }})</span></td>
-                            <td style="text-align: right; border-bottom:none;">{!! badge($cond) !!}</td>
+                            <td><b>PSV #{{ $i }}</b> <small>({{ $inspection->{"psv{$i}_serial_number"} ?? '-' }})</small></td>
+                            <td style="text-align: right;">{!! badge($cond) !!}</td>
                         </tr>
                         @endif
                     @endfor
@@ -200,74 +262,161 @@
         </tr>
     </table>
 
-    {{-- OUTGOING RECEIVER CONFIRMATION --}}
-    @if($type === 'outgoing')
-        <div style="page-break-inside: avoid;">
-            <div class="header-title" style="background-color: #e8f5e9; margin: 10px 0 5px 0; text-align: center; font-weight: bold; border: 1px solid #ddd;">
-                RECEIVER CONFIRMATION (GENERAL CONDITION)
-            </div>
+    {{-- OUTGOING: RECEIVER CONFIRMATION TABLE --}}
+    @if($type === 'outgoing' && isset($receiverConfirmations))
+        <div class="section-title" style="background-color: #e8f5e9; border-left-color: #2e7d32; margin-top: 8px;">RECEIVER CONFIRMATION (GENERAL CONDITION)</div>
         <table class="checklist-table">
             <thead>
-                <tr style="background-color: #eee;">
-                    <th style="text-align: left; padding: 4px; border-bottom: 1px solid #999;">Item</th>
-                    <th style="text-align: center; padding: 4px; border-bottom: 1px solid #999;">Inspector Cond.</th>
-                    <th style="text-align: center; padding: 4px; border-bottom: 1px solid #999;">Receiver Decision</th>
-                    <th style="text-align: left; padding: 4px; border-bottom: 1px solid #999;">Remark</th>
+                <tr>
+                    <th style="width: 25%;">Item</th>
+                    <th style="width: 15%; text-align: center;">Insp. Cond.</th>
+                    <th style="width: 15%; text-align: center;">Receiver Decision</th>
+                    <th style="width: 45%;">Remark</th>
                 </tr>
             </thead>
             <tbody>
-                @php
-                    // Get standard + dynamic items using the service
-                    $generalItems = \App\Services\PdfGenerationService::getGeneralConditionItems();
-                @endphp
-                @foreach($generalItems as $key)
+                @foreach(\App\Services\PdfGenerationService::getGeneralConditionItems() as $key)
                     @php
                         $label = \App\Services\PdfGenerationService::getItemDisplayName($key);
-                        $inspectorVal = $inspection->$key ?? null;
-                        
-                        // Get receiver confirmation data
+                        $inspectorVal = $inspection->$key ?? ($jsonData[$key] ?? null);
                         $conf = $receiverConfirmations[$key] ?? null;
-                        $decision = $conf ? $conf->receiver_decision : '-';
-                        $remark = $conf ? $conf->receiver_remark : '-';
                         
                         $decisionBadge = '-';
-                        if($decision === 'ACCEPT') {
-                            $decisionBadge = '<span class="status-badge bg-green">ACCEPT</span>';
-                        } elseif($decision === 'REJECT') {
-                            $decisionBadge = '<span class="status-badge bg-red">REJECT</span>';
+                        if ($conf) {
+                            $decisionBadge = $conf->receiver_decision === 'ACCEPT' 
+                                ? "<span class='status-badge bg-green'>ACCEPT</span>" 
+                                : "<span class='status-badge bg-red'>REJECT</span>";
                         }
                     @endphp
                     <tr>
-                        <td style="padding: 4px;">{{ $label }}</td>
-                        <td style="text-align: center; padding: 4px;">{!! badge($inspectorVal) !!}</td>
-                        <td style="text-align: center; padding: 4px;">{!! $decisionBadge !!}</td>
-                        <td style="padding: 4px; font-style: italic; color: #555;">{{ $remark }}</td>
+                        <td>{{ $label }}</td>
+                        <td style="text-align: center;">{!! badge($inspectorVal) !!}</td>
+                        <td style="text-align: center;">{!! $decisionBadge !!}</td>
+                        <td style="color: #555; font-style: italic;">{{ Str::limit($conf->receiver_remark ?? '-', 60) }}</td>
                     </tr>
                 @endforeach
             </tbody>
         </table>
-        </div>
     @endif
 
-    <!-- SIGNATURES (Compact) -->
-    <!-- SIGNATURES (Compact) -->
+    {{-- SIGNATURES --}}
     <div class="signature-section clearfix">
         <div class="sig-box">
-            Inspector Signature
+            <div class="sig-label">Inspector Signature</div>
+            
+            <div style="height: 60px; margin-bottom: 5px;">
+                @php
+                    $inspSigPath = $inspector->signature_path ?? ($inspection->inspectionJob->inspector->signature_path ?? null);
+                    $inspFullPath = null;
+                    if ($inspSigPath) {
+                        if (file_exists(public_path('storage/' . $inspSigPath))) $inspFullPath = public_path('storage/' . $inspSigPath);
+                        elseif (file_exists(storage_path('app/public/' . $inspSigPath))) $inspFullPath = storage_path('app/public/' . $inspSigPath);
+                    }
+                @endphp
+                
+                @if($inspFullPath)
+                    <img src="{{ $inspFullPath }}" style="max-height: 60px; max-width: 150px;">
+                @else
+                    <div style="height: 60px;"></div> {{-- Spacer if no signature --}}
+                @endif
+            </div>
+
             <div class="sig-line">
-                <b>{{ $inspector->name ?? ($inspection->inspectionJob->inspector->name ?? ($inspection->inspector_name ?? '.......................')) }}</b><br>
-                Date: {{ $inspection->inspection_date ? $inspection->inspection_date->format('d M Y') : '-' }}
+                {{ $inspector->name ?? ($inspection->inspectionJob->inspector->name ?? ($inspection->inspector_name ?? '.......................')) }}
+                <br><small style="font-weight: normal;">Date: {{ $inspection->inspection_date ? \Carbon\Carbon::parse($inspection->inspection_date)->format('d M Y') : '-' }}</small>
             </div>
         </div>
         
         @if($type === 'outgoing')
         <div class="sig-box">
-            Receiver Signature
+             <div class="sig-label">Receiver Signature</div>
+             
+             <div style="height: 60px; margin-bottom: 5px;">
+                @php
+                    $recvSigPath = $inspection->receiver_signature_path ?? null;
+                    $recvFullPath = null;
+                    if ($recvSigPath) {
+                        if (file_exists(public_path('storage/' . $recvSigPath))) $recvFullPath = public_path('storage/' . $recvSigPath);
+                        elseif (file_exists(storage_path('app/public/' . $recvSigPath))) $recvFullPath = storage_path('app/public/' . $recvSigPath);
+                    }
+                @endphp
+                
+                @if($recvFullPath)
+                    <img src="{{ $recvFullPath }}" style="max-height: 60px; max-width: 150px;">
+                @else
+                    <div style="height: 60px;"></div>
+                @endif
+            </div>
+            
             <div class="sig-line">
-                <b>{{ $job->receiver_name ?? '.......................' }}</b><br>
-                Date: {{ isset($generatedAt) ? $generatedAt->format('d M Y') : date('d M Y') }}
+                {{ $job->receiver_name ?? ($inspection->receiver_name ?? '.......................') }}
+                <br><small style="font-weight: normal;">
+                    Date: {{ $inspection->receiver_signed_at ? \Carbon\Carbon::parse($inspection->receiver_signed_at)->format('d M Y H:i') : (isset($generatedAt) ? $generatedAt->format('d M Y') : date('d M Y')) }}
+                </small>
             </div>
         </div>
+        @endif
+    </div>
+
+    {{-- PAGE BREAK --}}
+    <div class="page-break"></div>
+
+    {{-- PAGE 2: PHOTOS --}}
+    <div class="photo-page-title">INSPECTION PHOTOS</div>
+
+    <div class="photo-grid">
+        @php
+            $photos = [
+                'Front View' => $inspection->photo_front,
+                'Back View' => $inspection->photo_back,
+                'Left View' => $inspection->photo_left,
+                'Right View' => $inspection->photo_right,
+                'Inside Valve Box' => $inspection->photo_inside_valve_box,
+                'Additional' => $inspection->photo_additional,
+                'Extra' => $inspection->photo_extra,
+            ];
+        @endphp
+
+        @foreach($photos as $label => $path)
+            @if($path)
+                @php
+                    $fullPath = null;
+                    if (file_exists(public_path('storage/' . $path))) {
+                        $fullPath = public_path('storage/' . $path);
+                    } elseif (file_exists(storage_path('app/public/' . $path))) {
+                         $fullPath = storage_path('app/public/' . $path);
+                    }
+                @endphp
+
+                @if($fullPath)
+                <div class="photo-item">
+                    <img src="{{ $fullPath }}" alt="{{ $label }}">
+                    <div class="photo-label">{{ $label }}</div>
+                </div>
+                @endif
+            @endif
+        @endforeach
+        
+        {{-- Outgoing Receiver Photos --}}
+        @if($type === 'outgoing' && isset($receiverConfirmations))
+             @foreach($receiverConfirmations as $key => $conf)
+                @if($conf->receiver_photo_path)
+                    @php
+                        $fullPath = null;
+                         if (file_exists(public_path('storage/' . $conf->receiver_photo_path))) {
+                            $fullPath = public_path('storage/' . $conf->receiver_photo_path);
+                        } elseif (file_exists(storage_path('app/public/' . $conf->receiver_photo_path))) {
+                             $fullPath = storage_path('app/public/' . $conf->receiver_photo_path);
+                        }
+                    @endphp
+                     @if($fullPath)
+                    <div class="photo-item">
+                         <img src="{{ $fullPath }}" alt="Receiver Photo">
+                         <div class="photo-label">Receiver: {{ \App\Services\PdfGenerationService::getItemDisplayName($key) }}</div>
+                    </div>
+                    @endif
+                @endif
+             @endforeach
         @endif
     </div>
 

@@ -121,7 +121,7 @@
     <p style="color: #888; font-style: italic;">No inspection activities recorded today.</p>
     @endif
 
-    <!-- 4. MAINTENANCE UPDATE -->
+    <!-- 4. MAINTENANCE UPDATE (New Structure) -->
     <h3>🔧 Maintenance Updates</h3>
     
     <!-- Completed Today -->
@@ -149,8 +149,8 @@
     <p style="font-size: 13px; color: #888;">No maintenance jobs completed today.</p>
     @endif
 
-    <!-- Outstanding -->
-    <h4 style="margin-bottom: 5px; font-size: 15px; margin-top: 20px; color: #e65100;">Outstanding Jobs (> 3 Days)</h4>
+    <!-- Outstanding (Action Required) -->
+    <h4 style="margin-bottom: 5px; font-size: 15px; margin-top: 20px; color: #e65100;">Action Required (Outstanding)</h4>
     @if(count($maintenance['outstanding']) > 0)
     <table>
         <thead>
@@ -173,9 +173,33 @@
         </tbody>
     </table>
     @else
-    <p style="font-size: 13px; color: #2e7d32;">No long-overdue maintenance jobs.</p>
+    <p style="font-size: 13px; color: #2e7d32;">No outstanding action items.</p>
     @endif
 
+    <!-- Deferred (New Section) -->
+    <h4 style="margin-bottom: 5px; font-size: 15px; margin-top: 20px; color: #607d8b;">Deferred Maintenance (Approved)</h4>
+    @if(isset($maintenance['deferred']) && count($maintenance['deferred']) > 0)
+    <table>
+        <thead>
+            <tr>
+                <th>ISO Number</th>
+                <th>Item</th>
+                <th>Last Update</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($maintenance['deferred'] as $job)
+            <tr>
+                <td><strong>{{ $job->isotank->iso_number }}</strong></td>
+                <td>{{ $job->source_item }}</td>
+                <td>{{ $job->updated_at->format('d M Y') }}</td>
+            </tr>
+            @endforeach
+        </tbody>
+    </table>
+    @else
+    <p style="font-size: 13px; color: #888;">No deferred items.</p>
+    @endif
 
     <div class="footer">
         <p>This is an automated system message. Please do not reply directly to this email.</p>

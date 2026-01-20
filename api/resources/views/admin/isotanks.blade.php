@@ -50,40 +50,43 @@
                         <th>Actions</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="border-top-0">
                     @foreach($isotanks as $iso)
                     <tr>
                         <td><input type="checkbox" class="form-check-input iso-checkbox" value="{{ $iso->id }}"></td>
-                        <td class="fw-bold"><a href="{{ route('admin.isotanks.show', $iso->id) }}" class="text-decoration-none">{{ $iso->iso_number }}</a></td>
-                        <td>{{ $iso->owner ?? '-' }}</td>
+                        <td class="fw-bold"><a href="{{ route('admin.isotanks.show', $iso->id) }}" class="text-decoration-none text-primary">{{ $iso->iso_number }}</a></td>
+                        <td class="text-muted">{{ $iso->owner ?? '-' }}</td>
                         <td>
-                            {{ $iso->manufacturer ?? '-' }} <br>
-                            <small class="text-muted">{{ $iso->model_type ?? '' }}</small>
+                            <div class="fw-bold text-dark">{{ $iso->manufacturer ?? '-' }}</div>
+                            <div class="small text-muted" style="font-size: 0.75rem;">{{ $iso->model_type ?? '' }}</div>
                         </td>
-                        <td>{{ $iso->manufacturer_serial_number ?? '-' }}</td>
+                        <td class="text-muted">{{ $iso->manufacturer_serial_number ?? '-' }}</td>
                         <td>{{ $iso->location ?? '-' }}</td>
-                        <td>{{ $iso->product ?? '-' }}</td>
+                        <td class="fw-medium">{{ $iso->product ?? '-' }}</td>
                         <td>
                             @php
-                                $fillingBadge = 'secondary';
+                                $fillingClass = 'bg-secondary';
                                 $fillingText = $iso->filling_status_desc ?? $iso->filling_status_code ?? 'Not Set';
-                                if($iso->filling_status_code === 'filled') $fillingBadge = 'success';
-                                elseif(in_array($iso->filling_status_code, ['ready_to_fill', 'ongoing_inspection'])) $fillingBadge = 'info';
-                                elseif(in_array($iso->filling_status_code, ['under_maintenance', 'class_survey'])) $fillingBadge = 'warning';
+                                
+                                // Industrial Palette Logic
+                                if($iso->filling_status_code === 'filled') $fillingClass = 'bg-primary'; // Blue
+                                elseif(in_array($iso->filling_status_code, ['ready_to_fill'])) $fillingClass = 'bg-success'; // Green
+                                elseif(in_array($iso->filling_status_code, ['under_maintenance', 'class_survey'])) $fillingClass = 'bg-warning text-dark'; // Orange/Yellow
+                                elseif($iso->filling_status_code === 'ongoing_inspection') $fillingClass = 'bg-info text-dark';
                             @endphp
-                            <span class="badge bg-{{ $fillingBadge }}">{{ $fillingText }}</span>
+                            <span class="badge {{ $fillingClass }} fw-normal px-2 py-1">{{ $fillingText }}</span>
                         </td>
                         <td>
-                            <span class="badge {{ $iso->status === 'active' ? 'bg-success' : 'bg-secondary' }}">
+                            <span class="badge {{ $iso->status === 'active' ? 'bg-success bg-opacity-10 text-success border border-success' : 'bg-secondary bg-opacity-10 text-secondary border' }}">
                                 {{ ucfirst($iso->status) }}
                             </span>
                         </td>
                         
-                        <!-- Dates -->
-                        <td>{{ $iso->initial_pressure_test_date ? $iso->initial_pressure_test_date->format('d/m/Y') : '-' }}</td>
-                        <td>{{ $iso->csc_initial_test_date ? $iso->csc_initial_test_date->format('d/m/Y') : '-' }}</td>
-                        <td>{{ $iso->csc_survey_expiry_date ? $iso->csc_survey_expiry_date->format('d/m/Y') : '-' }}</td>
-                        <td>
+                        <!-- Dates (Muted for readability) -->
+                        <td class="text-muted small">{{ $iso->initial_pressure_test_date ? $iso->initial_pressure_test_date->format('d/m/Y') : '-' }}</td>
+                        <td class="text-muted small">{{ $iso->csc_initial_test_date ? $iso->csc_initial_test_date->format('d/m/Y') : '-' }}</td>
+                        <td class="text-muted small">{{ $iso->csc_survey_expiry_date ? $iso->csc_survey_expiry_date->format('d/m/Y') : '-' }}</td>
+                        <td class="text-muted small">
                             {{ $iso->class_survey_expiry_date ? $iso->class_survey_expiry_date->format('d/m/Y') : '-' }}
                         </td>
 
@@ -100,21 +103,21 @@
                             @endphp
 
                             @if($count === 0)
-                                <span class="badge bg-secondary">No Data</span>
+                                <span class="badge bg-light text-muted border">No Data</span>
                             @else
                                 <div class="dropdown">
-                                    <button class="btn btn-sm {{ $hasIssues ? 'btn-danger' : 'btn-success' }} dropdown-toggle py-0 px-2" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 0.75rem;">
+                                    <button class="btn btn-sm {{ $hasIssues ? 'btn-outline-danger' : 'btn-outline-success' }} dropdown-toggle py-0 px-2" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 0.75rem;">
                                         {{ $hasIssues ? 'ATTENTION' : 'VALID' }} ({{ $count }})
                                     </button>
-                                    <ul class="dropdown-menu shadow p-2" style="min-width: 250px;">
+                                    <ul class="dropdown-menu shadow-sm border-0" style="min-width: 250px;">
                                         @foreach($statuses as $cal)
-                                            <li class="mb-1 border-bottom pb-1">
-                                                <div class="d-flex justify-content-between align-items-center">
-                                                    <small class="fw-bold">{{ str_replace('_', ' ', $cal->item_name) }}</small>
+                                            <li class="mb-1 border-bottom pb-1 px-3 pt-2">
+                                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                                    <small class="fw-bold text-dark">{{ str_replace('_', ' ', $cal->item_name) }}</small>
                                                     @if($cal->status === 'valid')
-                                                        <span class="badge bg-success" style="font-size: 0.6rem;">VALID</span>
+                                                        <span class="badge bg-success bg-opacity-10 text-success" style="font-size: 0.6rem;">VALID</span>
                                                     @else
-                                                        <span class="badge bg-danger" style="font-size: 0.6rem;">{{ strtoupper($cal->status) }}</span>
+                                                        <span class="badge bg-danger bg-opacity-10 text-danger" style="font-size: 0.6rem;">{{ strtoupper($cal->status) }}</span>
                                                     @endif
                                                 </div>
                                                 <small class="text-muted d-block" style="font-size: 0.65rem;">
@@ -126,18 +129,19 @@
                                 </div>
                             @endif
                         </td>
-                        <!-- Status Moved Up -->
                         <td class="text-nowrap">
                             @if(auth()->user()->role === 'admin')
-                            <a href="{{ route('admin.isotanks.show', $iso->id) }}" class="btn btn-sm btn-outline-primary me-1" title="View Details">
-                                <i class="bi bi-eye"></i>
-                            </a>
-                            <form action="{{ route('admin.isotanks.toggle', $iso->id) }}" method="POST" class="d-inline">
-                                @csrf
-                                <button type="submit" class="btn btn-sm btn-outline-dark">
-                                    {{ $iso->status === 'active' ? 'Deactivate' : 'Activate' }}
-                                </button>
-                            </form>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ route('admin.isotanks.show', $iso->id) }}" class="btn btn-outline-secondary" title="View Details">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <form action="{{ route('admin.isotanks.toggle', $iso->id) }}" method="POST" class="d-inline">
+                                    @csrf
+                                    <button type="submit" class="btn btn-outline-secondary" title="{{ $iso->status === 'active' ? 'Deactivate' : 'Activate' }}">
+                                        <i class="bi bi-power"></i>
+                                    </button>
+                                </form>
+                            </div>
                             @else
                                 <span class="text-muted small">-</span>
                             @endif

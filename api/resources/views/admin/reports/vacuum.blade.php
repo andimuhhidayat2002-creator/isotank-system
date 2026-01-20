@@ -21,7 +21,7 @@
 <div class="tab-content" id="vacuumTabContent">
     <!-- TAB 1: Monitoring Process -->
     <div class="tab-pane fade show active" id="monitoring" role="tabpanel" aria-labelledby="monitoring-tab">
-        <div class="card shadow-sm border-top-0 rounded-0 rounded-bottom">
+        <div class="card border-top-0 rounded-0 rounded-bottom">
             <div class="card-body">
                 <div class="table-responsive">
                     <table id="vacuumTable" class="table table-hover align-middle w-100">
@@ -146,7 +146,7 @@
 
     <!-- TAB 2: All Vacuum History -->
     <div class="tab-pane fade" id="history" role="tabpanel" aria-labelledby="history-tab">
-        <div class="card shadow-sm border-top-0 rounded-0 rounded-bottom">
+        <div class="card border-top-0 rounded-0 rounded-bottom">
             <div class="card-body">
                 <div class="table-responsive">
                     <table id="historyTable" class="table table-striped table-hover align-middle w-100">
@@ -163,7 +163,7 @@
                             @foreach($vacuumLogs as $log)
                             <tr>
                                 <td>{{ \Carbon\Carbon::parse($log->check_datetime)->format('Y-m-d H:i') }}</td>
-                                <td class="fw-bold text-primary">{{ $log->isotank->iso_number ?? '-' }}</td>
+                                <td class="fw-bold"><a href="{{ route('admin.isotanks.show', $log->isotank_id) }}" class="text-decoration-none text-primary">{{ $log->isotank->iso_number ?? '-' }}</a></td>
                                 <td>
                                     <span class="fw-bold">{{ (float)$log->vacuum_value_mtorr }}</span> mTorr
                                     @if($log->vacuum_unit_raw && $log->vacuum_unit_raw !== 'mtorr')
@@ -179,11 +179,11 @@
                                 </td>
                                 <td>
                                     @if($log->source == 'inspection')
-                                        <span class="badge bg-info text-dark">Inspection</span>
+                                        <span class="badge bg-info bg-opacity-10 text-info border border-info-subtle">Inspection</span>
                                     @elseif($log->source == 'suction')
-                                        <span class="badge bg-warning text-dark">Suction Process</span>
+                                        <span class="badge bg-warning bg-opacity-10 text-warning border border-warning-subtle">Suction Process</span>
                                     @else
-                                        <span class="badge bg-secondary">Monitoring</span>
+                                        <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary-subtle">Monitoring</span>
                                     @endif
                                 </td>
                             </tr>

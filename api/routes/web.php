@@ -32,6 +32,7 @@ Route::middleware(['auth:web', 'role:admin,management,yard_operator'])->prefix('
     // Dashboard
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
     Route::get('/dashboard/location/{location}', [AdminController::class, 'locationDetail'])->name('dashboard.location');
+    Route::get('/dashboard/location/{location}/export', [AdminController::class, 'exportLocationInventory'])->name('dashboard.location.export');
     
     // Global Statistics Modules
     Route::get('/dashboard/maintenance', [AdminController::class, 'maintenanceStatistics'])->name('dashboard.maintenance');

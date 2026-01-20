@@ -5,14 +5,14 @@
     <h2 class="mb-0">Latest Condition Master</h2>
 </div>
 
-<div class="card shadow-sm">
+<div class="card">
     <div class="card-body">
         <div class="table-responsive">
             <table id="latestConditionTable" class="table table-bordered table-sm align-middle text-nowrap" style="font-size: 0.75rem;">
-                <thead class="bg-dark text-white text-center">
+                <thead class="text-white text-center" style="background-color: #2B4C7E;">
                     <tr>
-                        <th rowspan="2" class="align-middle bg-secondary" style="width: 120px;">ISO NUMBER</th>
-                        <th rowspan="2" class="align-middle bg-secondary" style="width: 100px;">UPDATED AT</th>
+                        <th rowspan="2" class="align-middle bg-secondary bg-opacity-75" style="width: 120px;">ISO NUMBER</th>
+                        <th rowspan="2" class="align-middle bg-secondary bg-opacity-75" style="width: 100px;">UPDATED AT</th>
                         
                         {{-- DYNAMIC SECTION B: GENERAL CONDITION --}}
                         @php
@@ -32,14 +32,14 @@
                             );
                         @endphp
 
-                        <th colspan="{{ $genItems->count() }}" class="bg-primary text-white">GENERAL CONDITION</th>
-                        <th colspan="{{ $valveItems->count() }}" class="bg-success text-white">VALVE & PIPE</th>
+                        <th colspan="{{ $genItems->count() }}" class="bg-primary text-white" style="border-bottom: 2px solid white;">GENERAL CONDITION</th>
+                        <th colspan="{{ $valveItems->count() }}" class="bg-success bg-opacity-75 text-white" style="border-bottom: 2px solid white;">VALVE & PIPE</th>
                         
                         {{-- HARDCODED SECTIONS --}}
-                        <th colspan="5" class="bg-warning text-dark">IBOX</th>
-                        <th colspan="6" class="bg-info text-dark">INSTRUMENTS</th>
-                        <th colspan="5" class="bg-danger text-white">VACUUM</th>
-                        <th colspan="12" class="bg-secondary text-white">PSV</th>
+                        <th colspan="5" style="background-color: #F59E0B; color: black; border-bottom: 2px solid white;">IBOX</th>
+                        <th colspan="6" style="background-color: #3B82F6; color: white; border-bottom: 2px solid white;">INSTRUMENTS</th>
+                        <th colspan="5" style="background-color: #EF4444; color: white; border-bottom: 2px solid white;">VACUUM</th>
+                        <th colspan="12" class="bg-secondary bg-opacity-75 text-white" style="border-bottom: 2px solid white;">PSV</th>
                     </tr>
                     <tr class="vertical-headers">
                         {{-- DYNAMIC HEADERS --}}

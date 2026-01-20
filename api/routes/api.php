@@ -26,6 +26,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Auth routes
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
+    Route::post('/me/signature', [AuthController::class, 'uploadSignature']);
     
     // Admin only routes
     Route::middleware('role:admin')->prefix('admin')->group(function () {

@@ -10,6 +10,38 @@ use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
+    // Digital Signature Upload
+    public function uploadSignature(Request $request) 
+    {
+        $request->validate([
+            'signature' => 'required|image|max:2048', // 2MB max
+        ]);
+
+        $user = $request->user();
+        
+        // Store signature: public/signatures/{id}_{ts}.png
+        $path = $request->file('signature')->storeAs(
+            'signatures', 
+            $user->id . '_' . time() . '.png',
+            'public'
+        );
+
+        // Update user profile
+        $user->update([
+            'signature_path' => $path,
+            'signature_updated_at' => now(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Signature updated successfully',
+            'data' => [
+                'signature_path' => $path,
+                'signature_url' => asset('storage/' . $path),
+            ]
+        ]);
+    }
+
     /**
      * Login user and create token
      */

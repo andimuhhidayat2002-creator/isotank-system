@@ -6,7 +6,7 @@
         <!-- Search Form -->
         <form action="{{ route('admin.activities.index') }}" method="GET" class="d-flex">
             <input type="text" name="search" class="form-control" placeholder="Search Activity by Last 4 Digits..." value="{{ request('search') }}">
-            <button type="submit" class="btn btn-outline-secondary ms-1"><i class="bi bi-search"></i></button>
+            <button type="submit" class="btn btn-primary ms-1"><i class="bi bi-search"></i></button>
             @if(request('search'))
                 <a href="{{ route('admin.activities.index') }}" class="btn btn-outline-danger ms-1" title="Clear Search"><i class="bi bi-x-lg"></i></a>
             @endif
@@ -16,7 +16,7 @@
     <div class="row mb-5">
         <!-- Inspection -->
         <div class="col-md-3">
-            <div class="card h-100 shadow-sm">
+            <div class="card h-100">
                 <div class="card-header bg-primary text-white fw-bold d-flex justify-content-between align-items-center">
                     <span>Inspection Activity</span>
                     <i class="bi bi-search"></i>
@@ -37,7 +37,7 @@
 
         <!-- Maintenance -->
         <div class="col-md-3">
-            <div class="card h-100 shadow-sm">
+            <div class="card h-100">
                 <div class="card-header bg-warning text-dark fw-bold d-flex justify-content-between align-items-center">
                     <span>Maintenance Activity</span>
                     <i class="bi bi-tools"></i>
@@ -58,7 +58,7 @@
 
         <!-- Calibration -->
         <div class="col-md-3">
-            <div class="card h-100 shadow-sm">
+            <div class="card h-100">
                 <div class="card-header bg-info text-white fw-bold d-flex justify-content-between align-items-center">
                     <span>Calibration Activity</span>
                     <i class="bi bi-clock-history"></i>
@@ -79,7 +79,7 @@
 
         <!-- Vacuum -->
         <div class="col-md-3">
-            <div class="card h-100 shadow-sm">
+            <div class="card h-100">
                 <div class="card-header bg-danger text-white fw-bold d-flex justify-content-between align-items-center">
                     <span>Vacuum Activity</span>
                     <i class="bi bi-speedometer"></i>
@@ -128,10 +128,7 @@
                             <label class="form-label">Destination (Outgoing Only)</label>
                             <input type="text" name="destination" class="form-control" placeholder="Client / Location">
                         </div>
-                        <div class="mb-3 receiver-field" style="display:none;">
-                            <label class="form-label">Receiver Name (Outgoing Only)</label>
-                            <input type="text" name="receiver_name" class="form-control" placeholder="Receiver Name">
-                        </div>
+                        <!-- Receiver Name Removed -->
                         <div class="mb-3 filling-field" style="display:none;">
                             <label class="form-label">Filling Status</label>
                             <select name="filling_status_code" class="form-select">
@@ -473,18 +470,12 @@
                         dest.style.display = 'block';
                         dest.querySelector('input').setAttribute('required', 'required');
                         
-                        if (receiver) {
-                            receiver.style.display = 'block';
-                            receiver.querySelector('input').setAttribute('required', 'required');
-                        }
+                        // Receiver field logic removed
                     } else {
                         dest.style.display = 'none';
                         dest.querySelector('input').removeAttribute('required');
                         
-                        if (receiver) {
-                            receiver.style.display = 'none';
-                            receiver.querySelector('input').removeAttribute('required');
-                        }
+                        // Receiver logic removed
                     }
 
                     // Filling Status: BOTH Incoming and Outgoing
@@ -536,10 +527,10 @@
     <div class="row mb-5">
         <!-- Pending Inspections -->
         <div class="col-md-12 mb-4">
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-white fw-bold border-bottom d-flex justify-content-between align-items-center">
+            <div class="card border-0">
+                <div class="card-header border-bottom d-flex justify-content-between align-items-center">
                     <span><i class="bi bi-search me-2"></i>Pending Inspections</span>
-                    <span class="badge bg-primary">{{ count($pendingInspections) }} Open</span>
+                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle">{{ count($pendingInspections) }} Open</span>
                 </div>
                 <div class="card-body">
                     <table id="pendingInspectionsTable" class="table table-hover mb-0 align-middle">
@@ -553,10 +544,10 @@
                                 <th class="text-end">Actions</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody class="border-top-0">
                             @foreach($pendingInspections as $job)
                             <tr>
-                                <td class="fw-bold">{{ optional($job->isotank)->iso_number ?? 'UNKNOWN' }}</td>
+                                <td class="fw-bold"><a href="{{ route('admin.isotanks.show', $job->isotank_id) }}" class="text-decoration-none text-primary">{{ optional($job->isotank)->iso_number ?? 'UNKNOWN' }}</a></td>
                                 <td>{{ strtoupper(str_replace('_', ' ', $job->activity_type)) }}</td>
                                 <td>{{ $job->planned_date ? $job->planned_date->format('Y-m-d') : '-' }}</td>
                                 <td>{{ $job->destination ?? '-' }}</td>
@@ -564,7 +555,7 @@
                                 <td class="text-end">
                                     <form action="{{ route('admin.activities.inspection.delete', $job->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Cancel this job?')">
                                         @csrf @method('DELETE')
-                                        <button type="submit" class="btn btn-link btn-sm text-danger p-0"><i class="bi bi-trash"></i> Cancel</button>
+                                        <button type="submit" class="btn btn-sm btn-outline-danger p-1 px-2"><i class="bi bi-trash"></i> Cancel</button>
                                     </form>
                                 </td>
                             </tr>
@@ -588,12 +579,12 @@
 
         <!-- Pending Maintenance & Calibration -->
         <div class="col-md-6 mb-4">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-header bg-white fw-bold border-bottom">
+            <div class="card border-0 h-100">
+                <div class="card-header border-bottom">
                     <i class="bi bi-tools me-2"></i>Pending Maintenance
                 </div>
                 <div class="card-body p-0">
-                    <table class="table table-sm table-hover mb-0">
+                    <table class="table table-hover mb-0 align-middle">
                         <thead class="table-light">
                             <tr>
                                 <th>ISO</th>
@@ -601,21 +592,21 @@
                                 <th class="text-end">Action</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody class="border-top-0">
                             @foreach($pendingMaintenance as $m)
                             <tr>
-                                <td>{{ optional($m->isotank)->iso_number ?? 'UNKNOWN' }}</td>
+                                <td class="fw-bold"><a href="{{ route('admin.isotanks.show', $m->isotank_id) }}" class="text-decoration-none text-primary">{{ optional($m->isotank)->iso_number ?? 'UNKNOWN' }}</a></td>
                                 <td class="text-truncate" style="max-width: 150px;">{{ $m->source_item }}</td>
                                 <td class="text-end">
                                     <form action="{{ route('admin.activities.maintenance.delete', $m->id) }}" method="POST" class="d-inline">
                                         @csrf @method('DELETE')
-                                        <button type="submit" class="btn btn-link btn-sm text-danger p-0"><i class="bi bi-trash"></i></button>
+                                        <button type="submit" class="btn btn-sm btn-outline-danger p-1 px-2"><i class="bi bi-trash"></i></button>
                                     </form>
                                 </td>
                             </tr>
                             @endforeach
                             @if($pendingMaintenance->isEmpty())
-                                <tr><td colspan="3" class="text-center py-2 text-muted x-small">Empty</td></tr>
+                                <tr><td colspan="3" class="text-center py-4 text-muted">No pending maintenance jobs</td></tr>
                             @endif
                         </tbody>
                     </table>
@@ -624,12 +615,12 @@
         </div>
 
         <div class="col-md-6 mb-4">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-header bg-white fw-bold border-bottom">
+            <div class="card border-0 h-100">
+                <div class="card-header border-bottom">
                     <i class="bi bi-clock-history me-2"></i>Planned Calibrations
                 </div>
                 <div class="card-body p-0">
-                    <table class="table table-sm table-hover mb-0">
+                    <table class="table table-hover mb-0 align-middle">
                         <thead class="table-light">
                             <tr>
                                 <th>ISO</th>
@@ -637,10 +628,10 @@
                                 <th class="text-end">Action</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody class="border-top-0">
                             @foreach($pendingCalibrations as $c)
                             <tr>
-                                <td>{{ optional($c->isotank)->iso_number ?? 'UNKNOWN' }}</td>
+                                <td class="fw-bold"><a href="{{ route('admin.isotanks.show', $c->isotank_id) }}" class="text-decoration-none text-primary">{{ optional($c->isotank)->iso_number ?? 'UNKNOWN' }}</a></td>
                                 <td class="text-truncate" style="max-width: 150px;">
                                     {{ $c->item_name }}
                                     @if($c->serial_number)
@@ -650,13 +641,13 @@
                                 <td class="text-end">
                                     <form action="{{ route('admin.activities.calibration.delete', $c->id) }}" method="POST" class="d-inline">
                                         @csrf @method('DELETE')
-                                        <button type="submit" class="btn btn-link btn-sm text-danger p-0"><i class="bi bi-trash"></i></button>
+                                        <button type="submit" class="btn btn-sm btn-outline-danger p-1 px-2"><i class="bi bi-trash"></i></button>
                                     </form>
                                 </td>
                             </tr>
                             @endforeach
                             @if($pendingCalibrations->isEmpty())
-                                <tr><td colspan="3" class="text-center py-2 text-muted x-small">Empty</td></tr>
+                                <tr><td colspan="3" class="text-center py-4 text-muted">No planned calibrations</td></tr>
                             @endif
                         </tbody>
                     </table>
@@ -665,7 +656,7 @@
         </div>
     </div>
     <h4>Upload History</h4>
-    <div class="card shadow-sm mt-3">
+    <div class="card mt-3">
         <div class="card-body">
         <table id="uploadHistoryTable" class="table table-hover mb-0 align-middle">
             <thead class="table-light">
@@ -678,14 +669,14 @@
                     <th>Details</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody class="border-top-0">
                 @foreach($logs as $log)
                 <tr>
                     <td>{{ $log->created_at ? $log->created_at->format('Y-m-d H:i') : '-' }}</td>
-                    <td>{{ ucfirst(str_replace('_', ' ', $log->activity_type)) }}</td>
+                    <td><span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary-subtle">{{ ucfirst(str_replace('_', ' ', $log->activity_type)) }}</span></td>
                     <td>{{ $log->total_rows }}</td>
-                    <td class="text-success">{{ $log->success_count }}</td>
-                    <td class="text-danger">{{ $log->error_count }}</td>
+                    <td class="text-success fw-bold">{{ $log->success_count }}</td>
+                    <td class="{{ $log->error_count > 0 ? 'text-danger fw-bold' : 'text-muted' }}">{{ $log->error_count }}</td>
                     <td>
                         @if($log->error_count > 0 && $log->error_details)
                             <button class="btn btn-sm btn-outline-danger view-error-btn" 

@@ -166,7 +166,26 @@
                         <tr><td class="ps-3">IBOX Condition</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->ibox_condition])</td></tr>
                         <tr><td class="ps-3">Battery</td><td class="text-center">{{ $log->ibox_battery_percent ? $log->ibox_battery_percent.'%' : '-' }}</td></tr>
                         <tr><td class="ps-3">Pressure (Digital)</td><td class="text-center">{{ $log->ibox_pressure ?? '-' }}</td></tr>
-                        <tr><td class="ps-3">Temperature (Digital)</td><td class="text-center">{{ $log->ibox_temperature ?? '-' }}</td></tr>
+                        
+                        <tr>
+                            <td class="ps-3">Temperature #1 (Digital)</td>
+                            <td class="text-center">
+                                {{ $log->ibox_temperature_1 ?? $log->ibox_temperature ?? '-' }}
+                                @if($log->ibox_temperature_1_timestamp)
+                                <br><small class="text-muted">({{ $log->ibox_temperature_1_timestamp->format('H:i') }})</small>
+                                @endif
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="ps-3">Temperature #2 (Digital)</td>
+                            <td class="text-center">
+                                {{ $log->ibox_temperature_2 ?? '-' }}
+                                @if($log->ibox_temperature_2_timestamp)
+                                <br><small class="text-muted">({{ $log->ibox_temperature_2_timestamp->format('H:i') }})</small>
+                                @endif
+                            </td>
+                        </tr>
+
                         <tr><td class="ps-3">Level (Digital)</td><td class="text-center">{{ $log->ibox_level ?? '-' }}</td></tr>
 
                         <!-- SECTION E: INSTRUMENTS (Hardcoded Legacy) -->
@@ -174,10 +193,45 @@
                         <tr><td class="ps-3">Pressure Gauge Condition</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->pressure_gauge_condition])</td></tr>
                         <tr><td class="ps-3 text-muted ms-3">Serial Number</td><td class="text-center">{{ $log->pressure_gauge_serial_number ?? '-' }}</td></tr>
                         <tr><td class="ps-3 text-muted ms-3">Calibration Date</td><td class="text-center">{{ $log->pressure_gauge_calibration_date ? $log->pressure_gauge_calibration_date->format('Y-m-d') : '-' }}</td></tr>
-                        <tr><td class="ps-3 text-muted ms-3">Reading (Pressure 1)</td><td class="text-center">{{ $log->pressure_1 ? (float)$log->pressure_1.' Bar' : '-' }}</td></tr>
+                        
+                        <tr>
+                            <td class="ps-3 text-muted ms-3">Reading (Pressure 1)</td>
+                            <td class="text-center">
+                                {{ $log->pressure_1 ? (float)$log->pressure_1.' MPa' : '-' }}
+                                @if($log->pressure_1_timestamp)
+                                <br><small class="text-muted">({{ $log->pressure_1_timestamp->format('H:i') }})</small>
+                                @endif
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="ps-3 text-muted ms-3">Reading (Pressure 2)</td>
+                            <td class="text-center">
+                                {{ $log->pressure_2 ? (float)$log->pressure_2.' MPa' : '-' }}
+                                @if($log->pressure_2_timestamp)
+                                <br><small class="text-muted">({{ $log->pressure_2_timestamp->format('H:i') }})</small>
+                                @endif
+                            </td>
+                        </tr>
                         
                         <tr><td class="ps-3">Level Gauge Condition</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->level_gauge_condition])</td></tr>
-                        <tr><td class="ps-3 text-muted ms-3">Reading (Level 1)</td><td class="text-center">{{ $log->level_1 ? (float)$log->level_1.' %' : '-' }}</td></tr>
+                        <tr>
+                            <td class="ps-3 text-muted ms-3">Reading (Level 1)</td>
+                            <td class="text-center">
+                                {{ $log->level_1 ? (float)$log->level_1.' %' : '-' }}
+                                @if($log->level_1_timestamp)
+                                <br><small class="text-muted">({{ $log->level_1_timestamp->format('H:i') }})</small>
+                                @endif
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="ps-3 text-muted ms-3">Reading (Level 2)</td>
+                            <td class="text-center">
+                                {{ $log->level_2 ? (float)$log->level_2.' %' : '-' }}
+                                @if($log->level_2_timestamp)
+                                <br><small class="text-muted">({{ $log->level_2_timestamp->format('H:i') }})</small>
+                                @endif
+                            </td>
+                        </tr>
 
                         <!-- SECTION F: VACUUM SYSTEM (Hardcoded Legacy) -->
                         <tr class="table-secondary"><th colspan="2">F. VACUUM SYSTEM</th></tr>

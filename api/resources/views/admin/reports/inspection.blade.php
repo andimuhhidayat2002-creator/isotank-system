@@ -5,7 +5,7 @@
         <h2>Inspection Logs</h2>
     </div>
 
-    <div class="card shadow-sm mt-4">
+    <div class="card mt-4">
         <div class="card-body">
             <table id="inspectionLogTable" class="table table-hover align-middle">
                 <thead class="table-light">
@@ -18,25 +18,27 @@
                         <th class="text-end">Actions</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="border-top-0">
                     @foreach($logs as $log)
                     <tr>
                         <td>{{ $log->inspection_date }}</td>
-                        <td class="fw-bold">{{ $log->isotank->iso_number ?? '-' }}</td>
-                        <td>{{ str_replace('_', ' ', strtoupper($log->inspection_type)) }}</td>
-                        <td>{{ $log->inspector->name ?? '-' }}</td>
-                        <td><span class="badge bg-primary">LOGGED</span></td>
+                        <td class="fw-bold"><a href="{{ route('admin.isotanks.show', $log->isotank_id) }}" class="text-decoration-none text-primary">{{ $log->isotank->iso_number ?? '-' }}</a></td>
+                        <td class="text-dark">{{ str_replace('_', ' ', strtoupper($log->inspection_type)) }}</td>
+                        <td class="text-muted">{{ $log->inspector->name ?? '-' }}</td>
+                        <td><span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle">LOGGED</span></td>
                         <td class="text-end">
-                            @if($log->pdf_path)
-                                <a href="{{ asset('storage/' . $log->pdf_path) }}" target="_blank" class="btn btn-sm btn-outline-danger me-1" title="View PDF">
-                                    <i class="bi bi-file-earmark-pdf"></i> PDF
-                                </a>
-                            @else
-                                <a href="{{ route('admin.reports.inspection.pdf', $log->id) }}" class="btn btn-sm btn-outline-danger me-1" title="Generate PDF">
-                                    <i class="bi bi-file-earmark-pdf"></i> PDF
-                                </a>
-                            @endif
-                            <a href="{{ route('admin.reports.inspection.show', $log->id) }}" class="btn btn-sm btn-outline-primary">Details</a>
+                            <div class="btn-group btn-group-sm">
+                                @if($log->pdf_path)
+                                    <a href="{{ asset('storage/' . $log->pdf_path) }}" target="_blank" class="btn btn-outline-danger" title="View PDF">
+                                        <i class="bi bi-file-earmark-pdf"></i>
+                                    </a>
+                                @else
+                                    <a href="{{ route('admin.reports.inspection.pdf', $log->id) }}" class="btn btn-outline-danger" title="Generate PDF">
+                                        <i class="bi bi-file-earmark-pdf"></i>
+                                    </a>
+                                @endif
+                                <a href="{{ route('admin.reports.inspection.show', $log->id) }}" class="btn btn-outline-secondary">Details</a>
+                            </div>
                         </td>
                     </tr>
                     @endforeach

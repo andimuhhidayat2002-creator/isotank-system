@@ -5,7 +5,7 @@
         <h2>Calibration Reports & History</h2>
     </div>
 
-    <div class="card shadow-sm">
+    <div class="card mt-4">
         <div class="card-body">
             <table id="calibrationTable" class="table table-hover align-middle">
                 <thead class="table-light">
@@ -20,26 +20,26 @@
                         <th>Notes</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="border-top-0">
                     @foreach($logs as $log)
                     <tr>
-                        <td class="fw-bold">{{ $log->isotank->iso_number ?? '-' }}</td>
-                        <td class="text-uppercase small">{{ str_replace('_', ' ', $log->item_name) }}</td>
+                        <td class="fw-bold"><a href="{{ route('admin.isotanks.show', $log->isotank_id) }}" class="text-decoration-none text-primary">{{ $log->isotank->iso_number ?? '-' }}</a></td>
+                        <td class="text-uppercase small fw-bold text-muted">{{ str_replace('_', ' ', $log->item_name) }}</td>
                         <td>
                             @if($log->status === 'completed')
-                                <span class="badge bg-success">COMPLETED</span>
+                                <span class="badge bg-success bg-opacity-10 text-success border border-success-subtle">COMPLETED</span>
                             @elseif($log->status === 'rejected')
-                                <span class="badge bg-danger">REJECTED</span>
+                                <span class="badge bg-danger bg-opacity-10 text-danger border border-danger-subtle">REJECTED</span>
                             @elseif($log->status === 'planned')
-                                <span class="badge bg-info">PLANNED</span>
+                                <span class="badge bg-info bg-opacity-10 text-info border border-info-subtle">PLANNED</span>
                             @else
-                                <span class="badge bg-warning text-dark">{{ strtoupper($log->status) }}</span>
+                                <span class="badge bg-warning bg-opacity-10 text-warning border border-warning-subtle">{{ strtoupper($log->status) }}</span>
                             @endif
                         </td>
                         <td>{{ $log->calibration_date ? $log->calibration_date->format('Y-m-d') : '-' }}</td>
                         <td>
                             @if($log->valid_until)
-                                <span class="{{ $log->valid_until->lt(now()) ? 'text-danger fw-bold' : '' }}">
+                                <span class="{{ $log->valid_until->lt(now()) ? 'text-danger fw-bold' : 'text-success' }}">
                                     {{ $log->valid_until->format('Y-m-d') }}
                                 </span>
                             @else
@@ -55,9 +55,9 @@
                                 {{ $log->serial_number ?? '-' }}
                             @endif
                         </td>
-                        <td>{{ $log->vendor ?? '-' }}</td>
+                        <td class="text-muted">{{ $log->vendor ?? '-' }}</td>
                         <td>
-                            <button class="btn btn-sm btn-outline-dark" data-bs-toggle="modal" data-bs-target="#notesModal{{ $log->id }}">
+                            <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#notesModal{{ $log->id }}">
                                 View
                             </button>
                         </td>
