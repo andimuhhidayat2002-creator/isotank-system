@@ -60,6 +60,7 @@ class IsotankUploadController extends Controller
         // Headers
         $headers = [
             'ISO Number',
+            'Tank Category', // New Column
             'Owner', 
             'Manufacturer',
             'Model Type',
@@ -78,6 +79,7 @@ class IsotankUploadController extends Controller
         // Example Row
         $example = [
             'HAIU1234567',
+            'T75', // Example Category 
             'Kayan', 
             'CIMC', 
             'T11', 

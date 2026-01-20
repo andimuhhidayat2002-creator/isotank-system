@@ -90,6 +90,7 @@ class MasterIsotanksImport
 
                     $data = [
                         'iso_number' => $iso,
+                         'tank_category' => $getVal('tank_category') ?? $getVal('category') ?? $getVal('type') ?? 'T75',
                         'product' => $getVal('product'),
                         'owner' => $getVal('owner'),
                         'manufacturer' => $getVal('manufacturer'),

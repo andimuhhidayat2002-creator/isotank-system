@@ -35,6 +35,7 @@
                     <tr>
                         <th style="width: 30px;"><input type="checkbox" id="selectAllIsotanks" class="form-check-input"></th>
                         <th>ISO Number</th>
+                        <th>Tank Cat</th> <!-- Added -->
                         <th>Owner</th>
                         <th>Manuf. / Model</th>
                         <th>Serial No</th>
@@ -55,6 +56,7 @@
                     <tr>
                         <td><input type="checkbox" class="form-check-input iso-checkbox" value="{{ $iso->id }}"></td>
                         <td class="fw-bold"><a href="{{ route('admin.isotanks.show', $iso->id) }}" class="text-decoration-none text-primary">{{ $iso->iso_number }}</a></td>
+                        <td><span class="badge bg-info text-dark">{{ $iso->tank_category ?? 'T75' }}</span></td> <!-- Added -->
                         <td class="text-muted">{{ $iso->owner ?? '-' }}</td>
                         <td>
                             <div class="fw-bold text-dark">{{ $iso->manufacturer ?? '-' }}</div>
@@ -153,6 +155,7 @@
                     <tr>
                         <th></th>
                         <th>ISO Number</th>
+                        <th>Tank Cat</th> <!-- Added -->
                         <th>Owner</th>
                         <th>Manuf/Model</th>
                         <th>Serial No</th>
