@@ -88,9 +88,16 @@ class MasterIsotanksImport
                     
                     $isotank = MasterIsotank::where('iso_number', $iso)->first();
 
+                    $rawCategory = $getVal('tank_category') ?? $getVal('category') ?? $getVal('type');
+                    $tankCategory = $rawCategory ? strtoupper(trim((string)$rawCategory)) : 'T75';
+                    
+                    // Fallback cleanup: if T75 is actually what they wrote, fine. 
+                    // If they wrote something weird, maybe keep it or default? 
+                    // Let's assume input is correct but normalize case.
+
                     $data = [
                         'iso_number' => $iso,
-                         'tank_category' => $getVal('tank_category') ?? $getVal('category') ?? $getVal('type') ?? 'T75',
+                        'tank_category' => $tankCategory,
                         'product' => $getVal('product'),
                         'owner' => $getVal('owner'),
                         'manufacturer' => $getVal('manufacturer'),
@@ -105,7 +112,8 @@ class MasterIsotanksImport
                     ];
 
                     if ($isotank) {
-                        $isotank->update($data);
+                        // Force update of category even if it exists
+                        $isotank->forceFill($data)->save();
                     } else {
                         MasterIsotank::create($data);
                     }
