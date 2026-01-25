@@ -30,66 +30,61 @@
                         <th rowspan="2" class="align-middle bg-secondary bg-opacity-75" style="width: 120px;">ISO NUMBER</th>
                         <th rowspan="2" class="align-middle bg-secondary bg-opacity-75" style="width: 100px;">UPDATED AT</th>
                         
-                        {{-- DYNAMIC SECTION B: GENERAL CONDITION --}}
-                        @php
-                            $genItems = $inspectionItems->filter(fn($i) => 
-                                $i->category && (
-                                    str_starts_with(strtolower($i->category), 'b') || 
-                                    str_contains(strtolower($i->category), 'general') ||
-                                    in_array(strtolower($i->category), ['external'])
-                                )
-                            );
-                            $valveItems = $inspectionItems->filter(fn($i) => 
-                                $i->category && (
-                                    str_starts_with(strtolower($i->category), 'c') || 
-                                    str_contains(strtolower($i->category), 'valve') ||
-                                    str_contains(strtolower($i->category), 'piping')
-                                )
-                            );
-                        @endphp
-
-                        <th colspan="{{ $genItems->count() }}" class="bg-primary text-white" style="border-bottom: 2px solid white;">GENERAL CONDITION</th>
-                        <th colspan="{{ $valveItems->count() }}" class="bg-success bg-opacity-75 text-white" style="border-bottom: 2px solid white;">VALVE & PIPE</th>
+                        {{-- DYNAMIC CATEGORY HEADERS --}}
+                        @php $colorToggle = true; @endphp
+                        @foreach($groupedItems as $catName => $items)
+                            <th colspan="{{ $items->count() }}" class="{{ $colorToggle ? 'bg-primary' : 'bg-success bg-opacity-75' }} text-white" style="border-bottom: 2px solid white;">
+                                {{ strtoupper($catName) }}
+                            </th>
+                            @php $colorToggle = !$colorToggle; @endphp
+                        @endforeach
                         
-                        {{-- HARDCODED SECTIONS --}}
-                        <th colspan="5" style="background-color: #F59E0B; color: black; border-bottom: 2px solid white;">IBOX</th>
-                        <th colspan="6" style="background-color: #3B82F6; color: white; border-bottom: 2px solid white;">INSTRUMENTS</th>
-                        <th colspan="5" style="background-color: #EF4444; color: white; border-bottom: 2px solid white;">VACUUM</th>
-                        <th colspan="12" class="bg-secondary bg-opacity-75 text-white" style="border-bottom: 2px solid white;">PSV</th>
+                        {{-- HARDCODED SECTIONS (LEGACY T75) --}}
+                        @if($category === 'all' || $category === 'T75')
+                            <th colspan="5" style="background-color: #F59E0B; color: black; border-bottom: 2px solid white;">IBOX</th>
+                            <th colspan="6" style="background-color: #3B82F6; color: white; border-bottom: 2px solid white;">INSTRUMENTS</th>
+                            <th colspan="5" style="background-color: #EF4444; color: white; border-bottom: 2px solid white;">VACUUM</th>
+                            <th colspan="12" class="bg-secondary bg-opacity-75 text-white" style="border-bottom: 2px solid white;">PSV</th>
+                        @endif
                     </tr>
                     <tr class="vertical-headers">
-                        {{-- DYNAMIC HEADERS --}}
-                        @foreach($genItems as $item) <th><div>{{ $item->label }}</div></th> @endforeach
-                        @foreach($valveItems as $item) <th><div>{{ $item->label }}</div></th> @endforeach
+                        {{-- DYNAMIC ITEM HEADERS --}}
+                        @foreach($groupedItems as $catName => $items)
+                            @foreach($items as $item) 
+                                <th><div>{{ $item->label }}</div></th> 
+                            @endforeach
+                        @endforeach
                         
-                        {{-- HARDCODED HEADERS --}}
-                        <!-- IBOX -->
-                        <th><div>Condition</div></th>
-                        <th><div>Battery</div></th>
-                        <th><div>Pressure</div></th>
-                        <th><div>Temperature</div></th>
-                        <th><div>Level</div></th>
-                        
-                        <!-- Instruments -->
-                        <th><div>PG Cond.</div></th>
-                        <th><div>PG Serial</div></th>
-                        <th><div>PG Calib.</div></th>
-                        <th><div>Pressure</div></th>
-                        <th><div>LG Cond.</div></th>
-                        <th><div>Level</div></th>
-                        
-                        <!-- Vacuum -->
-                        <th><div>VG Cond.</div></th>
-                        <th><div>Port Suction</div></th>
-                        <th><div>Value</div></th>
-                        <th><div>Temp</div></th>
-                        <th><div>Check Date</div></th>
-                        
-                        <!-- PSV -->
-                        <th><div>PSV1 Cond</div></th><th><div>Serial</div></th><th><div>Date</div></th>
-                        <th><div>PSV2 Cond</div></th><th><div>Serial</div></th><th><div>Date</div></th>
-                        <th><div>PSV3 Cond</div></th><th><div>Serial</div></th><th><div>Date</div></th>
-                        <th><div>PSV4 Cond</div></th><th><div>Serial</div></th><th><div>Date</div></th>
+                        {{-- HARDCODED SUB HEADERS --}}
+                        @if($category === 'all' || $category === 'T75')
+                            <!-- IBOX -->
+                            <th><div>Condition</div></th>
+                            <th><div>Battery</div></th>
+                            <th><div>Pressure</div></th>
+                            <th><div>Temperature</div></th>
+                            <th><div>Level</div></th>
+                            
+                            <!-- Instruments -->
+                            <th><div>PG Cond.</div></th>
+                            <th><div>PG Serial</div></th>
+                            <th><div>PG Calib.</div></th>
+                            <th><div>Pressure</div></th>
+                            <th><div>LG Cond.</div></th>
+                            <th><div>Level</div></th>
+                            
+                            <!-- Vacuum -->
+                            <th><div>VG Cond.</div></th>
+                            <th><div>Port Suction</div></th>
+                            <th><div>Value</div></th>
+                            <th><div>Temp</div></th>
+                            <th><div>Check Date</div></th>
+                            
+                            <!-- PSV -->
+                            <th><div>PSV1 Cond</div></th><th><div>Serial</div></th><th><div>Date</div></th>
+                            <th><div>PSV2 Cond</div></th><th><div>Serial</div></th><th><div>Date</div></th>
+                            <th><div>PSV3 Cond</div></th><th><div>Serial</div></th><th><div>Date</div></th>
+                            <th><div>PSV4 Cond</div></th><th><div>Serial</div></th><th><div>Date</div></th>
+                        @endif
                     </tr>
                 </thead>
                 <tbody>
@@ -108,108 +103,107 @@
                         </td>
                         <td class="small">{{ $log->updated_at ? $log->updated_at->format('Y-m-d') : '-' }}</td>
                         
-                        {{-- DYNAMIC VALUES: GENERAL --}}
-                        @foreach($genItems as $item)
-                            @php 
-                                $code = $item->code; 
-                                $val = $logData[$code] ?? ($iLog->$code ?? ($log->$code ?? null));
-                            @endphp
-                            <td>@include('admin.reports.partials.badge', ['status' => $val])</td>
+                        {{-- DYNAMIC VALUES --}}
+                        @foreach($groupedItems as $catName => $items)
+                            @foreach($items as $item)
+                                @php 
+                                    $code = $item->code; 
+                                    $val = $logData[$code] ?? ($iLog->$code ?? ($log->$code ?? null));
+                                @endphp
+                                <td>@include('admin.reports.partials.badge', ['status' => $val])</td>
+                            @endforeach
                         @endforeach
 
-                        {{-- DYNAMIC VALUES: VALVE --}}
-                        @foreach($valveItems as $item)
-                             @php 
-                                $code = $item->code; 
-                                $val = $logData[$code] ?? ($iLog->$code ?? ($log->$code ?? null));
+                        {{-- HARDCODED VALUES (LEGACY T75) --}}
+                        @if($category === 'all' || $category === 'T75')
+                             {{-- IBOX --}}
+                             <td>@include('admin.reports.partials.badge', ['status' => $log->ibox_condition])</td>
+                             <td>{{ $log->ibox_battery_percent ? $log->ibox_battery_percent.'%' : '-' }}</td>
+                             <td>{{ $log->ibox_pressure ?? '-' }}</td>
+                             <td>{{ $log->ibox_temperature_1 ?? ($log->ibox_temperature ?? '-') }}</td>
+                             <td>{{ $log->ibox_level ?? '-' }}</td>
+
+                            {{-- INSTRUMENTS --}}
+                            <td>@include('admin.reports.partials.badge', ['status' => $log->pressure_gauge_condition])</td>
+                             @php
+                                $comps = $log->isotank->components ?? collect();
+                                $pgComp = $comps->where('component_type', 'PG')->first();
+                                $pgDate = $log->pressure_gauge_calibration_date 
+                                    ? \Carbon\Carbon::parse($log->pressure_gauge_calibration_date)->format('y-m-d')
+                                    : ($pgComp && $pgComp->last_calibration_date ? $pgComp->last_calibration_date->format('y-m-d') : '-');
+                                $pgSerial = $log->pressure_gauge_serial_number ?: ($pgComp ? $pgComp->serial_number : '-');
                             @endphp
-                            <td>@include('admin.reports.partials.badge', ['status' => $val])</td>
-                        @endforeach
+                            <td class="small">{{ $pgSerial }}</td>
+                            <td class="small">{{ $pgDate }}</td>
+                            <td>{{ $log->pressure_1 ? (float)$log->pressure_1 : '' }}</td>
+                            <td>@include('admin.reports.partials.badge', ['status' => $log->level_gauge_condition])</td>
+                            <td>{{ $log->level_1 ? (float)$log->level_1 : '' }}</td>
 
-                        {{-- HARDCODED VALUES: IBOX --}}
-                         <td>@include('admin.reports.partials.badge', ['status' => $log->ibox_condition])</td>
-                         <td>{{ $log->ibox_battery_percent ? $log->ibox_battery_percent.'%' : '-' }}</td>
-                         <td>{{ $log->ibox_pressure ?? '-' }}</td>
-                         <td>{{ $log->ibox_temperature_1 ?? ($log->ibox_temperature ?? '-') }}</td>
-                         <td>{{ $log->ibox_level ?? '-' }}</td>
+                            {{-- VACUUM --}}
+                            <td>@include('admin.reports.partials.badge', ['status' => $log->vacuum_gauge_condition])</td>
+                            <td>@include('admin.reports.partials.badge', ['status' => $log->vacuum_port_suction_condition])</td>
+                            <td>{{ $log->vacuum_value ? (float)$log->vacuum_value : '-' }}</td>
+                            <td>{{ $log->vacuum_temperature ?? '-' }}</td>
+                            <td class="small">{{ $log->vacuum_check_datetime ? \Carbon\Carbon::parse($log->vacuum_check_datetime)->format('y-m-d') : '-' }}</td>
 
-                        {{-- HARDCODED VALUES: INSTRUMENTS --}}
-                        <td>@include('admin.reports.partials.badge', ['status' => $log->pressure_gauge_condition])</td>
-                         @php
-                            $comps = $log->isotank->components ?? collect();
-                            $pgComp = $comps->where('component_type', 'PG')->first();
-                            $pgDate = $log->pressure_gauge_calibration_date 
-                                ? \Carbon\Carbon::parse($log->pressure_gauge_calibration_date)->format('y-m-d')
-                                : ($pgComp && $pgComp->last_calibration_date ? $pgComp->last_calibration_date->format('y-m-d') : '-');
-                            $pgSerial = $log->pressure_gauge_serial_number ?: ($pgComp ? $pgComp->serial_number : '-');
-                        @endphp
-                        <td class="small">{{ $pgSerial }}</td>
-                        <td class="small">{{ $pgDate }}</td>
-                        <td>{{ $log->pressure_1 ? (float)$log->pressure_1 : '' }}</td>
-                        <td>@include('admin.reports.partials.badge', ['status' => $log->level_gauge_condition])</td>
-                        <td>{{ $log->level_1 ? (float)$log->level_1 : '' }}</td>
-
-                        {{-- HARDCODED VALUES: VACUUM --}}
-                        <td>@include('admin.reports.partials.badge', ['status' => $log->vacuum_gauge_condition])</td>
-                        <td>@include('admin.reports.partials.badge', ['status' => $log->vacuum_port_suction_condition])</td>
-                        <td>{{ $log->vacuum_value ? (float)$log->vacuum_value : '-' }}</td>
-                        <td>{{ $log->vacuum_temperature ?? '-' }}</td>
-                        <td class="small">{{ $log->vacuum_check_datetime ? \Carbon\Carbon::parse($log->vacuum_check_datetime)->format('y-m-d') : '-' }}</td>
-
-                        {{-- HARDCODED VALUES: PSV --}}
-                        @php
-                            $getPsv = function($pos) use ($log, $comps) {
-                                $psvLogCond = $log->{"psv{$pos}_condition"};
-                                $psvLogSerial = $log->{"psv{$pos}_serial_number"};
-                                $psvLogDate = $log->{"psv{$pos}_calibration_date"};
-                                
-                                $comp = $comps->where('component_type', 'PSV')->where('position_code', $pos)->first();
-                                
-                                $serial = $psvLogSerial ?: ($comp->serial_number ?? '-');
-                                $date = $psvLogDate 
-                                    ? \Carbon\Carbon::parse($psvLogDate)->format('y-m-d')
-                                    : ($comp && $comp->last_calibration_date ? $comp->last_calibration_date->format('y-m-d') : '-');
+                            {{-- PSV --}}
+                            @php
+                                $getPsv = function($pos) use ($log, $comps) {
+                                    $psvLogCond = $log->{"psv{$pos}_condition"};
+                                    $psvLogSerial = $log->{"psv{$pos}_serial_number"};
+                                    $psvLogDate = $log->{"psv{$pos}_calibration_date"};
                                     
-                                return [$psvLogCond, $serial, $date];
-                            };
+                                    $comp = $comps->where('component_type', 'PSV')->where('position_code', $pos)->first();
+                                    
+                                    $serial = $psvLogSerial ?: ($comp->serial_number ?? '-');
+                                    $date = $psvLogDate 
+                                        ? \Carbon\Carbon::parse($psvLogDate)->format('y-m-d')
+                                        : ($comp && $comp->last_calibration_date ? $comp->last_calibration_date->format('y-m-d') : '-');
+                                        
+                                    return [$psvLogCond, $serial, $date];
+                                };
+                                
+                                $p1 = $getPsv(1); $p2 = $getPsv(2); $p3 = $getPsv(3); $p4 = $getPsv(4);
+                            @endphp
+                            <td>@include('admin.reports.partials.badge', ['status' => $p1[0]])</td>
+                            <td class="small">{{ $p1[1] }}</td>
+                            <td class="small">{{ $p1[2] }}</td>
                             
-                            $p1 = $getPsv(1); $p2 = $getPsv(2); $p3 = $getPsv(3); $p4 = $getPsv(4);
-                        @endphp
-                        <td>@include('admin.reports.partials.badge', ['status' => $p1[0]])</td>
-                        <td class="small">{{ $p1[1] }}</td>
-                        <td class="small">{{ $p1[2] }}</td>
-                        
-                        <td>@include('admin.reports.partials.badge', ['status' => $p2[0]])</td>
-                        <td class="small">{{ $p2[1] }}</td>
-                        <td class="small">{{ $p2[2] }}</td>
-                        
-                        <td>@include('admin.reports.partials.badge', ['status' => $p3[0]])</td>
-                        <td class="small">{{ $p3[1] }}</td>
-                        <td class="small">{{ $p3[2] }}</td>
-                        
-                        <td>@include('admin.reports.partials.badge', ['status' => $p4[0]])</td>
-                        <td class="small">{{ $p4[1] }}</td>
-                        <td class="small">{{ $p4[2] }}</td>
+                            <td>@include('admin.reports.partials.badge', ['status' => $p2[0]])</td>
+                            <td class="small">{{ $p2[1] }}</td>
+                            <td class="small">{{ $p2[2] }}</td>
+                            
+                            <td>@include('admin.reports.partials.badge', ['status' => $p3[0]])</td>
+                            <td class="small">{{ $p3[1] }}</td>
+                            <td class="small">{{ $p3[2] }}</td>
+                            
+                            <td>@include('admin.reports.partials.badge', ['status' => $p4[0]])</td>
+                            <td class="small">{{ $p4[1] }}</td>
+                            <td class="small">{{ $p4[2] }}</td>
+                        @endif
                     </tr>
                     @endforeach
                 </tbody>
                 <tfoot class="bg-light">
                     <tr>
                         <th>ISO</th><th>Upd</th>
-                         @foreach($genItems as $item) <th>{{ substr($item->label,0,4) }}</th> @endforeach
-                         @foreach($valveItems as $item) <th>{{ substr($item->label,0,4) }}</th> @endforeach
-                         
-                         <!-- IBOX -->
-                         <th>Cond</th><th>Bat</th><th>Prs</th><th>Tmp</th><th>Lvl</th>
-                         <!-- Inst -->
-                         <th>PGC</th><th>SN</th><th>Cal</th><th>Prs</th><th>LGC</th><th>Lvl</th>
-                         <!-- Vac -->
-                         <th>VC</th><th>VPC</th><th>Val</th><th>Tmp</th><th>Dt</th>
-                         <!-- PSV -->
-                         <th>P1C</th><th>SN</th><th>Dt</th>
-                         <th>P2C</th><th>SN</th><th>Dt</th>
-                         <th>P3C</th><th>SN</th><th>Dt</th>
-                         <th>P4C</th><th>SN</th><th>Dt</th>
+                         @foreach($groupedItems as $catName => $items)
+                             @foreach($items as $item) <th>{{ substr($item->label,0,4) }}</th> @endforeach
+                         @endforeach
+
+                         @if($category === 'all' || $category === 'T75')
+                             <!-- IBOX -->
+                             <th>Cond</th><th>Bat</th><th>Prs</th><th>Tmp</th><th>Lvl</th>
+                             <!-- Inst -->
+                             <th>PGC</th><th>SN</th><th>Cal</th><th>Prs</th><th>LGC</th><th>Lvl</th>
+                             <!-- Vac -->
+                             <th>VC</th><th>VPC</th><th>Val</th><th>Tmp</th><th>Dt</th>
+                             <!-- PSV -->
+                             <th>P1C</th><th>SN</th><th>Dt</th>
+                             <th>P2C</th><th>SN</th><th>Dt</th>
+                             <th>P3C</th><th>SN</th><th>Dt</th>
+                             <th>P4C</th><th>SN</th><th>Dt</th>
+                         @endif
                     </tr>
                 </tfoot>
             </table>
