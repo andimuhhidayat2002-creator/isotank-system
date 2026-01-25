@@ -5,6 +5,21 @@
         <h2>Inspection Logs</h2>
     </div>
 
+    <ul class="nav nav-tabs mb-3">
+        <li class="nav-item">
+          <a class="nav-link {{ $category == 'all' ? 'active' : '' }}" href="{{ route('admin.reports.inspection', ['category' => 'all']) }}">All</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {{ $category == 'T75' ? 'active' : '' }}" href="{{ route('admin.reports.inspection', ['category' => 'T75']) }}">T75</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {{ $category == 'T11' ? 'active' : '' }}" href="{{ route('admin.reports.inspection', ['category' => 'T11']) }}">T11</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {{ $category == 'T50' ? 'active' : '' }}" href="{{ route('admin.reports.inspection', ['category' => 'T50']) }}">T50</a>
+        </li>
+    </ul>
+
     <div class="card mt-4">
         <div class="card-body">
             <table id="inspectionLogTable" class="table table-hover align-middle">

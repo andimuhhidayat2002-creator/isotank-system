@@ -759,9 +759,28 @@ class AdminController extends Controller
         return back()->with('success', 'Calibration job removed.');
     }
     
-    public function inspectionLogs() {
-        $logs = InspectionLog::with(['isotank', 'inspector'])->latest()->get();
-        return view('admin.reports.inspection', compact('logs'));
+    public function inspectionLogs(Request $request) {
+        $category = $request->query('category', 'all');
+        $query = InspectionLog::with(['isotank', 'inspector']);
+
+        if ($category !== 'all') {
+            $query->whereHas('isotank', function ($q) use ($category) {
+                // If filtering for T75, also include null/empty for legacy support? 
+                // Creating a strict filter for now as per user request to separate them.
+                if ($category === 'T75') {
+                     $q->where(function($sub) {
+                         $sub->where('tank_category', 'T75')
+                             ->orWhereNull('tank_category')
+                             ->orWhere('tank_category', '');
+                     });
+                } else {
+                    $q->where('tank_category', $category);
+                }
+            });
+        }
+
+        $logs = $query->latest()->get();
+        return view('admin.reports.inspection', compact('logs', 'category'));
     }
 
     public function showInspectionLog($id) {
@@ -770,24 +789,45 @@ class AdminController extends Controller
         return view('admin.reports.inspection_show', compact('log', 'inspectionItems'));
     }
     
-    public function maintenanceJobs() {
+    public function maintenanceJobs(Request $request) {
+        $category = $request->query('category', 'all');
+
+        $filter = function($query) use ($category) {
+            if ($category !== 'all') {
+                $query->whereHas('isotank', function ($q) use ($category) {
+                    if ($category === 'T75') {
+                         $q->where(function($sub) {
+                             $sub->where('tank_category', 'T75')
+                                 ->orWhereNull('tank_category')
+                                 ->orWhere('tank_category', '');
+                         });
+                    } else {
+                        $q->where('tank_category', $category);
+                    }
+                });
+            }
+        };
+
         $activeJobs = MaintenanceJob::with(['isotank', 'assignee'])
             ->whereIn('status', ['open', 'on_progress'])
+            ->tap($filter)
             ->latest()
             ->get();
             
         $deferredJobs = MaintenanceJob::with(['isotank', 'assignee'])
             ->where('status', 'deferred')
+            ->tap($filter)
             ->latest()
             ->get();
             
         $closedJobs = MaintenanceJob::with(['isotank', 'assignee'])
             ->where('status', 'closed')
+            ->tap($filter)
             ->latest()
             ->limit(100) // Limit for performance
             ->get();
             
-        return view('admin.reports.maintenance', compact('activeJobs', 'deferredJobs', 'closedJobs'));
+        return view('admin.reports.maintenance', compact('activeJobs', 'deferredJobs', 'closedJobs', 'category'));
     }
 
     public function showMaintenanceJob($id) {
@@ -869,12 +909,30 @@ class AdminController extends Controller
         return view('admin.reports.vacuum', compact('sessions', 'vacuumLogs'));
     }
 
-    public function latestInspections() {
-        $logs = MasterLatestInspection::with(['isotank.components', 'inspector', 'lastInspectionLog'])->get();
+    public function latestInspections(Request $request) {
+        $category = $request->query('category', 'all');
+        
+        $query = MasterLatestInspection::with(['isotank.components', 'inspector', 'lastInspectionLog']);
+
+        if ($category !== 'all') {
+            $query->whereHas('isotank', function ($q) use ($category) {
+               if ($category === 'T75') {
+                    $q->where(function($sub) {
+                        $sub->where('tank_category', 'T75')
+                            ->orWhereNull('tank_category')
+                            ->orWhere('tank_category', '');
+                    });
+               } else {
+                   $q->where('tank_category', $category);
+               }
+            });
+        }
+
+        $logs = $query->get();
         $inspectionItems = \App\Models\InspectionItem::where('is_active', true)->orderBy('order')->get();
         // Group items by category for the table header structure
         $groupedItems = $inspectionItems->groupBy('category');
-        return view('admin.reports.latest_inspections', compact('logs', 'inspectionItems', 'groupedItems'));
+        return view('admin.reports.latest_inspections', compact('logs', 'inspectionItems', 'groupedItems', 'category'));
     }
 
     public function calibrationLogs() {

@@ -9,6 +9,22 @@
         </div>
     </div>
 
+    <!-- Category Filter -->
+    <ul class="nav nav-pills mb-3">
+        <li class="nav-item">
+          <a class="nav-link {{ $category == 'all' ? 'active' : '' }}" href="{{ route('admin.reports.maintenance', ['category' => 'all']) }}">All</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {{ $category == 'T75' ? 'active' : '' }}" href="{{ route('admin.reports.maintenance', ['category' => 'T75']) }}">T75</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {{ $category == 'T11' ? 'active' : '' }}" href="{{ route('admin.reports.maintenance', ['category' => 'T11']) }}">T11</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {{ $category == 'T50' ? 'active' : '' }}" href="{{ route('admin.reports.maintenance', ['category' => 'T50']) }}">T50</a>
+        </li>
+    </ul>
+
     <!-- Navigation Tabs -->
     <ul class="nav nav-tabs mb-4" id="maintenanceTabs" role="tablist">
         <li class="nav-item" role="presentation">

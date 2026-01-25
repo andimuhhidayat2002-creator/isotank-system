@@ -5,6 +5,22 @@
     <h2 class="mb-0">Latest Condition Master</h2>
 </div>
 
+    <!-- Category Filter -->
+    <ul class="nav nav-pills mb-3">
+        <li class="nav-item">
+          <a class="nav-link {{ $category == 'all' ? 'active' : '' }}" href="{{ route('admin.reports.latest', ['category' => 'all']) }}">All</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {{ $category == 'T75' ? 'active' : '' }}" href="{{ route('admin.reports.latest', ['category' => 'T75']) }}">T75</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {{ $category == 'T11' ? 'active' : '' }}" href="{{ route('admin.reports.latest', ['category' => 'T11']) }}">T11</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {{ $category == 'T50' ? 'active' : '' }}" href="{{ route('admin.reports.latest', ['category' => 'T50']) }}">T50</a>
+        </li>
+    </ul>
+
 <div class="card">
     <div class="card-body">
         <div class="table-responsive">
