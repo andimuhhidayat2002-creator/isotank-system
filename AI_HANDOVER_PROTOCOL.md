@@ -21,10 +21,20 @@ We follow a strict **GIT-FLOW** sync looking like this:
 *   **To Deploy Code:** Run `.\deploy_to_vps.bat` (This script handles the git push -> ssh pull chain).
 *   **If Server is Broken:** Refer to `.agent/workflows/deployment_protocol.md`
 
-## 4. Current State (As of Jan 20, 2026)
-*   Server successfully migrated to `api/` subfolder structure.
-*   Server synced to generic GitHub `main`.
-*   Flutter App uses `http://202.10.44.146/api` as Base URL.
+## 4. CRITICIAL ARCHITECTURE UPDATES (As of Jan 20, 2026 19:30)
+
+### A. Multi-Category Support (T75, T11, T50)
+*   Table `master_isotanks` now has `tank_category` column (Default: T75).
+*   Table `inspection_items` has `applicable_categories` JSON column.
+*   **API Logic:** `InspectionItemApiController` automatically filters items. If no `tank_category` param is provided, it defaults to **T75** (Backward Compatibility).
+
+### B. Dynamic Receiver Validation
+*   **Source of Truth:** Validation for Receiver Confirmation (`InspectionSubmitController`) is now **DYNAMIC**, sourced from `inspection_items` table.
+*   **Do Not Hardcode:** Never revert to using `PdfGenerationService::getGeneralConditionItems()` for validation rules.
+
+### C. Excel Import/Export
+*   Templates now support `Tank Category` column.
+*   Logic has been updated to parse this column or fallback to T75.
 
 ---
 *Created by Antigravity Agent to ensure consistency across sessions.*
