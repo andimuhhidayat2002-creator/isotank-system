@@ -69,45 +69,46 @@ class InspectionSubmitController extends Controller
         $category = $job->isotank->tank_category ?? 'T75';
         $isT75 = ($category === 'T75');
         
-        // T75 Specific Required Logic
-        // If it's T75 and not draft -> Required.
-        // If it's T11/T50 -> Nullable (because they use dynamic items instead)
-        $t75Required = ($isT75 && !$isDraft) ? 'required' : 'nullable';
+        // Helper rule generator
+        $t75Rule = function($constraints) use ($isT75, $isDraft) {
+            if (!$isT75) return 'nullable'; // Completely relaxed for non-T75
+            return ($isDraft ? 'nullable' : 'required') . '|' . $constraints;
+        };
 
         // Validation rules
         $rules = [
             'inspection_date' => 'required|date',
             
             // B. GENERAL CONDITION (Legacy T75)
-            'surface' => $t75Required . '|in:good,not_good,need_attention,na',
-            'frame' => $t75Required . '|in:good,not_good,need_attention,na',
-            'tank_plate' => $t75Required . '|in:good,not_good,need_attention,na',
-            'venting_pipe' => $t75Required . '|in:good,not_good,need_attention,na',
-            'explosion_proof_cover' => $t75Required . '|in:good,not_good,need_attention,na',
-            'grounding_system' => $t75Required . '|in:good,not_good,need_attention,na',
-            'document_container' => $t75Required . '|in:good,not_good,need_attention,na',
-            'safety_label' => $t75Required . '|in:good,not_good,need_attention,na',
-            'valve_box_door' => $t75Required . '|in:good,not_good,need_attention,na',
-            'valve_box_door_handle' => $t75Required . '|in:good,not_good,need_attention,na',
+            'surface' => $t75Rule('in:good,not_good,need_attention,na'),
+            'frame' => $t75Rule('in:good,not_good,need_attention,na'),
+            'tank_plate' => $t75Rule('in:good,not_good,need_attention,na'),
+            'venting_pipe' => $t75Rule('in:good,not_good,need_attention,na'),
+            'explosion_proof_cover' => $t75Rule('in:good,not_good,need_attention,na'),
+            'grounding_system' => $t75Rule('in:good,not_good,need_attention,na'),
+            'document_container' => $t75Rule('in:good,not_good,need_attention,na'),
+            'safety_label' => $t75Rule('in:good,not_good,need_attention,na'),
+            'valve_box_door' => $t75Rule('in:good,not_good,need_attention,na'),
+            'valve_box_door_handle' => $t75Rule('in:good,not_good,need_attention,na'),
             
             // C. VALVE & PIPE SYSTEM (Legacy T75)
-            'valve_condition' => $t75Required . '|in:good,not_good,need_attention,na',
-            'valve_position' => $t75Required . '|in:correct,incorrect',
-            'pipe_joint' => $t75Required . '|in:good,not_good,need_attention,na',
-            'air_source_connection' => $t75Required . '|in:good,not_good,need_attention,na',
-            'esdv' => $t75Required . '|in:good,not_good,need_attention,na',
-            'blind_flange' => $t75Required . '|in:good,not_good,need_attention,na',
-            'prv' => $t75Required . '|in:good,not_good,need_attention,na',
+            'valve_condition' => $t75Rule('in:good,not_good,need_attention,na'),
+            'valve_position' => $t75Rule('in:correct,incorrect'),
+            'pipe_joint' => $t75Rule('in:good,not_good,need_attention,na'),
+            'air_source_connection' => $t75Rule('in:good,not_good,need_attention,na'),
+            'esdv' => $t75Rule('in:good,not_good,need_attention,na'),
+            'blind_flange' => $t75Rule('in:good,not_good,need_attention,na'),
+            'prv' => $t75Rule('in:good,not_good,need_attention,na'),
             
             // D. IBOX SYSTEM
-            'ibox_condition' => $t75Required . '|in:good,not_good,need_attention,na',
+            'ibox_condition' => $t75Rule('in:good,not_good,need_attention,na'),
             'pressure' => 'nullable|numeric',
             'temperature' => 'nullable|numeric',
             'level' => 'nullable|numeric',
             'battery_percent' => 'nullable|integer|min:0|max:100',
             
             // E. INSTRUMENT (outgoing has multi-stage)
-            'pressure_gauge_condition' => $t75Required . '|in:good,not_good,need_attention,na',
+            'pressure_gauge_condition' => $t75Rule('in:good,not_good,need_attention,na'),
             'pressure_gauge_serial' => 'nullable|string',
             'pressure_gauge_calibration_date' => 'nullable|date',
             'pressure_gauge_valid_until' => 'nullable|date',
@@ -116,7 +117,7 @@ class InspectionSubmitController extends Controller
             'pressure_2' => 'nullable|numeric',
             'pressure_2_timestamp' => 'nullable|date_format:Y-m-d H:i:s',
             
-            'level_gauge_condition' => $t75Required . '|in:good,not_good,need_attention,na',
+            'level_gauge_condition' => $t75Rule('in:good,not_good,need_attention,na'),
             'level_1' => 'nullable|numeric',
             'level_1_timestamp' => 'nullable|date_format:Y-m-d H:i:s',
             'level_2' => 'nullable|numeric',
@@ -132,8 +133,8 @@ class InspectionSubmitController extends Controller
             'vacuum_unit' => 'nullable|in:torr,mtorr,scientific',
             'vacuum_temperature' => 'nullable|numeric',
             'vacuum_check_datetime' => 'nullable|date_format:Y-m-d H:i:s',
-            'vacuum_gauge_condition' => $t75Required . '|in:good,not_good,need_attention,na',
-            'vacuum_port_suction_condition' => $t75Required . '|in:good,not_good,need_attention,na',
+            'vacuum_gauge_condition' => $t75Rule('in:good,not_good,need_attention,na'),
+            'vacuum_port_suction_condition' => $t75Rule('in:good,not_good,need_attention,na'),
             
             // G. PSV (1-4)
             'psv1_condition' => 'nullable|in:good,not_good,need_attention,na',
