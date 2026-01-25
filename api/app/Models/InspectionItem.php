@@ -20,6 +20,7 @@ class InspectionItem extends Model
         'is_active',
         'applies_to',
         'options',
+        'applicable_categories',
     ];
 
     protected $casts = [
@@ -27,6 +28,7 @@ class InspectionItem extends Model
         'is_active' => 'boolean',
         'options' => 'array',
         'order' => 'integer',
+        'applicable_categories' => 'array',
     ];
 
     /**

@@ -929,7 +929,26 @@ class AdminController extends Controller
         }
 
         $logs = $query->get();
-        $inspectionItems = \App\Models\InspectionItem::where('is_active', true)->orderBy('order')->get();
+        
+        // Filter Inspection Items Layout based on Category
+        $allInspectionItems = \App\Models\InspectionItem::where('is_active', true)->orderBy('order')->get();
+        
+        if ($category !== 'all') {
+            $inspectionItems = $allInspectionItems->filter(function($item) use ($category) {
+                // If applicable_categories is null/empty, safe to assume it's legacy T75?
+                // Migration updated all legacy to ["T75"].
+                // So checking in_array is sufficient.
+                $cats = $item->applicable_categories ?? [];
+                
+                // Safety catch for non-array (should be array due to Cast)
+                if (!is_array($cats)) return false; 
+                
+                return in_array($category, $cats);
+            });
+        } else {
+            $inspectionItems = $allInspectionItems;
+        }
+
         // Group items by category for the table header structure
         $groupedItems = $inspectionItems->groupBy('category');
         return view('admin.reports.latest_inspections', compact('logs', 'inspectionItems', 'groupedItems', 'category'));
