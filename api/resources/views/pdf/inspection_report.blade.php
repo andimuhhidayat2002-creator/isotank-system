@@ -154,6 +154,7 @@
                     @endphp
                 </table>
                 
+                @if(!empty($inspection->ibox_condition) || !empty($inspection->ibox_pressure))
                 <div class="section-title">D. IBOX SYSTEM</div>
                 <table class="checklist-table">
                     <tr><td style="width: 70%;">Condition</td><td style="text-align:right">{!! badge($inspection->ibox_condition) !!}</td></tr>
@@ -179,7 +180,9 @@
                     </tr>
                     <tr><td>Level (Digital)</td><td style="text-align:right">{{ $inspection->ibox_level ?? '-' }}</td></tr>
                 </table>
+                @endif
 
+                @if(!empty($inspection->vacuum_gauge_condition) || !empty($inspection->vacuum_value))
                  <div class="section-title">F. VACUUM SYSTEM</div>
                  <table class="checklist-table">
                     <tr><td>Gauge / Port</td><td style="text-align:right">{!! badge($inspection->vacuum_gauge_condition) !!} / {!! badge($inspection->vacuum_port_suction_condition) !!}</td></tr>
@@ -191,6 +194,7 @@
                         Check Date: {{ $inspection->vacuum_check_datetime ? \Carbon\Carbon::parse($inspection->vacuum_check_datetime)->format('d M Y H:i') : '-' }}
                     </td></tr>
                  </table>
+                 @endif
 
             </td>
             
@@ -210,6 +214,7 @@
                     @endforelse
                 </table>
 
+                @if(!empty($inspection->pressure_gauge_condition) || !empty($inspection->pressure_1))
                 <div class="section-title">E. INSTRUMENTS</div>
                 <table class="checklist-table">
                     <tr>
@@ -244,7 +249,9 @@
                         @endif
                     </td></tr>
                 </table>
+                @endif
 
+                @if(!empty($inspection->psv1_condition) || !empty($inspection->psv2_condition) || !empty($inspection->psv3_condition) || !empty($inspection->psv4_condition))
                  <div class="section-title">G. SAFETY VALVES (PSV)</div>
                  <table class="checklist-table">
                     @for($i=1; $i<=4; $i++)
@@ -257,6 +264,7 @@
                         @endif
                     @endfor
                  </table>
+                 @endif
 
             </td>
         </tr>
