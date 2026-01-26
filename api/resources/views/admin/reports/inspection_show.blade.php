@@ -173,6 +173,47 @@
                             @endforeach
                         @endif
 
+                        @if($tankCat == 'T11')
+                        <!-- SECTION F: IBOX READINGS (T11 Specific) -->
+                        <tr class="table-secondary"><th colspan="2">F. IBOX READINGS</th></tr>
+                        <tr>
+                            <td class="ps-3">Temperature #1 (°C)</td>
+                            <td class="text-center">
+                                {{ $log->ibox_temperature_1 ?? $log->ibox_temperature ?? '-' }}
+                                @if($log->ibox_temperature_1_timestamp)
+                                <br><small class="text-muted">({{ $log->ibox_temperature_1_timestamp->format('H:i') }})</small>
+                                @endif
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="ps-3">Temperature #2 (°C)</td>
+                            <td class="text-center">
+                                {{ $log->ibox_temperature_2 ?? '-' }}
+                                @if($log->ibox_temperature_2_timestamp)
+                                <br><small class="text-muted">({{ $log->ibox_temperature_2_timestamp->format('H:i') }})</small>
+                                @endif
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="ps-3">Pressure (Bar)</td>
+                            <td class="text-center">
+                                {{ $log->pressure_1 ? (float)$log->pressure_1.' MPa' : '-' }}
+                                @if($log->pressure_1_timestamp)
+                                <br><small class="text-muted">({{ $log->pressure_1_timestamp->format('H:i') }})</small>
+                                @endif
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="ps-3">Level</td>
+                            <td class="text-center">
+                                {{ $log->level_1 ? (float)$log->level_1.' %' : '-' }}
+                                @if($log->level_1_timestamp)
+                                <br><small class="text-muted">({{ $log->level_1_timestamp->format('H:i') }})</small>
+                                @endif
+                            </td>
+                        </tr>
+                        @endif
+
                         @if($tankCat == 'T75')
                         <!-- SECTION D: IBOX SYSTEM (Hardcoded Legacy) -->
                         <tr class="table-secondary"><th colspan="2">D. IBOX SYSTEM</th></tr>
