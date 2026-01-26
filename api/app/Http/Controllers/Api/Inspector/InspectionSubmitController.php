@@ -683,11 +683,14 @@ class InspectionSubmitController extends Controller
             'psv1_condition', 'psv2_condition', 'psv3_condition', 'psv4_condition',
         ];
 
-        // Fetch dynamic items if available
+        // Fetch dynamic items if available (ONLY items that represent a condition/status)
         $dynamicItems = [];
         try {
             if (class_exists(\App\Models\InspectionItem::class)) {
-                $dynamicItems = \App\Models\InspectionItem::where('is_active', true)->pluck('code')->toArray();
+                $dynamicItems = \App\Models\InspectionItem::where('is_active', true)
+                    ->whereIn('input_type', ['condition', 'boolean', 'select'])
+                    ->pluck('code')
+                    ->toArray();
             }
         } catch (\Exception $e) {
             // Ignore if model not found or db error
@@ -705,6 +708,11 @@ class InspectionSubmitController extends Controller
             } else if (!$val && isset($validated['inspection_data']) && is_string($validated['inspection_data'])) {
                  $json = json_decode($validated['inspection_data'], true);
                  $val = $json[$item] ?? null;
+            }
+
+            // EXTRA SAFETY: Skip numeric values for condition table
+            if ($val && (is_numeric($val) || is_float($val))) {
+                continue;
             }
 
             if ($val) {
