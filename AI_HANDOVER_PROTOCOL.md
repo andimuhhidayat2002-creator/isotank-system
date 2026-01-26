@@ -69,6 +69,7 @@ We operate on **TWO SEPARATE** repositories. Always verify which one you are wor
 *   **Strict Item Filter:** T50 inspection items are now strictly limited to the 27 items requested (matching standard inspection flow provided in photo).
 *   **Explicit Labels:** Data labels for T50 now explicitly include section prefixes (e.g., `FRONT:`, `REAR:`, `RIGHT:`, `LEFT:`, `TOP:`) for parity with the T11 style.
 *   **Submission Sync:** `InspectionLog` for T50 now expects the new prefixed labels for correct parsing.
+*   **Technical Diagram:** Added T50 technical diagram (Rear, Side, Top view) to the PDF report specifically for T50 category tanks.
 
 ---
-*Last Updated: Jan 27, 2026 05:30 - Antigravity Agent*
+*Last Updated: Jan 27, 2026 05:45 - Antigravity Agent*

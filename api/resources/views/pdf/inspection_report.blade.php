@@ -93,6 +93,18 @@
         </div>
     @endif
 
+    {{-- T50 DIAGRAM (USER REQUEST) --}}
+    @if(($isotank->tank_category ?? '') === 'T50')
+        <div style="text-align: center; margin: 5px 0; border: 1px solid #eee; padding: 2px;">
+            @php $diagramPath = public_path('assets/images/t50_diagram.png'); @endphp
+            @if(file_exists($diagramPath))
+                <img src="{{ $diagramPath }}" style="width: 100%; max-height: 150px; object-fit: contain;">
+            @else
+                <div style="color: #999; font-style: italic;">[ T50 ISO TANK DIAGRAM ]</div>
+            @endif
+        </div>
+    @endif
+
     {{-- Helper PHP --}}
     @php
         function badge($val) {
