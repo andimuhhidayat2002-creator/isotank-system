@@ -359,7 +359,8 @@ class InspectionSubmitController extends Controller
                 'valve_box_door_handle' => $clean($validated['valve_box_door_handle'] ?? null),
                 
                 'valve_condition' => $clean($validated['valve_condition'] ?? null),
-                'valve_position' => $clean($validated['valve_position'] ?? null),
+                // Fix for T11/T50: Force NULL for valve_position if not T75, preventing "Data truncated" on ENUM('correct','incorrect')
+                'valve_position' => ($isT75) ? $clean($validated['valve_position'] ?? null) : null,
                 'pipe_joint' => $clean($validated['pipe_joint'] ?? null),
                 'air_source_connection' => $clean($validated['air_source_connection'] ?? null),
                 'esdv' => $clean($validated['esdv'] ?? null),

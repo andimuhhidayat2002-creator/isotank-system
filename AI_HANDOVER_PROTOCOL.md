@@ -1,14 +1,19 @@
 # ISOTANK SYSTEM - AI HANDOVER PROTOCOL
 > **IMPORTANT FOR AI AGENT:** READ THIS BEFORE DOING ANYTHING RELATED TO DEPLOYMENT.
 
-## 1. System Topology (The Triple Source of Truth)
-We follow a strict **GIT-FLOW** sync looking like this:
-`[Local PC]`  -> `(git push)` -> `[GitHub Main]` -> `(ssh git pull)` -> `[VPS Server]`
+## 1. System Topology (The Two Sources of Truth)
+We operate on **TWO SEPARATE** repositories. Always verify which one you are working on.
 
+### A. Web System & API (Monorepo)
 *   **Local Path:** `c:\laragon\www\isotank-system`
 *   **GitHub Repo:** `andimuhhidayat2002-creator/isotank-system` (Branch: **main**)
-*   **VPS Info:** IP `202.10.44.146` (User: `root`)
-*   **VPS Path:** `/var/www/isotank-system` (Code lives inside `/api` subfolder!)
+*   **VPS Info:** IP `202.10.44.146` (User: `root`) -> Check `/var/www/isotank-system/api`
+
+### B. Mobile App (Standalone Flutter)
+*   **Local Path:** `c:\Users\USER\isotank_app`
+*   **GitHub Repo:** `andimuhhidayat2002-creator/isotank-app`
+*   **Note:** Do NOT use the `mobile/` folder inside the `isotank-system` monorepo. It is deprecated/out of sync.
+*   **Build Output:** `build\app\outputs\flutter-apk\app-release.apk`
 
 ## 2. THE GOLDEN RULES (DO NOT VIOLATE)
 1.  **NO ASSUMPTIONS:** Never assume the server is synced. ALWAYS run `VERIFY_SYNC.bat` first.

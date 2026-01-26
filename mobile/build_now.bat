@@ -1,5 +1,5 @@
 @echo off
-cd /d "c:\Users\USER\isotank_app"
+cd /d "%~dp0"
 
 echo ==========================================
 echo      FLUTTER BUILD PROCESS
