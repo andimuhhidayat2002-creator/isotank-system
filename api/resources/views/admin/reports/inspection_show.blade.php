@@ -109,6 +109,9 @@
 
                         <!-- DYNAMIC CATEGORIES LOOP -->
                         @php
+                            $tankCat = $log->isotank->tank_category ?? 'T75';
+                        @endphp
+                        @php
                             // 1. Filter items STRICTLY by Tank Category
                             $catSpecificItems = $inspectionItems->filter(fn($i) => 
                                  in_array($tankCat, $i->applicable_categories ?? [])

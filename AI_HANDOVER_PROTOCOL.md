@@ -42,9 +42,9 @@ We operate on **TWO SEPARATE** repositories. Always verify which one you are wor
 *   Logic has been updated to parse this column or fallback to T75.
 ### D. Web Admin Dynamic Views (Jan 25, 2026)
 *   **Global Dashboard:** Added Category Filter (All, T75, T11, T50) to filter all statistics (Active, Maintenance, Inspection, Alerts).
-*   **Master Condition & Maintenance:** Now have filtering tabs (All, T75, T11, T50).
-*   **Dynamic Columns:** `latest_inspections.blade.php` is refactored to dynamically render columns based on the selected category's inspection items.
-*   **Legacy Hiding:** Hardcoded sections (IBOX, VACUUM, INSTRUMENTS, PSV) are **HIDDEN** for T11/T50 unless viewing 'All' or 'T75', or if data exists.
+*   **Master Condition & Maintenance:** 'All' tab REMOVED. Default is now T75. Tabs: T75, T11, T50.
+*   **Strict Category Display:** `isotanks/show.blade.php` and `inspection_show.blade.php` now STRICTLY filter items based on tank category. T75-specific sections (IBOX, Vacuum, Instruments) are totally hidden for T11/T50.
+*   **Legacy Data Fallback:** Implemented `$legacyMap` to ensure old inspection data (e.g. key `frame` vs dynamic item `Frame`) displays correctly without "N/A" errors.
 *   **Unified Reports:** Daily & Weekly Reports (Email) now show breakdown of Incoming, Outgoing, and Stock by **Category** (T75/T11/T50).
 
 ### E. Digital Signatures & PDF
