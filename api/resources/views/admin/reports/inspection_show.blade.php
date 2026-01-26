@@ -255,6 +255,7 @@
                         <tr><td class="ps-3">Check Datetime</td><td class="text-center">{{ $log->vacuum_check_datetime ? $log->vacuum_check_datetime->format('Y-m-d H:i') : '-' }}</td></tr>
                         @endif
 
+                        @if($tankCat == 'T75')
                         <!-- SECTION G: PSV (Hardcoded Legacy) -->
                         <tr class="table-secondary"><th colspan="2">G. PSV (PRESSURE SAFETY VALVES)</th></tr>
                         @foreach(['psv1', 'psv2', 'psv3', 'psv4'] as $p)
@@ -270,6 +271,7 @@
                                 <td class="text-center small">Valid Until: {{ $log->{$p.'_valid_until'} ? $log->{$p.'_valid_until'}->format('Y-m-d') : '-' }}</td>
                             </tr>
                         @endforeach
+                        @endif
 
                         <!-- SIGNATURES -->
                         <tr class="table-dark"><th colspan="2">SIGNATURES</th></tr>

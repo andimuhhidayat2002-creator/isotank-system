@@ -195,6 +195,7 @@
                                             <tr><td class="ps-3">Value</td><td class="text-center fw-bold">{{ $log->vacuum_value ? (float)$log->vacuum_value . ' mTorr' : '-' }}</td></tr>
                                             @endif
 
+                                            @if($tankCat == 'T75')
                                             <!-- SECTION G: PSV -->
                                             <tr class="table-secondary"><th colspan="2">G. PSV</th></tr>
                                             @foreach(['psv1', 'psv2', 'psv3', 'psv4'] as $p)
@@ -205,6 +206,7 @@
                                                 </tr>
                                                 @endif
                                             @endforeach
+                                            @endif
                                         </tbody>
                                     </table>
                                 </div>
