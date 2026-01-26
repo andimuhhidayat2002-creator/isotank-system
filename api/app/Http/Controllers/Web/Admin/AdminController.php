@@ -941,7 +941,7 @@ class AdminController extends Controller
     }
 
     public function latestInspections(Request $request) {
-        $category = $request->query('category', 'all');
+        $category = $request->query('category', 'T75');
         
         $query = MasterLatestInspection::with(['isotank.components', 'inspector', 'lastInspectionLog']);
 

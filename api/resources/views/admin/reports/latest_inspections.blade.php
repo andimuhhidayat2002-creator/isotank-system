@@ -7,9 +7,7 @@
 
     <!-- Category Filter -->
     <ul class="nav nav-pills mb-3">
-        <li class="nav-item">
-          <a class="nav-link {{ $category == 'all' ? 'active' : '' }}" href="{{ route('admin.reports.latest', ['category' => 'all']) }}">All</a>
-        </li>
+
         <li class="nav-item">
           <a class="nav-link {{ $category == 'T75' ? 'active' : '' }}" href="{{ route('admin.reports.latest', ['category' => 'T75']) }}">T75</a>
         </li>
