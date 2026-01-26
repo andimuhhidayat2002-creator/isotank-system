@@ -110,13 +110,15 @@
                         <!-- SECTION B: GENERAL CONDITION (Dynamic + Hybrid + Unmapped) -->
                         <tr class="table-secondary"><th colspan="2">B. GENERAL CONDITION</th></tr>
                         @php
-                            // Filter items that are 'b', 'general', or 'external'
+                             $tankCat = $log->isotank->tank_category ?? 'T75'; // Default to T75
+                             
+                             // Filter items that are 'b', 'general', or 'external' AND match Tank Category
                              $generalItems = $inspectionItems->filter(fn($i) => 
                                 $i->category && (
                                     str_starts_with(strtolower($i->category), 'b') || 
                                     str_contains(strtolower($i->category), 'general') ||
                                     in_array(strtolower($i->category), ['external'])
-                                )
+                                ) && in_array($tankCat, $i->applicable_categories ?? [])
                             );
                             
                             $legacyMap = [
@@ -168,7 +170,7 @@
                                     str_starts_with(strtolower($i->category), 'c') || 
                                     str_contains(strtolower($i->category), 'valve') ||
                                     str_contains(strtolower($i->category), 'piping')
-                                )
+                                ) && in_array($tankCat, $i->applicable_categories ?? [])
                             );
                             
                             $legacyValveMap = [
@@ -198,6 +200,7 @@
                              </tr>
                         @endforeach
 
+                        @if($tankCat == 'T75')
                         <!-- SECTION D: IBOX SYSTEM (Hardcoded Legacy) -->
                         <tr class="table-secondary"><th colspan="2">D. IBOX SYSTEM</th></tr>
                         <tr><td class="ps-3">IBOX Condition</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->ibox_condition])</td></tr>
@@ -277,6 +280,7 @@
                         <tr><td class="ps-3">Vacuum Value</td><td class="text-center fw-bold">{{ $log->vacuum_value ? (float)$log->vacuum_value . ' mTorr' : '-' }}</td></tr>
                         <tr><td class="ps-3">Vacuum Temperature</td><td class="text-center">{{ $log->vacuum_temperature ? $log->vacuum_temperature . ' C' : '-' }}</td></tr>
                         <tr><td class="ps-3">Check Datetime</td><td class="text-center">{{ $log->vacuum_check_datetime ? $log->vacuum_check_datetime->format('Y-m-d H:i') : '-' }}</td></tr>
+                        @endif
 
                         <!-- SECTION G: PSV (Hardcoded Legacy) -->
                         <tr class="table-secondary"><th colspan="2">G. PSV (PRESSURE SAFETY VALVES)</th></tr>

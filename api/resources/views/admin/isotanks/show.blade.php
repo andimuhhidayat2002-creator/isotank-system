@@ -101,8 +101,23 @@
                                             @php
                                                 $inspectionItems = \App\Models\InspectionItem::where('is_active', true)->orderBy('order')->get();
                                                 $logData = is_array($log->inspection_data) ? $log->inspection_data : json_decode($log->inspection_data, true) ?? [];
+                                                $tankCat = $isotank->tank_category ?? 'T75'; // Default to T75
+
+                                                // Legacy Map for Fallback
+                                                $legacyMap = [
+                                                    'Surface Condition' => 'surface', 'Tank Surface & Paint Condition' => 'surface',
+                                                    'Frame Condition' => 'frame', 'Frame Structure' => 'frame',
+                                                    'Tank Name Plate' => 'tank_plate', 'Data Plate' => 'tank_plate',
+                                                    'Venting Pipe' => 'venting_pipe',
+                                                    'Explosion Proof Cover' => 'explosion_proof_cover',
+                                                    'Valve Box Door' => 'valve_box_door',
+                                                    'Valve Condition' => 'valve_condition',
+                                                    'Valve Position' => 'valve_position',
+                                                    'Pipe Joint' => 'pipe_joint'
+                                                ];
                                                 
                                                 // Unmapped Item Logic (Same as Report)
+                                                // ... (Using simplified logic for brevity as per instructions) ...
                                                 $standardCodes = $inspectionItems->pluck('code')->toArray();
                                                 $unmapped = [];
                                                 foreach($logData as $k => $v) {
@@ -120,11 +135,20 @@
                                             <tr class="table-secondary"><th colspan="2">B. GENERAL CONDITION</th></tr>
                                             @php
                                                  $generalItems = $inspectionItems->filter(fn($i) => 
-                                                    $i->category && (str_starts_with(strtolower($i->category), 'b') || str_contains(strtolower($i->category), 'general') || strtolower($i->category)=='external')
+                                                    $i->category && 
+                                                    (str_starts_with(strtolower($i->category), 'b') || str_contains(strtolower($i->category), 'general') || strtolower($i->category)=='external') &&
+                                                    in_array($tankCat, $i->applicable_categories ?? [])
                                                 );
                                             @endphp
                                             @foreach($generalItems as $item)
-                                                 @php $code = $item->code; $val = $logData[$code] ?? ($log->$code ?? null); @endphp
+                                                 @php 
+                                                    $code = $item->code; 
+                                                    $val = $logData[$code] ?? ($log->$code ?? null);
+                                                    if(!$val && isset($legacyMap[$item->label])) {
+                                                        $lKey = $legacyMap[$item->label];
+                                                        $val = $logData[$lKey] ?? ($log->$lKey ?? null);
+                                                    }
+                                                 @endphp
                                                  <tr>
                                                     <td class="ps-3">{{ $item->label }}</td>
                                                     <td class="text-center">@include('admin.reports.partials.badge', ['status' => $val ?: '-'])</td>
@@ -142,41 +166,58 @@
                                             <tr class="table-secondary"><th colspan="2">C. VALVE & PIPE SYSTEM</th></tr>
                                             @php
                                                 $valveItems = $inspectionItems->filter(fn($i) => 
-                                                    $i->category && (str_starts_with(strtolower($i->category), 'c') || str_contains(strtolower($i->category), 'valve') || str_contains(strtolower($i->category), 'piping'))
+                                                    $i->category && 
+                                                    (str_starts_with(strtolower($i->category), 'c') || str_contains(strtolower($i->category), 'valve') || str_contains(strtolower($i->category), 'piping')) &&
+                                                    in_array($tankCat, $i->applicable_categories ?? [])
                                                 );
                                             @endphp
                                              @foreach($valveItems as $item)
-                                                 @php $code = $item->code; $val = $logData[$code] ?? ($log->$code ?? null); @endphp
+                                                 @php 
+                                                    $code = $item->code; 
+                                                    $val = $logData[$code] ?? ($log->$code ?? null);
+                                                    if(!$val && isset($legacyMap[$item->label])) {
+                                                        $lKey = $legacyMap[$item->label];
+                                                        $val = $logData[$lKey] ?? ($log->$lKey ?? null);
+                                                    }
+                                                 @endphp
                                                  <tr>
                                                     <td class="ps-3">{{ $item->label }}</td>
                                                     <td class="text-center">@include('admin.reports.partials.badge', ['status' => $val ?: '-'])</td>
                                                  </tr>
                                             @endforeach
 
+                                            @if($tankCat == 'T75')
                                             <!-- SECTION D: IBOX -->
                                             <tr class="table-secondary"><th colspan="2">D. IBOX SYSTEM</th></tr>
                                             <tr><td class="ps-3">IBOX Condition</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->ibox_condition])</td></tr>
                                             <tr><td class="ps-3">Pressure (Digital)</td><td class="text-center">{{ $log->ibox_pressure ?? '-' }}</td></tr>
                                             <tr><td class="ps-3">Temperature</td><td class="text-center">{{ $log->ibox_temperature ?? '-' }}</td></tr>
+                                            @endif
 
+                                            @if($tankCat == 'T75')
                                             <!-- SECTION E: INSTRUMENTS -->
                                             <tr class="table-secondary"><th colspan="2">E. INSTRUMENTS</th></tr>
                                             <tr><td class="ps-3">Pressure Gauge</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->pressure_gauge_condition])</td></tr>
                                             <tr><td class="ps-3">Level Gauge</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->level_gauge_condition])</td></tr>
+                                            @endif
 
+                                            @if($tankCat == 'T75')
                                             <!-- SECTION F: VACUUM -->
                                             <tr class="table-secondary"><th colspan="2">F. VACUUM SYSTEM</th></tr>
                                             <tr><td class="ps-3">Vacuum Gauge</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->vacuum_gauge_condition])</td></tr>
                                             <tr><td class="ps-3">Port Suction</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->vacuum_port_suction_condition])</td></tr>
                                             <tr><td class="ps-3">Value</td><td class="text-center fw-bold">{{ $log->vacuum_value ? (float)$log->vacuum_value . ' mTorr' : '-' }}</td></tr>
+                                            @endif
 
                                             <!-- SECTION G: PSV -->
                                             <tr class="table-secondary"><th colspan="2">G. PSV</th></tr>
                                             @foreach(['psv1', 'psv2', 'psv3', 'psv4'] as $p)
+                                                @if($log->{$p.'_condition'}) {{-- Only show if data exists (legacy friendly) --}}
                                                 <tr>
                                                     <td class="ps-3">{{ strtoupper($p) }} Condition</td>
                                                     <td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->{$p.'_condition'}])</td>
                                                 </tr>
+                                                @endif
                                             @endforeach
                                         </tbody>
                                     </table>
