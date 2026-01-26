@@ -154,7 +154,8 @@
                     @endphp
                 </table>
                 
-                @if(!empty($inspection->ibox_condition) || !empty($inspection->ibox_pressure))
+                {{-- D. IBOX SYSTEM (T75 ONLY) --}}
+                @if(($isotank->tank_category == 'T75' || !$isotank->tank_category) && (!empty($inspection->ibox_condition) || !empty($inspection->ibox_pressure)))
                 <div class="section-title">D. IBOX SYSTEM</div>
                 <table class="checklist-table">
                     <tr><td style="width: 70%;">Condition</td><td style="text-align:right">{!! badge($inspection->ibox_condition) !!}</td></tr>
@@ -182,7 +183,8 @@
                 </table>
                 @endif
 
-                @if(!empty($inspection->vacuum_gauge_condition) || !empty($inspection->vacuum_value))
+                {{-- F. VACUUM SYSTEM (T75 ONLY) --}}
+                @if(($isotank->tank_category == 'T75' || !$isotank->tank_category) && (!empty($inspection->vacuum_gauge_condition) || !empty($inspection->vacuum_value)))
                  <div class="section-title">F. VACUUM SYSTEM</div>
                  <table class="checklist-table">
                     <tr><td>Gauge / Port</td><td style="text-align:right">{!! badge($inspection->vacuum_gauge_condition) !!} / {!! badge($inspection->vacuum_port_suction_condition) !!}</td></tr>
@@ -214,7 +216,8 @@
                     @endforelse
                 </table>
 
-                @if(!empty($inspection->pressure_gauge_condition) || !empty($inspection->pressure_1))
+                {{-- E. INSTRUMENTS (T75 ONLY - T11/T50 use General Section) --}}
+                @if(($isotank->tank_category == 'T75' || !$isotank->tank_category) && (!empty($inspection->pressure_gauge_condition) || !empty($inspection->pressure_1)))
                 <div class="section-title">E. INSTRUMENTS</div>
                 <table class="checklist-table">
                     <tr>
