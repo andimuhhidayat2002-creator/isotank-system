@@ -96,6 +96,8 @@ class InspectionLog extends Model
         'filling_status_code',
         'filling_status_desc',
         'inspection_data',
+        'receiver_signature_path',
+        'receiver_signed_at',
     ];
 
     protected $casts = [

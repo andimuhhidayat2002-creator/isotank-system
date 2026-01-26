@@ -70,6 +70,9 @@ class PdfGenerationService
      */
     public function generateOutgoingPdf(InspectionLog $inspectionLog): string
     {
+        // Ensure we have the latest data (including signature path updated in controller)
+        $inspectionLog->refresh();
+        
         // Load relationships
         $inspectionLog->load(['isotank', 'inspector', 'inspectionJob']);
         
@@ -130,16 +133,21 @@ class PdfGenerationService
             if (class_exists(\App\Models\InspectionItem::class)) {
                 $query = \App\Models\InspectionItem::where('is_active', true);
                 
-                // Filter by Tank Category
+                // Filter items based on category logic
                 $query->where(function($q) use ($tankCat) {
                     $q->whereJsonContains('applicable_categories', $tankCat);
+                    if ($tankCat === 'T75') {
+                        $q->orWhereNull('applicable_categories');
+                    }
                 });
 
-                // For Receiver Confirmation, we usually want items from the "main" sections
-                // T75: Section B
-                // T11/T50: Sections A, B, C, D, E (Front, Rear, Sides, Top)
+                // For Receiver Confirmation, T75 has specific sections. 
+                // T11/T50 shows everything tagged.
                 if ($tankCat === 'T75') {
-                    $query->whereIn('category', ['b', 'external', 'general']);
+                    $query->where(function($q) {
+                        $q->whereIn('category', ['b', 'external', 'general'])
+                          ->orWhere('category', 'like', 'b%');
+                    });
                 }
                 
                 $dynamicItems = $query->orderBy('order', 'asc')
@@ -230,6 +238,16 @@ class PdfGenerationService
             'psv4_condition' => 'PSV 4 Condition',
         ];
         
-        return $names[$itemKey] ?? ucwords(str_replace('_', ' ', $itemKey));
+        // DYNAMIC LOOKUP for non-standard items
+        if (!isset($names[$itemKey])) {
+            try {
+                if (class_exists(\App\Models\InspectionItem::class)) {
+                    $item = \App\Models\InspectionItem::where('code', $itemKey)->first();
+                    if ($item) return $item->label;
+                }
+            } catch (\Exception $e) {}
+        }
+        
+        return $names[$itemKey] ?? ucwords(str_replace(['_', 'T11', 'T50'], ' ', $itemKey));
     }
 }

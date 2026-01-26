@@ -60,5 +60,10 @@ We operate on **TWO SEPARATE** repositories. Always verify which one you are wor
 *   **Null Safety:** Added null-safe operators and explicit checks for `$log->isotank` to prevent 500 errors on legacy logs or logs with missing relationships.
 *   **Syntax Integrity:** Fixed blade syntax errors (duplicate `@endif`) in report templates.
 
+### H. T11 Item Limitation (Jan 26, 2026 20:00)
+*   **Strict Item Filter:** T11 inspection items are now strictly limited to the 14 items requested (matching standard inspection flow).
+*   **Explicit Labels:** Data labels for T11 now explicitly include section prefixes (e.g., `FRONT:`, `REAR:`) to ensure no confusion in flat list views.
+*   **Submission Sync:** `InspectionLog` now strictly requires a new submission (after Jan 26 19:30) for dynamic items to correctly populate database JSON.
+
 ---
-*Last Updated: Jan 26, 2026 - Antigravity Agent*
+*Last Updated: Jan 26, 2026 20:00 - Antigravity Agent*
