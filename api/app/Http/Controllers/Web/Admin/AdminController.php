@@ -28,16 +28,37 @@ use Illuminate\Support\Str;
 
 class AdminController extends Controller
 {
-    public function dashboard()
+    public function dashboard(Request $request)
     {
+        $category = $request->input('category', 'All');
+
+        // Helper to filter isotanks by category
+        $isotankFilter = function($query) use ($category) {
+            if ($category !== 'All') {
+                $query->where('tank_category', $category);
+            }
+        };
+
+        // Helper to filter related models via isotank relationship
+        $relationFilter = function($query) use ($category) {
+            if ($category !== 'All') {
+                $query->whereHas('isotank', function($q) use ($category) {
+                    $q->where('tank_category', $category);
+                });
+            }
+        };
+
         // 1) Global summary (all locations combined)
         $globalStats = [
-             'total_active' => MasterIsotank::where('status', 'active')->count(),
-             'open_maintenance' => MaintenanceJob::whereIn('status', ['open', 'on_progress'])->count(),
-             'deferred_maintenance' => MaintenanceJob::where('status', 'deferred')->count(),
-             'open_inspections' => InspectionJob::whereIn('status', ['open', 'in_progress'])->count(),
-             'calibration_alerts' => MasterIsotankCalibrationStatus::where('status', '!=', 'valid')
-                  ->orWhere('valid_until', '<', now()->addMonth())
+             'total_active' => MasterIsotank::where('status', 'active')->tap($isotankFilter)->count(),
+             'open_maintenance' => MaintenanceJob::whereIn('status', ['open', 'on_progress'])->tap($relationFilter)->count(),
+             'deferred_maintenance' => MaintenanceJob::where('status', 'deferred')->tap($relationFilter)->count(),
+             'open_inspections' => InspectionJob::whereIn('status', ['open', 'in_progress'])->tap($relationFilter)->count(),
+             'calibration_alerts' => MasterIsotankCalibrationStatus::where(function($q) {
+                    $q->where('status', '!=', 'valid')
+                      ->orWhere('valid_until', '<', now()->addMonth());
+                  })
+                  ->tap($relationFilter)
                   ->count()
         ];
 
@@ -52,6 +73,7 @@ class AdminController extends Controller
             ->whereNotNull('location')
             ->where('location', '!=', '')
             ->where('status', 'active')
+            ->tap($isotankFilter) // Apply category filter
             ->groupBy('location')
             ->orderBy('location')
             ->get();
@@ -60,6 +82,7 @@ class AdminController extends Controller
         // Group by Location for easy access in View: $ownerBreakdown['SMGRS'] -> Collection of rows
         $ownerBreakdown = MasterIsotank::where('status', 'active')
             ->whereNotNull('location')->where('location', '!=', '')
+            ->tap($isotankFilter)
             ->select('location', 'owner', DB::raw('count(*) as count'))
             ->groupBy('location', 'owner')
             ->get()
@@ -67,6 +90,7 @@ class AdminController extends Controller
 
         $manufacturerBreakdown = MasterIsotank::where('status', 'active')
             ->whereNotNull('location')->where('location', '!=', '')
+            ->tap($isotankFilter)
             ->select('location', 'manufacturer', DB::raw('count(*) as count'))
             ->groupBy('location', 'manufacturer')
             ->get()
@@ -74,16 +98,20 @@ class AdminController extends Controller
 
         // 3) Alerts across all isotanks
         // Limit query to prevent memory overflow
-        $vacuumAlerts = MasterIsotankMeasurementStatus::where('vacuum_mtorr', '>', 8)
-             ->orWhere('last_measurement_at', '<', now()->subMonths(11))
-             ->with('isotank:id,iso_number,location')
+        $vacuumAlerts = MasterIsotankMeasurementStatus::where(function($q){
+                 $q->where('vacuum_mtorr', '>', 8)
+                   ->orWhere('last_measurement_at', '<', now()->subMonths(11));
+             })
+             ->tap($relationFilter)
+             ->with('isotank:id,iso_number,location,tank_category')
              ->limit(5)
              ->get();
 
         // Optimized Calibration Alerts Query (Limit 5)
         $calibrationAlerts = \App\Models\MasterIsotankComponent::select('id', 'isotank_id', 'expiry_date', 'component_type', 'position_code', 'serial_number')
              ->where('expiry_date', '<', now()->addMonths(1))
-             ->with('isotank:id,iso_number,location')
+             ->tap($relationFilter)
+             ->with('isotank:id,iso_number,location,tank_category')
              ->orderBy('expiry_date', 'asc')
              ->limit(5)
              ->get();
@@ -93,6 +121,7 @@ class AdminController extends Controller
         foreach (MasterIsotank::getValidFillingStatuses() as $code => $description) {
             $count = MasterIsotank::where('status', 'active')
                 ->where('filling_status_code', $code)
+                ->tap($isotankFilter)
                 ->count();
             if ($count > 0) {
                 $fillingStatusStats[] = [
@@ -103,31 +132,33 @@ class AdminController extends Controller
             }
         }
         
-    // No status count
-    $noStatusCount = MasterIsotank::where('status', 'active')
-        ->whereNull('filling_status_code')
-        ->count();
-    if ($noStatusCount > 0) {
-        $fillingStatusStats[] = [
-            'code' => 'no_status',
-            'description' => 'No Status',
-            'count' => $noStatusCount
-        ];
-    }
-    
-    // Saved Recipient Emails
-    $savedEmails = \Illuminate\Support\Facades\Cache::get('daily_report_recipients', 'manager@ptkayan.com');
+        // No status count
+        $noStatusCount = MasterIsotank::where('status', 'active')
+            ->whereNull('filling_status_code')
+            ->tap($isotankFilter)
+            ->count();
+        if ($noStatusCount > 0) {
+            $fillingStatusStats[] = [
+                'code' => 'no_status',
+                'description' => 'No Status',
+                'count' => $noStatusCount
+            ];
+        }
+        
+        // Saved Recipient Emails
+        $savedEmails = \Illuminate\Support\Facades\Cache::get('daily_report_recipients', 'manager@ptkayan.com');
 
-    return view('admin.dashboard', compact(
-        'globalStats', 
-        'locations', 
-        'ownerBreakdown', 
-        'manufacturerBreakdown',
-        'vacuumAlerts', 
-        'calibrationAlerts',
-        'fillingStatusStats',
-        'savedEmails'
-    ));
+        return view('admin.dashboard', compact(
+            'globalStats', 
+            'locations', 
+            'ownerBreakdown', 
+            'manufacturerBreakdown',
+            'vacuumAlerts', 
+            'calibrationAlerts',
+            'fillingStatusStats',
+            'savedEmails',
+            'category'
+        ));
     }
 
     public function locationDetail($location)

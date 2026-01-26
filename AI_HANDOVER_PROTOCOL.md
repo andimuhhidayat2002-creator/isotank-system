@@ -35,6 +35,19 @@ We follow a strict **GIT-FLOW** sync looking like this:
 ### C. Excel Import/Export
 *   Templates now support `Tank Category` column.
 *   Logic has been updated to parse this column or fallback to T75.
+### D. Web Admin Dynamic Views (Jan 25, 2026)
+*   **Global Dashboard:** Added Category Filter (All, T75, T11, T50) to filter all statistics (Active, Maintenance, Inspection, Alerts).
+*   **Master Condition & Maintenance:** Now have filtering tabs (All, T75, T11, T50).
+*   **Dynamic Columns:** `latest_inspections.blade.php` is refactored to dynamically render columns based on the selected category's inspection items.
+*   **Legacy Hiding:** Hardcoded sections (IBOX, VACUUM, INSTRUMENTS, PSV) are **HIDDEN** for T11/T50 unless viewing 'All' or 'T75', or if data exists.
+
+### E. Digital Signatures & PDF
+*   **Signature Fix:** `User` model now correctly allows `signature_path` update.
+*   **Conditional PDF:** `inspection_report.blade.php` now wraps legacy sections (IBOX, etc.) in checks. If the data is empty (as expected for T11/T50), the tables are hidden to keep the PDF clean.
+
+### F. Migration Notes
+*   **T11/T50 Items:** Specific items for T11 and T50 have been seeded.
+*   **Category Logic:** Use `applicable_categories` in `InspectionItem` to control visibility.
 
 ---
-*Created by Antigravity Agent to ensure consistency across sessions.*
+*Last Updated: Jan 25, 2026 - Antigravity Agent*

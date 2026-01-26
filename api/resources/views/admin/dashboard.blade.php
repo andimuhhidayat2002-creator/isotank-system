@@ -7,7 +7,16 @@
     <div class="d-flex justify-content-between align-items-end mb-5">
         <div>
             <h1 class="fw-bold text-dark mb-1" style="font-size: 1.75rem; letter-spacing: -0.5px;">GLOBAL DASHBOARD</h1>
-            <div class="text-muted" style="font-size: 0.9rem;">Operational Overview – Isotank System</div>
+            <div class="d-flex align-items-center gap-3">
+                <div class="text-muted" style="font-size: 0.9rem;">Operational Overview – Isotank System</div>
+                <div class="vr my-1 text-secondary"></div>
+                <div class="btn-group btn-group-sm">
+                    <a href="{{ route('admin.dashboard', ['category' => 'All']) }}" class="btn {{ ($category ?? 'All') === 'All' ? 'btn-dark' : 'btn-outline-dark' }} px-3">All</a>
+                    <a href="{{ route('admin.dashboard', ['category' => 'T75']) }}" class="btn {{ ($category ?? 'All') === 'T75' ? 'btn-dark' : 'btn-outline-dark' }} px-3">T75</a>
+                    <a href="{{ route('admin.dashboard', ['category' => 'T11']) }}" class="btn {{ ($category ?? 'All') === 'T11' ? 'btn-dark' : 'btn-outline-dark' }} px-3">T11</a>
+                    <a href="{{ route('admin.dashboard', ['category' => 'T50']) }}" class="btn {{ ($category ?? 'All') === 'T50' ? 'btn-dark' : 'btn-outline-dark' }} px-3">T50</a>
+                </div>
+            </div>
         </div>
         <div>
             <div class="d-flex align-items-center gap-2">
