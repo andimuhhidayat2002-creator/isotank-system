@@ -109,8 +109,9 @@
 
                         <!-- DYNAMIC CATEGORIES LOOP -->
                         @php
-                            $tankCat = $log->isotank->tank_category ?? 'T75';
+                            $tankCat = $log->isotank?->tank_category ?? 'T75';
                         @endphp
+                        @if($log->isotank)
                         @php
                             // 1. Filter items STRICTLY by Tank Category
                             $catSpecificItems = $inspectionItems->filter(fn($i) => 
@@ -171,6 +172,7 @@
                                     <td class="text-center">@include('admin.reports.partials.badge', ['status' => $v])</td>
                                 </tr>
                             @endforeach
+                        @endif
                         @endif
 
                         @if($tankCat == 'T75')
