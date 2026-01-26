@@ -1095,9 +1095,10 @@ class InspectionSubmitController extends Controller
                  throw new \Exception("Receiver signature is required.");
             }
 
-            // Update inspection log with receiver confirmation timestamp and signature
+            // Update inspection log with receiver confirmation timestamp, name and signature
             $inspectionLog->update([
                 'receiver_confirmed_at' => now(),
+                'receiver_name' => $request->user()->name,
                 'receiver_signature_path' => $receiverSignaturePath,
                 'receiver_signed_at' => now(),
             ]);
