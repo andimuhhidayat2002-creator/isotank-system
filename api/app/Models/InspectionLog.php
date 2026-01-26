@@ -95,6 +95,7 @@ class InspectionLog extends Model
         'pdf_path',
         'filling_status_code',
         'filling_status_desc',
+        'inspection_data',
     ];
 
     protected $casts = [
@@ -123,6 +124,7 @@ class InspectionLog extends Model
         'psv4_replacement_calibration_date' => 'date',
         'receiver_confirmed_at' => 'datetime',
         'additional_details' => 'array',
+        'inspection_data' => 'array',
     ];
 
     // Relationships

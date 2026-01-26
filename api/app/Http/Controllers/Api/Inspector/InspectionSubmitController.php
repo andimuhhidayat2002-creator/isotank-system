@@ -469,7 +469,7 @@ class InspectionSubmitController extends Controller
                              $data[$code] = $validated[$code];
                         }
                     }
-                    return !empty($data) ? json_encode($data) : null;
+                    return !empty($data) ? $data : null;
                 })(),
             ];
 
