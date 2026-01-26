@@ -104,11 +104,38 @@
                         <td class="small">{{ $log->updated_at ? $log->updated_at->format('Y-m-d') : '-' }}</td>
                         
                         {{-- DYNAMIC VALUES --}}
+                        @php
+                            $legacyMap = [
+                                'Surface Condition' => 'surface', 'Tank Surface & Paint Condition' => 'surface',
+                                'Frame Condition' => 'frame', 'Frame Structure' => 'frame',
+                                'Tank Name Plate' => 'tank_plate', 'Data Plate' => 'tank_plate',
+                                'Venting Pipe' => 'venting_pipe',
+                                'Explosion Proof Cover' => 'explosion_proof_cover',
+                                'Safety Label' => 'safety_label', 'DG 1972 GHS MSA_Safety_label' => 'safety_label',
+                                'Document Container' => 'document_container',
+                                'Valve Box Door' => 'valve_box_door',
+                                'Grounding System' => 'grounding_system',
+                                'Valve Condition' => 'valve_condition',
+                                'Valve Position' => 'valve_position',
+                                'Pipe Joint' => 'pipe_joint',
+                                'Air Source Connection' => 'air_source_connection',
+                                'ESDV' => 'esdv',
+                                'Blind Flange' => 'blind_flange',
+                                'PRV' => 'prv'
+                            ];
+                        @endphp
+
                         @foreach($groupedItems as $catName => $items)
                             @foreach($items as $item)
                                 @php 
                                     $code = $item->code; 
                                     $val = $logData[$code] ?? ($iLog->$code ?? ($log->$code ?? null));
+                                    
+                                    // Fallback for T11/T50 mapping
+                                    if(!$val && isset($legacyMap[$item->label])) {
+                                        $lKey = $legacyMap[$item->label];
+                                        $val = $logData[$lKey] ?? ($iLog->$lKey ?? ($log->$lKey ?? null));
+                                    }
                                 @endphp
                                 <td>@include('admin.reports.partials.badge', ['status' => $val])</td>
                             @endforeach

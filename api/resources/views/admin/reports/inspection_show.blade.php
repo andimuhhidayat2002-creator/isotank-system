@@ -118,10 +118,30 @@
                                     in_array(strtolower($i->category), ['external'])
                                 )
                             );
+                            
+                            $legacyMap = [
+                                'Surface Condition' => 'surface', 'Tank Surface & Paint Condition' => 'surface',
+                                'Frame Condition' => 'frame', 'Frame Structure' => 'frame',
+                                'Tank Name Plate' => 'tank_plate', 'Data Plate' => 'tank_plate',
+                                'Venting Pipe' => 'venting_pipe',
+                                'Explosion Proof Cover' => 'explosion_proof_cover',
+                                'Safety Label' => 'safety_label', 'DG 1972 GHS MSA_Safety_label' => 'safety_label',
+                                'Document Container' => 'document_container',
+                                'Valve Box Door' => 'valve_box_door',
+                                'Grounding System' => 'grounding_system',
+                            ];
                         @endphp
                         
                         @foreach($generalItems as $item)
-                             @php $code = $item->code; $val = $logData[$code] ?? ($log->$code ?? null); @endphp
+                             @php 
+                                $code = $item->code; 
+                                $val = $logData[$code] ?? ($log->$code ?? null);
+                                // Fallback
+                                if(!$val && isset($legacyMap[$item->label])) {
+                                    $lKey = $legacyMap[$item->label];
+                                    $val = $logData[$lKey] ?? ($log->$lKey ?? null);
+                                }
+                             @endphp
                              <tr>
                                 <td class="ps-3">{{ $item->label }}</td>
                                 <td class="text-center">
@@ -150,9 +170,26 @@
                                     str_contains(strtolower($i->category), 'piping')
                                 )
                             );
+                            
+                            $legacyValveMap = [
+                                'Valve Condition' => 'valve_condition',
+                                'Valve Position' => 'valve_position',
+                                'Pipe Joint' => 'pipe_joint',
+                                'Air Source Connection' => 'air_source_connection',
+                                'ESDV' => 'esdv',
+                                'Blind Flange' => 'blind_flange',
+                                'PRV' => 'prv'
+                            ];
                         @endphp
                          @foreach($valveItems as $item)
-                             @php $code = $item->code; $val = $logData[$code] ?? ($log->$code ?? null); @endphp
+                             @php 
+                                $code = $item->code; 
+                                $val = $logData[$code] ?? ($log->$code ?? null); 
+                                if(!$val && isset($legacyValveMap[$item->label])) {
+                                    $lKey = $legacyValveMap[$item->label];
+                                    $val = $logData[$lKey] ?? ($log->$lKey ?? null);
+                                }
+                             @endphp
                              <tr>
                                 <td class="ps-3">{{ $item->label }}</td>
                                 <td class="text-center">
