@@ -70,6 +70,8 @@ We operate on **TWO SEPARATE** repositories. Always verify which one you are wor
 *   **Explicit Labels:** Data labels for T50 now explicitly include section prefixes (e.g., `FRONT:`, `REAR:`, `RIGHT:`, `LEFT:`, `TOP:`) for parity with the T11 style.
 *   **Submission Sync:** `InspectionLog` for T50 now expects the new prefixed labels for correct parsing.
 *   **Technical Diagram:** Added T50 technical diagram (Rear, Side, Top view) to the PDF report specifically for T50 category tanks.
+*   **Numeric Readings:** Added numeric input items for T50: Level Gauge (%), Thermometer (°C), and Pressure Gauge (MPa) placed below their respective condition items.
+*   **Master Sync Fix:** Updated `InspectionSubmitController` to exclude numeric values from `MasterIsotankItemStatus` to prevent "Data truncated" errors (only condition strings are allowed in that table).
 
 ---
-*Last Updated: Jan 27, 2026 05:45 - Antigravity Agent*
+*Last Updated: Jan 27, 2026 06:40 - Antigravity Agent*
