@@ -65,5 +65,10 @@ We operate on **TWO SEPARATE** repositories. Always verify which one you are wor
 *   **Explicit Labels:** Data labels for T11 now explicitly include section prefixes (e.g., `FRONT:`, `REAR:`) to ensure no confusion in flat list views.
 *   **Submission Sync:** `InspectionLog` now strictly requires a new submission (after Jan 26 19:30) for dynamic items to correctly populate database JSON.
 
+### I. T50 Item Limitation (Jan 27, 2026 05:30)
+*   **Strict Item Filter:** T50 inspection items are now strictly limited to the 27 items requested (matching standard inspection flow provided in photo).
+*   **Explicit Labels:** Data labels for T50 now explicitly include section prefixes (e.g., `FRONT:`, `REAR:`, `RIGHT:`, `LEFT:`, `TOP:`) for parity with the T11 style.
+*   **Submission Sync:** `InspectionLog` for T50 now expects the new prefixed labels for correct parsing.
+
 ---
-*Last Updated: Jan 26, 2026 20:00 - Antigravity Agent*
+*Last Updated: Jan 27, 2026 05:30 - Antigravity Agent*
