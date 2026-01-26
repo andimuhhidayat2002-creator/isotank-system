@@ -81,6 +81,18 @@
         </tr>
     </table>
 
+    {{-- T11 DIAGRAM (USER REQUEST) --}}
+    @if(($isotank->tank_category ?? '') === 'T11')
+        <div style="text-align: center; margin: 10px 0; border: 1px solid #eee; padding: 5px;">
+            @php $diagramPath = public_path('assets/images/t11_diagram.png'); @endphp
+            @if(file_exists($diagramPath))
+                <img src="{{ $diagramPath }}" style="width: 100%; max-height: 200px; object-fit: contain;">
+            @else
+                <div style="color: #999; font-style: italic;">[ T11 ISO TANK DIAGRAM ]</div>
+            @endif
+        </div>
+    @endif
+
     {{-- Helper PHP --}}
     @php
         function badge($val) {
@@ -168,7 +180,14 @@
                             @endphp
                             <tr>
                                 <td style="width: 70%;">{{ $item->label }}</td>
-                                <td style="text-align: right;">{!! badge($val) !!}</td>
+                                <td style="text-align: right;">
+                                    {{-- Avoid double badges for outgoing; Receiver Confirmation table takes priority --}}
+                                    @if($type === 'incoming')
+                                        {!! badge($val) !!}
+                                    @else
+                                        <small style="color: #666; font-weight: bold;">{{ strtoupper($val ?? '-') }}</small>
+                                    @endif
+                                </td>
                             </tr>
                         @endforeach
 
@@ -254,7 +273,13 @@
                             @endphp
                             <tr>
                                 <td style="width: 70%;">{{ $item->label }}</td>
-                                <td style="text-align: right;">{!! badge($val) !!}</td>
+                                <td style="text-align: right;">
+                                    @if($type === 'incoming')
+                                        {!! badge($val) !!}
+                                    @else
+                                        <small style="color: #666; font-weight: bold;">{{ strtoupper($val ?? '-') }}</small>
+                                    @endif
+                                </td>
                             </tr>
                         @endforeach
                     </table>
@@ -341,7 +366,13 @@
                                 @endphp
                                 <tr>
                                     <td style="width: 70%;">{{ $item->label }}</td>
-                                    <td style="text-align: right;">{!! badge($val) !!}</td>
+                                    <td style="text-align: right;">
+                                        @if($type === 'incoming')
+                                            {!! badge($val) !!}
+                                        @else
+                                            <small style="color: #666; font-weight: bold;">{{ strtoupper($val ?? '-') }}</small>
+                                        @endif
+                                    </td>
                                 </tr>
                             @endforeach
                         </table>
@@ -363,7 +394,13 @@
                                 @endphp
                                 <tr>
                                     <td style="width: 70%;">{{ $item->label }}</td>
-                                    <td style="text-align: right;">{!! badge($val) !!}</td>
+                                    <td style="text-align: right;">
+                                        @if($type === 'incoming')
+                                            {!! badge($val) !!}
+                                        @else
+                                            <small style="color: #666; font-weight: bold;">{{ strtoupper($val ?? '-') }}</small>
+                                        @endif
+                                    </td>
                                 </tr>
                             @endforeach
                         </table>
@@ -375,7 +412,10 @@
 
     {{-- OUTGOING: RECEIVER CONFIRMATION TABLE --}}
     @if($type === 'outgoing' && isset($receiverConfirmations))
-        <div class="section-title" style="background-color: #e8f5e9; border-left-color: #2e7d32; margin-top: 8px;">RECEIVER CONFIRMATION (GENERAL CONDITION)</div>
+        <div class="section-title" style="background-color: #e8f5e9; border-left-color: #2e7d32; margin-top: 8px;">FINAL RECEIVER CONFIRMATION & ACCEPTANCE</div>
+        <div style="font-size: 7.5pt; color: #555; margin-bottom: 5px; font-style: italic;">
+            "I hereby confirm that I have reviewed the inspector's findings below and accept the current condition of the isotank."
+        </div>
         <table class="checklist-table">
             <thead>
                 <tr>
