@@ -5,23 +5,23 @@
     <title>Inspection Report - {{ $isotank->iso_number ?? 'UNKNOWN' }}</title>
     <style>
         @page { margin: 20px 25px; }
-        body { font-family: sans-serif; font-size: 8pt; margin: 0; padding: 0; color: #333; line-height: 1.1; }
+        body { font-family: sans-serif; font-size: 7.5pt; margin: 0; padding: 0; color: #333; line-height: 1.1; }
         
         .header { text-align: center; margin-bottom: 2px; }
         .header img { width: 100%; height: auto; max-height: 45px; object-fit: contain; } 
         
-        .title-box { text-align: center; color: black; font-weight: bold; padding: 3px; font-size: 10pt; margin-bottom: 5px; border: 1px solid #ccc; background-color: #e0f7fa; }
+        .title-box { text-align: center; color: black; font-weight: bold; padding: 2px; font-size: 9.5pt; margin-bottom: 4px; border: 1px solid #ccc; background-color: #e0f7fa; }
         .title-box.outgoing { background-color: #e8f5e9; }
         
         .info-table { width: 100%; border-collapse: collapse; margin-bottom: 3px; font-size: 7.5pt; }
         .info-table td { border: 1px solid #ddd; padding: 2px 4px; }
         .label { background-color: #f5f5f5; font-weight: bold; width: 15%; }
         
-        .section-title { background-color: #eee; font-weight: bold; font-size: 8.5pt; padding: 2px 5px; margin-bottom: 2px; border-left: 4px solid #333; margin-top: 4px; }
+        .section-title { background-color: #eee; font-weight: bold; font-size: 8pt; padding: 1px 4px; margin-bottom: 1px; border-left: 3px solid #333; margin-top: 3px; }
         
-        .checklist-table { width: 100%; border-collapse: collapse; font-size: 7.5pt; margin-bottom: 2px; }
-        .checklist-table td { border-bottom: 1px solid #eee; padding: 1px 3px; vertical-align: middle; }
-        .checklist-table th { background-color: #f0f0f0; padding: 2px 3px; font-weight: bold; border-bottom: 1px solid #ccc; text-align: left; font-size: 7.5pt; }
+        .checklist-table { width: 100%; border-collapse: collapse; font-size: 7pt; margin-bottom: 1px; }
+        .checklist-table td { border-bottom: 1px solid #eee; padding: 1px 2px; vertical-align: middle; }
+        .checklist-table th { background-color: #f0f0f0; padding: 1px 2px; font-weight: bold; border-bottom: 1px solid #ccc; text-align: left; font-size: 7pt; }
         
         .status-badge { padding: 1px 3px; border-radius: 2px; color: white; font-weight: bold; font-size: 6.5pt; display: inline-block; min-width: 35px; text-align: center; text-transform: uppercase; }
         .bg-green { background-color: #2e7d32; }
@@ -29,9 +29,9 @@
         .bg-orange { background-color: #ef6c00; }
         .bg-grey { background-color: #9e9e9e; }
         
-        .signature-section { margin-top: 10px; width: 100%; page-break-inside: avoid; }
+        .signature-section { margin-top: 5px; width: 100%; page-break-inside: avoid; }
         .sig-box { float: left; width: 45%; margin-right: 5%; }
-        .sig-line { border-top: 1px solid #000; margin-top: 30px; padding-top: 2px; font-weight: bold; font-size: 8pt; }
+        .sig-line { border-top: 1px solid #000; margin-top: 20px; padding-top: 2px; font-weight: bold; font-size: 8pt; }
         .sig-label { font-size: 7.5pt; margin-bottom: 2px; }
         
         .page-break { page-break-after: always; }
@@ -83,10 +83,10 @@
 
     {{-- T11 DIAGRAM (USER REQUEST) --}}
     @if(($isotank->tank_category ?? '') === 'T11')
-        <div style="text-align: center; margin: 10px 0; border: 1px solid #eee; padding: 5px;">
+        <div style="text-align: center; margin: 5px 0; border: 1px solid #eee; padding: 2px;">
             @php $diagramPath = public_path('assets/images/t11_diagram.png'); @endphp
             @if(file_exists($diagramPath))
-                <img src="{{ $diagramPath }}" style="width: 100%; max-height: 200px; object-fit: contain;">
+                <img src="{{ $diagramPath }}" style="width: 100%; max-height: 150px; object-fit: contain;">
             @else
                 <div style="color: #999; font-style: italic;">[ T11 ISO TANK DIAGRAM ]</div>
             @endif
