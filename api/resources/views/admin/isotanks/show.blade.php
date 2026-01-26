@@ -172,8 +172,6 @@
                                                 @endforeach
                                             @endif
 
-                                            @endif
-
                                             @if($tankCat == 'T75')
                                             <!-- SECTION D: IBOX -->
                                             <tr class="table-secondary"><th colspan="2">D. IBOX SYSTEM</th></tr>
