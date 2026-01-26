@@ -1203,24 +1203,23 @@ class InspectionSubmitController extends Controller
         // Get general condition items DYNAMICALLY from Master Data
     // Matches the logic in Inspection Form and Report View for Category B
     // Matches the logic in Inspection Form and Report View for Category B
-    // FILTERED BY ISOTANK CATEGORY
-    $category = $job->isotank->tank_category ?? 'T75';
+    $category = $job->isotank->tank_category ?? 'T75'; // Ensure category is defined here
 
-    $dynamicItemsQuery = \App\Models\InspectionItem::where('is_active', true)
-        ->where(function($q) use ($category) {
-            // Check if category is in the JSON array OR if column is null (legacy/global)
+    $dynamicItemsQuery = \App\Models\InspectionItem::where('is_active', true);
+
+    // CRITICAL: For T75, we keep legacy filtering logic
+    if ($category === 'T75') {
+        $dynamicItemsQuery->where(function($q) use ($category) {
             $q->whereJsonContains('applicable_categories', $category)
               ->orWhereNull('applicable_categories');
-        });
-
-    // CRITICAL: For T75, we only show specific sections to the receiver
-    // For T11/T50, we show EVERYTHING as per requested layout
-    if ($category === 'T75') {
-        $dynamicItemsQuery->where(function($q) {
+        })->where(function($q) {
              $q->where('category', 'like', 'b%')
                ->orWhere('category', 'like', '%general%')
                ->orWhere('category', 'external');
         });
+    } else {
+        // For T11/T50: ONLY show items explicitly tagged for this category to avoid "trash" items
+        $dynamicItemsQuery->whereJsonContains('applicable_categories', $category);
     }
 
     $dynamicItems = $dynamicItemsQuery->orderBy('order')->get();
@@ -1238,7 +1237,6 @@ class InspectionSubmitController extends Controller
         // Check availability in log (try json first, then column fallback)
         $val = $logData[$key] ?? ($inspectionLog->$key ?? 'na');
         
-        // Skip null values if desired? No, receiver should see everything inspector saw.
         // Format condition
         $fmt = strtoupper(str_replace('_', ' ', $val));
         if ($val === null || $val === '') {
@@ -1246,9 +1244,13 @@ class InspectionSubmitController extends Controller
              $fmt = 'N/A';
         }
 
+        // Use the label directly from DB (which now includes prefixes like FRONT:, REAR:, etc.)
+        $displayName = $dItem->label;
+
         $items[] = [
             'key' => $key,
-            'name' => $dItem->label,
+            'name' => $displayName,
+            'category' => $dItem->category,
             'inspector_condition' => $val,
             'inspector_condition_formatted' => $fmt,
         ];
