@@ -175,7 +175,20 @@
 
                         @if($tankCat == 'T11')
                         <!-- SECTION F: IBOX READINGS (T11 Specific) -->
-                        <tr class="table-secondary"><th colspan="2">F. IBOX READINGS</th></tr>
+                        @php
+                            // Check if we have any dynamic data
+                            $hasDynamicData = $grouped->isNotEmpty();
+                        @endphp
+                        
+                        @if(!$hasDynamicData)
+                            <tr class="table-warning">
+                                <td colspan="2" class="text-center small">
+                                    <em>No inspection item data found. Showing legacy IBOX readings only.</em>
+                                </td>
+                            </tr>
+                        @endif
+                        
+                        <tr class="table-secondary"><th colspan="2">{{ $hasDynamicData ? 'F' : '' }}. IBOX READINGS</th></tr>
                         <tr>
                             <td class="ps-3">Temperature #1 (°C)</td>
                             <td class="text-center">
@@ -197,7 +210,7 @@
                         <tr>
                             <td class="ps-3">Pressure (Bar)</td>
                             <td class="text-center">
-                                {{ $log->pressure_1 ? (float)$log->pressure_1.' MPa' : '-' }}
+                                {{ $log->pressure_1 ? (float)$log->pressure_1.' MPa' : ($log->ibox_pressure ?? '-') }}
                                 @if($log->pressure_1_timestamp)
                                 <br><small class="text-muted">({{ $log->pressure_1_timestamp->format('H:i') }})</small>
                                 @endif
@@ -206,7 +219,7 @@
                         <tr>
                             <td class="ps-3">Level</td>
                             <td class="text-center">
-                                {{ $log->level_1 ? (float)$log->level_1.' %' : '-' }}
+                                {{ $log->level_1 ? (float)$log->level_1.' %' : ($log->ibox_level ?? '-') }}
                                 @if($log->level_1_timestamp)
                                 <br><small class="text-muted">({{ $log->level_1_timestamp->format('H:i') }})</small>
                                 @endif
