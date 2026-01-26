@@ -122,22 +122,47 @@ class ReportController extends Controller
         $endOfWeek   = now()->endOfWeek();
         
         // 2. ACTIVITY STATS (Throughput: Incoming Jobs + Confirmed Outgoing)
-        $incomingWeek = \App\Models\InspectionJob::whereBetween('created_at', [$startOfWeek, $endOfWeek])
+        $incomingStats = \App\Models\InspectionJob::whereBetween('inspection_jobs.created_at', [$startOfWeek, $endOfWeek])
             ->where('activity_type', 'incoming_inspection')
-            ->count();
-            
-        $outgoingWeek = \App\Models\InspectionLog::whereBetween('receiver_confirmed_at', [$startOfWeek, $endOfWeek])
+            ->join('master_isotanks', 'inspection_jobs.isotank_id', '=', 'master_isotanks.id') // Join to get category
+            ->selectRaw('master_isotanks.tank_category, count(*) as count')
+            ->groupBy('master_isotanks.tank_category')
+            ->pluck('count', 'tank_category');
+
+        $outgoingStats = \App\Models\InspectionLog::whereBetween('inspection_logs.receiver_confirmed_at', [$startOfWeek, $endOfWeek])
             ->where('inspection_type', 'outgoing_inspection')
-            ->count();
+            ->join('master_isotanks', 'inspection_logs.isotank_id', '=', 'master_isotanks.id')
+            ->selectRaw('master_isotanks.tank_category, count(*) as count')
+            ->groupBy('master_isotanks.tank_category')
+            ->pluck('count', 'tank_category');
+
+        // Helper to format breakdown
+        $formatBreakdown = function($stats) {
+            $parts = [];
+            foreach($stats as $cat => $count) {
+                // Handle null/empty as T75 (Legacy)
+                $label = ($cat && $cat !== '') ? $cat : 'T75';
+                if (isset($parts[$label])) $parts[$label] += $count;
+                else $parts[$label] = $count;
+            }
+            $str = [];
+            foreach($parts as $l => $c) $str[] = "$l: $c";
+            return empty($str) ? '' : '(' . implode(', ', $str) . ')';
+        };
+
+        $incomingWeek = $incomingStats->sum();
+        $outgoingWeek = $outgoingStats->sum();
 
         // Total YTD (Approximation)
-        // Note: Counting ALL inspection jobs created (Incoming) + ALL confirmed outgoing logs might be heavy but accurate to logic.
         $incomingTotal = \App\Models\InspectionJob::where('activity_type', 'incoming_inspection')->count();
         $outgoingTotal = \App\Models\InspectionLog::whereNotNull('receiver_confirmed_at')->count();
         
         $stats = [
             'date_range' => $startOfWeek->format('d M') . ' - ' . $endOfWeek->format('d M Y'),
             'inspections_week' => $incomingWeek + $outgoingWeek,
+            'inspections_week_details' => $formatBreakdown($incomingStats->mergeRecursive($outgoingStats)), // Merge logic simplified for now
+            'incoming_desc' => $formatBreakdown($incomingStats),
+            'outgoing_desc' => $formatBreakdown($outgoingStats),
             'inspections_total' => $incomingTotal + $outgoingTotal,
             'maintenance_week' => \App\Models\MaintenanceJob::whereBetween('completed_at', [$startOfWeek, $endOfWeek])->count(),
             'maintenance_active' => \App\Models\MaintenanceJob::whereNull('completed_at')->count(),
@@ -183,32 +208,61 @@ class ReportController extends Controller
         $dateFormatted = $date->format('l, d F Y');
 
         // 1. Movement Summary
+        // 1. Movement Summary
+        
+        // Helper to format breakdown
+        $formatBreakdown = function($stats) {
+            $parts = [];
+            foreach($stats as $cat => $count) {
+                $label = ($cat && $cat !== '') ? $cat : 'T75';
+                if (isset($parts[$label])) $parts[$label] += $count;
+                else $parts[$label] = $count;
+            }
+            $str = [];
+            foreach($parts as $l => $c) $str[] = "$l: $c";
+            return implode(', ', $str);
+        };
+
         // INCOMING: Count Jobs created (Admin "Gate In" action)
-        $incoming = InspectionJob::whereDate('created_at', $date)
+        $incomingStats = InspectionJob::whereDate('inspection_jobs.created_at', $date)
             ->where('activity_type', 'incoming_inspection')
-            ->count();
+            ->join('master_isotanks', 'inspection_jobs.isotank_id', '=', 'master_isotanks.id')
+            ->selectRaw('master_isotanks.tank_category, count(*) as count')
+            ->groupBy('master_isotanks.tank_category')
+            ->pluck('count', 'tank_category');
         
         // OUTGOING: Count Logs confirmed by Receiver (Gate Out action)
-        $outgoing = InspectionLog::whereDate('receiver_confirmed_at', $date)
+        $outgoingStats = InspectionLog::whereDate('inspection_logs.receiver_confirmed_at', $date)
             ->where('inspection_type', 'outgoing_inspection')
-            ->count();
+            ->join('master_isotanks', 'inspection_logs.isotank_id', '=', 'master_isotanks.id')
+            ->selectRaw('master_isotanks.tank_category, count(*) as count')
+            ->groupBy('master_isotanks.tank_category')
+            ->pluck('count', 'tank_category');
 
         // Stock (Count "At Site")
-        $stockSite = MasterIsotank::where('status', 'active')
+        $stockSiteStats = MasterIsotank::where('status', 'active')
             ->where('location', 'SMGRS')
-            ->count();
+            ->selectRaw('tank_category, count(*) as count')
+            ->groupBy('tank_category')
+            ->pluck('count', 'tank_category');
         
-        $stockOther = MasterIsotank::where('status', 'active')
+        $stockOtherStats = MasterIsotank::where('status', 'active')
             ->where('location', '!=', 'SMGRS') 
             ->whereNotNull('location')
             ->where('location', '!=', '')
-            ->count();
+            ->selectRaw('tank_category, count(*) as count')
+            ->groupBy('tank_category')
+            ->pluck('count', 'tank_category');
 
         $summary = [
-            'incoming' => $incoming,
-            'outgoing' => $outgoing,
-            'stock_site' => $stockSite,
-            'stock_other' => $stockOther,
+            'incoming' => $incomingStats->sum(),
+            'incoming_details' => $formatBreakdown($incomingStats),
+            'outgoing' => $outgoingStats->sum(),
+            'outgoing_details' => $formatBreakdown($outgoingStats),
+            'stock_site' => $stockSiteStats->sum(),
+            'stock_site_details' => $formatBreakdown($stockSiteStats),
+            'stock_other' => $stockOtherStats->sum(),
+            'stock_other_details' => $formatBreakdown($stockOtherStats),
         ];
 
         // 2. Issues (Exception Report)

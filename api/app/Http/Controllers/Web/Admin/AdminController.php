@@ -993,31 +993,60 @@ class AdminController extends Controller
     private function getDailyReportData($date) {
         $dateFormatted = $date->format('l, d F Y');
 
-        // 1. Movement Summary
-        $incoming = InspectionLog::whereDate('created_at', $date)
-            ->where('inspection_type', 'incoming_inspection')
-            ->count();
-        
-        $outgoing = InspectionLog::whereDate('created_at', $date)
-            ->where('inspection_type', 'outgoing_inspection')
-            ->count();
+        // Helper to format breakdown
+        $formatBreakdown = function($stats) {
+            $parts = [];
+            foreach($stats as $cat => $count) {
+                // Handle null/empty as T75 (Legacy)
+                $label = ($cat && $cat !== '') ? $cat : 'T75';
+                if (isset($parts[$label])) $parts[$label] += $count;
+                else $parts[$label] = $count;
+            }
+            $str = [];
+            foreach($parts as $l => $c) $str[] = "$l: $c";
+            return implode(', ', $str);
+        };
 
-        // Stock (Assuming SMGRS is site)
-        $stockSite = MasterIsotank::where('status', 'active')
-            ->where('location', 'SMGRS')
-            ->count();
+        // INCOMING: Count Jobs created (Admin "Gate In" action)
+        $incomingStats = InspectionJob::whereDate('inspection_jobs.created_at', $date)
+            ->where('activity_type', 'incoming_inspection')
+            ->join('master_isotanks', 'inspection_jobs.isotank_id', '=', 'master_isotanks.id')
+            ->selectRaw('master_isotanks.tank_category, count(*) as count')
+            ->groupBy('master_isotanks.tank_category')
+            ->pluck('count', 'tank_category');
         
-        $stockOther = MasterIsotank::where('status', 'active')
-            ->where('location', '!=', 'SMGRS') // Assuming any non-empty location that isn't SMGRS is 'stock other'
+        // OUTGOING: Count Logs confirmed by Receiver (Gate Out action)
+        $outgoingStats = InspectionLog::whereDate('inspection_logs.receiver_confirmed_at', $date)
+            ->where('inspection_type', 'outgoing_inspection')
+            ->join('master_isotanks', 'inspection_logs.isotank_id', '=', 'master_isotanks.id')
+            ->selectRaw('master_isotanks.tank_category, count(*) as count')
+            ->groupBy('master_isotanks.tank_category')
+            ->pluck('count', 'tank_category');
+
+        // Stock (Count "At Site")
+        $stockSiteStats = MasterIsotank::where('status', 'active')
+            ->where('location', 'SMGRS')
+            ->selectRaw('tank_category, count(*) as count')
+            ->groupBy('tank_category')
+            ->pluck('count', 'tank_category');
+        
+        $stockOtherStats = MasterIsotank::where('status', 'active')
+            ->where('location', '!=', 'SMGRS') 
             ->whereNotNull('location')
             ->where('location', '!=', '')
-            ->count();
+            ->selectRaw('tank_category, count(*) as count')
+            ->groupBy('tank_category')
+            ->pluck('count', 'tank_category');
 
         $summary = [
-            'incoming' => $incoming,
-            'outgoing' => $outgoing,
-            'stock_site' => $stockSite,
-            'stock_other' => $stockOther,
+            'incoming' => $incomingStats->sum(),
+            'incoming_details' => $formatBreakdown($incomingStats),
+            'outgoing' => $outgoingStats->sum(),
+            'outgoing_details' => $formatBreakdown($outgoingStats),
+            'stock_site' => $stockSiteStats->sum(),
+            'stock_site_details' => $formatBreakdown($stockSiteStats),
+            'stock_other' => $stockOtherStats->sum(),
+            'stock_other_details' => $formatBreakdown($stockOtherStats),
         ];
 
         // 2. Issues (Exception Report)

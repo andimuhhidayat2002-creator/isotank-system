@@ -41,18 +41,22 @@
     <div class="summary-container">
         <div class="summary-box">
             <span class="sum-number">{{ $summary['incoming'] }}</span>
+            <div style="font-size: 10px; color: #666; margin-bottom: 3px;">{{ $summary['incoming_details'] ?? '' }}</div>
             <span class="sum-label">Incoming Today</span>
         </div>
         <div class="summary-box">
             <span class="sum-number">{{ $summary['outgoing'] }}</span>
+            <div style="font-size: 10px; color: #666; margin-bottom: 3px;">{{ $summary['outgoing_details'] ?? '' }}</div>
             <span class="sum-label">Outgoing Today</span>
         </div>
         <div class="summary-box">
             <span class="sum-number">{{ $summary['stock_site'] }}</span>
+            <div style="font-size: 10px; color: #666; margin-bottom: 3px;">{{ $summary['stock_site_details'] ?? '' }}</div>
             <span class="sum-label">Stock at Site</span>
         </div>
         <div class="summary-box">
             <span class="sum-number">{{ $summary['stock_other'] }}</span>
+            <div style="font-size: 10px; color: #666; margin-bottom: 3px;">{{ $summary['stock_other_details'] ?? '' }}</div>
             <span class="sum-label">Other Locations</span>
         </div>
     </div>

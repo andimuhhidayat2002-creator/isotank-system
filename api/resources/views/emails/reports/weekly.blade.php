@@ -33,7 +33,10 @@
                 <div class="stat-box">
                     <span class="stat-number">{{ $inspections_week }}</span>
                     <span class="stat-label">New Inspections (Week)</span>
-                    <small style="display:block; margin-top:5px; color:#888;">Total YTD: {{ $inspections_total }}</small>
+                    <div style="font-size:10px; color:#666; margin-top:5px; line-height:1.2;">
+                        <div>IN: {{ $incoming_desc }}</div>
+                        <div>OUT: {{ $outgoing_desc }}</div>
+                    </div>
                 </div>
                 <div class="stat-box">
                     <span class="stat-number">{{ $maintenance_week }}</span>
