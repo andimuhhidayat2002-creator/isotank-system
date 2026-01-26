@@ -108,7 +108,10 @@
             if (!is_array($jsonData)) $jsonData = [];
         }
 
-        // Fetch Items STRICTLY filtered by tank category
+        // Fetch Items
+        $masterItems = \App\Models\InspectionItem::where('is_active', true)->orderBy('order', 'asc')->get();
+
+        // Filter STRICTLY by tank category
         $tankCat = $isotank->tank_category ?? 'T75';
         $applicableItems = $masterItems->filter(fn($i) => in_array($tankCat, $i->applicable_categories ?? []));
         
