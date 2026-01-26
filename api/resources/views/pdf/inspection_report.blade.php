@@ -159,6 +159,12 @@
             'Blind Flange' => 'blind_flange',
             'PRV' => 'prv'
         ];
+
+        // Fetch Receiver Confirmations if outgoing
+        $recvConfirmations = collect();
+        if ($type === 'outgoing') {
+            $recvConfirmations = \App\Models\ReceiverConfirmation::where('inspection_log_id', $inspection->id)->get()->keyBy('item_name');
+        }
     @endphp
 
     @if($tankCat == 'T75')
@@ -179,13 +185,21 @@
                                 }
                             @endphp
                             <tr>
-                                <td style="width: 70%;">{{ $item->label }}</td>
-                                <td style="text-align: right;">
-                                    {{-- Avoid double badges for outgoing; Receiver Confirmation table takes priority --}}
-                                    @if($type === 'incoming')
-                                        {!! badge($val) !!}
-                                    @else
-                                        <small style="color: #666; font-weight: bold;">{{ strtoupper($val ?? '-') }}</small>
+                                <td style="width: 65%;">
+                                    <strong>{{ $item->label }}</strong>
+                                    @if($type === 'outgoing' && isset($recvConfirmations[$item->code]) && $recvConfirmations[$item->code]->receiver_remark)
+                                        <div style="font-size: 6pt; color: #666; font-style: italic;">
+                                            Note: {{ $recvConfirmations[$item->code]->receiver_remark }}
+                                        </div>
+                                    @endif
+                                </td>
+                                <td style="text-align: right; white-space: nowrap;">
+                                    {!! badge($val) !!}
+                                    @if($type === 'outgoing' && isset($recvConfirmations[$item->code]))
+                                        @php $rDec = $recvConfirmations[$item->code]->receiver_decision; @endphp
+                                        <span class="status-badge {{ $rDec === 'ACCEPT' ? 'bg-green' : 'bg-red' }}" style="margin-left: 2px;">
+                                            {{ $rDec }}
+                                        </span>
                                     @endif
                                 </td>
                             </tr>
@@ -272,12 +286,21 @@
                                 }
                             @endphp
                             <tr>
-                                <td style="width: 70%;">{{ $item->label }}</td>
-                                <td style="text-align: right;">
-                                    @if($type === 'incoming')
-                                        {!! badge($val) !!}
-                                    @else
-                                        <small style="color: #666; font-weight: bold;">{{ strtoupper($val ?? '-') }}</small>
+                                <td style="width: 65%;">
+                                    <strong>{{ $item->label }}</strong>
+                                    @if($type === 'outgoing' && isset($recvConfirmations[$item->code]) && $recvConfirmations[$item->code]->receiver_remark)
+                                        <div style="font-size: 6pt; color: #666; font-style: italic;">
+                                            Note: {{ $recvConfirmations[$item->code]->receiver_remark }}
+                                        </div>
+                                    @endif
+                                </td>
+                                <td style="text-align: right; white-space: nowrap;">
+                                    {!! badge($val) !!}
+                                    @if($type === 'outgoing' && isset($recvConfirmations[$item->code]))
+                                        @php $rDec = $recvConfirmations[$item->code]->receiver_decision; @endphp
+                                        <span class="status-badge {{ $rDec === 'ACCEPT' ? 'bg-green' : 'bg-red' }}" style="margin-left: 2px;">
+                                            {{ $rDec }}
+                                        </span>
                                     @endif
                                 </td>
                             </tr>
@@ -365,12 +388,21 @@
                                     }
                                 @endphp
                                 <tr>
-                                    <td style="width: 70%;">{{ $item->label }}</td>
-                                    <td style="text-align: right;">
-                                        @if($type === 'incoming')
-                                            {!! badge($val) !!}
-                                        @else
-                                            <small style="color: #666; font-weight: bold;">{{ strtoupper($val ?? '-') }}</small>
+                                    <td style="width: 65%;">
+                                        <strong>{{ $item->label }}</strong>
+                                        @if($type === 'outgoing' && isset($recvConfirmations[$item->code]) && $recvConfirmations[$item->code]->receiver_remark)
+                                            <div style="font-size: 6pt; color: #666; font-style: italic;">
+                                               Note: {{ $recvConfirmations[$item->code]->receiver_remark }}
+                                            </div>
+                                        @endif
+                                    </td>
+                                    <td style="text-align: right; white-space: nowrap;">
+                                        {!! badge($val) !!}
+                                        @if($type === 'outgoing' && isset($recvConfirmations[$item->code]))
+                                            @php $rDec = $recvConfirmations[$item->code]->receiver_decision; @endphp
+                                            <span class="status-badge {{ $rDec === 'ACCEPT' ? 'bg-green' : 'bg-red' }}" style="margin-left: 2px;">
+                                                {{ $rDec }}
+                                            </span>
                                         @endif
                                     </td>
                                 </tr>
@@ -393,12 +425,21 @@
                                     }
                                 @endphp
                                 <tr>
-                                    <td style="width: 70%;">{{ $item->label }}</td>
-                                    <td style="text-align: right;">
-                                        @if($type === 'incoming')
-                                            {!! badge($val) !!}
-                                        @else
-                                            <small style="color: #666; font-weight: bold;">{{ strtoupper($val ?? '-') }}</small>
+                                    <td style="width: 65%;">
+                                        <strong>{{ $item->label }}</strong>
+                                        @if($type === 'outgoing' && isset($recvConfirmations[$item->code]) && $recvConfirmations[$item->code]->receiver_remark)
+                                            <div style="font-size: 6pt; color: #666; font-style: italic;">
+                                               Note: {{ $recvConfirmations[$item->code]->receiver_remark }}
+                                            </div>
+                                        @endif
+                                    </td>
+                                    <td style="text-align: right; white-space: nowrap;">
+                                        {!! badge($val) !!}
+                                        @if($type === 'outgoing' && isset($recvConfirmations[$item->code]))
+                                            @php $rDec = $recvConfirmations[$item->code]->receiver_decision; @endphp
+                                            <span class="status-badge {{ $rDec === 'ACCEPT' ? 'bg-green' : 'bg-red' }}" style="margin-left: 2px;">
+                                                {{ $rDec }}
+                                            </span>
                                         @endif
                                     </td>
                                 </tr>
@@ -410,44 +451,12 @@
         </table>
     @endif
 
-    {{-- OUTGOING: RECEIVER CONFIRMATION TABLE --}}
-    @if($type === 'outgoing' && isset($receiverConfirmations))
+    {{-- OUTGOING: RECEIVER CONFIRMATION SUMMRY --}}
+    @if($type === 'outgoing')
         <div class="section-title" style="background-color: #e8f5e9; border-left-color: #2e7d32; margin-top: 8px;">FINAL RECEIVER CONFIRMATION & ACCEPTANCE</div>
-        <div style="font-size: 7.5pt; color: #555; margin-bottom: 5px; font-style: italic;">
-            "I hereby confirm that I have reviewed the inspector's findings below and accept the current condition of the isotank."
+        <div style="font-size: 7.5pt; color: #333; margin-bottom: 5px; padding: 5px; border: 1px solid #c8e6c9;">
+            "I, <strong>{{ $inspection->receiver_name ?? 'N/A' }}</strong>, hereby confirm that I have reviewed the inspector's findings listed in the sections above and accept the current condition of the isotank as documented."
         </div>
-        <table class="checklist-table">
-            <thead>
-                <tr>
-                    <th style="width: 25%;">Item</th>
-                    <th style="width: 15%; text-align: center;">Insp. Cond.</th>
-                    <th style="width: 15%; text-align: center;">Receiver Decision</th>
-                    <th style="width: 45%;">Remark</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach(\App\Services\PdfGenerationService::getGeneralConditionItems($tankCat) as $key)
-                    @php
-                        $label = \App\Services\PdfGenerationService::getItemDisplayName($key);
-                        $inspectorVal = $inspection->$key ?? ($jsonData[$key] ?? null);
-                        $conf = $receiverConfirmations[$key] ?? null;
-                        
-                        $decisionBadge = '-';
-                        if ($conf) {
-                            $decisionBadge = $conf->receiver_decision === 'ACCEPT' 
-                                ? "<span class='status-badge bg-green'>ACCEPT</span>" 
-                                : "<span class='status-badge bg-red'>REJECT</span>";
-                        }
-                    @endphp
-                    <tr>
-                        <td>{{ $label }}</td>
-                        <td style="text-align: center;">{!! badge($inspectorVal) !!}</td>
-                        <td style="text-align: center;">{!! $decisionBadge !!}</td>
-                        <td style="color: #555; font-style: italic;">{{ Str::limit($conf->receiver_remark ?? '-', 60) }}</td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
     @endif
 
     {{-- SIGNATURES --}}
