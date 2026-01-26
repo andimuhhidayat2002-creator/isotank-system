@@ -118,18 +118,31 @@ class PdfGenerationService
     }
     
     /**
-     * Get general condition items (B) for receiver confirmation
+     * Get general condition items for receiver confirmation (Category-aware)
      * 
+     * @param string $tankCat
      * @return array
      */
-    public static function getGeneralConditionItems(): array
+    public static function getGeneralConditionItems(string $tankCat = 'T75'): array
     {
         // 1. Try to fetch DYNAMIC items from Database first (Single Source of Truth)
         try {
             if (class_exists(\App\Models\InspectionItem::class)) {
-                $dynamicItems = \App\Models\InspectionItem::where('is_active', true)
-                    ->whereIn('category', ['b', 'general', 'external']) // Match Blade Template Section B
-                    ->orderBy('order', 'asc')
+                $query = \App\Models\InspectionItem::where('is_active', true);
+                
+                // Filter by Tank Category
+                $query->where(function($q) use ($tankCat) {
+                    $q->whereJsonContains('applicable_categories', $tankCat);
+                });
+
+                // For Receiver Confirmation, we usually want items from the "main" sections
+                // T75: Section B
+                // T11/T50: Sections A, B, C, D, E (Front, Rear, Sides, Top)
+                if ($tankCat === 'T75') {
+                    $query->whereIn('category', ['b', 'external', 'general']);
+                }
+                
+                $dynamicItems = $query->orderBy('order', 'asc')
                     ->pluck('code')
                     ->toArray();
 
@@ -139,7 +152,7 @@ class PdfGenerationService
                 }
             }
         } catch (\Exception $e) {
-            \Log::error('Failed to fetch dynamic inspection items: ' . $e->getMessage());
+            \Log::error('Failed to fetch dynamic inspection items for PDF: ' . $e->getMessage());
         }
 
         // 2. Fallback to Hardcoded List (Only if DB is empty or fails)

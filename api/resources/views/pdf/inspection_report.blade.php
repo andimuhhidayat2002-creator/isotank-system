@@ -108,170 +108,267 @@
             if (!is_array($jsonData)) $jsonData = [];
         }
 
-        // Fetch Items
-        $masterItems = \App\Models\InspectionItem::where('is_active', true)->orderBy('order', 'asc')->get();
-        // B: General/External
-        $itemsB = $masterItems->filter(fn($i) => in_array($i->category, ['b', 'external', 'general']));
-        // C: Valves/Piping
-        $itemsC = $masterItems->filter(fn($i) => in_array($i->category, ['c', 'valve', 'piping']) || empty($i->category));
+        // Fetch Items STRICTLY filtered by tank category
+        $tankCat = $isotank->tank_category ?? 'T75';
+        $applicableItems = $masterItems->filter(fn($i) => in_array($tankCat, $i->applicable_categories ?? []));
+        
+        // Grouping for Display
+        if ($tankCat == 'T75') {
+            // T75: Use legacy B/C layout
+            $itemsB = $applicableItems->filter(fn($i) => in_array($i->category, ['b', 'external', 'general']));
+            $itemsC = $applicableItems->filter(fn($i) => in_array($i->category, ['c', 'valve', 'piping']) || empty($i->category));
+            $groupedItems = [];
+        } else {
+            // T11/T50: Use dynamic grouping
+            $groupedItems = $applicableItems->groupBy('category');
+            $itemsB = collect();
+            $itemsC = collect();
+        }
+
+        // Legacy Map for Fallback (Same as Web)
+        $legacyMap = [
+            'Surface Condition' => 'surface', 'Tank Surface & Paint Condition' => 'surface',
+            'Frame Condition' => 'frame', 'Frame Structure' => 'frame',
+            'Tank Name Plate' => 'tank_plate', 'Data Plate' => 'tank_plate',
+            'Venting Pipe' => 'venting_pipe',
+            'Explosion Proof Cover' => 'explosion_proof_cover',
+            'Safety Label' => 'safety_label', 'DG 1972 GHS MSA_Safety_label' => 'safety_label',
+            'Document Container' => 'document_container',
+            'Valve Box Door' => 'valve_box_door',
+            'Grounding System' => 'grounding_system',
+            'Valve Condition' => 'valve_condition',
+            'Valve Position' => 'valve_position',
+            'Pipe Joint' => 'pipe_joint',
+            'Air Source Connection' => 'air_source_connection',
+            'ESDV' => 'esdv',
+            'Blind Flange' => 'blind_flange',
+            'PRV' => 'prv'
+        ];
     @endphp
 
-    <table style="width: 100%; border-collapse: collapse; margin-top: 0;">
-        <tr>
-            <!-- LEFT COLUMN: B (General), D (IBOX), F (Vacuum) -->
-            <td style="width: 49%; vertical-align: top; padding-right: 5px; border: none;">
-                
-                <div class="section-title">B. GENERAL CONDITION</div>
-                <table class="checklist-table">
-                    @forelse($itemsB as $item)
-                        @php $val = $inspection->{$item->code} ?? ($jsonData[$item->code] ?? null); @endphp
-                        <tr>
-                            <td style="width: 70%;">{{ $item->label }}</td>
-                            <td style="text-align: right;">{!! badge($val) !!}</td>
-                        </tr>
-                    @empty
-                        <tr><td colspan="2" style="color: grey;">No items defined.</td></tr>
-                    @endforelse
-
-                    {{-- UNMAPPED ITEMS LOGIC --}}
-                    @php
-                        $standardCodes = $masterItems->pluck('code')->toArray();
-                        foreach($jsonData as $k => $v) {
-                            if(!in_array($k, $standardCodes) && 
-                               !in_array($k, ['inspection_date', 'inspector_name', 'filling_status', 'remarks', 'signature', 'longitude', 'latitude', 'location_name']) &&
-                               is_string($v) && strlen($v) < 50) {
-                                 // Exclude hardcoded legacy fields
-                                 if(!str_contains($k, 'ibox') && !str_contains($k, 'vacuum') && !str_contains($k, 'pressure_gauge') && !str_contains($k, 'psv')) {
-                    @endphp
-                        <tr>
-                            <td style="width: 70%;">{{ ucwords(str_replace('_', ' ', $k)) }}</td>
-                            <td style="text-align: right;">{!! badge($v) !!}</td>
-                        </tr>
-                    @php
-                                 }
-                            }
-                        }
-                    @endphp
-                </table>
-                
-                {{-- D. IBOX SYSTEM (T75 ONLY) --}}
-                @if(($isotank->tank_category == 'T75' || !$isotank->tank_category) && (!empty($inspection->ibox_condition) || !empty($inspection->ibox_pressure)))
-                <div class="section-title">D. IBOX SYSTEM</div>
-                <table class="checklist-table">
-                    <tr><td style="width: 70%;">Condition</td><td style="text-align:right">{!! badge($inspection->ibox_condition) !!}</td></tr>
-                    <tr><td>Battery</td><td style="text-align:right">{{ $inspection->ibox_battery_percent ? $inspection->ibox_battery_percent.'%' : '-' }}</td></tr>
-                    <tr><td>Pressure (Digital)</td><td style="text-align:right">{{ $inspection->ibox_pressure ?? '-' }}</td></tr>
-                    <tr>
-                         <td>Temp #1 (Digital)</td>
-                         <td style="text-align:right">
-                             {{ $inspection->ibox_temperature_1 ?? $inspection->ibox_temperature ?? '-' }}
-                             @if($inspection->ibox_temperature_1_timestamp)
-                             <br><small style="color:#666; font-size:6pt;">({{ \Carbon\Carbon::parse($inspection->ibox_temperature_1_timestamp)->format('H:i') }})</small>
-                             @endif
-                         </td>
-                    </tr>
-                    <tr>
-                         <td>Temp #2 (Digital)</td>
-                         <td style="text-align:right">
-                             {{ $inspection->ibox_temperature_2 ?? '-' }}
-                             @if($inspection->ibox_temperature_2_timestamp)
-                             <br><small style="color:#666; font-size:6pt;">({{ \Carbon\Carbon::parse($inspection->ibox_temperature_2_timestamp)->format('H:i') }})</small>
-                             @endif
-                         </td>
-                    </tr>
-                    <tr><td>Level (Digital)</td><td style="text-align:right">{{ $inspection->ibox_level ?? '-' }}</td></tr>
-                </table>
-                @endif
-
-                {{-- F. VACUUM SYSTEM (T75 ONLY) --}}
-                @if(($isotank->tank_category == 'T75' || !$isotank->tank_category) && (!empty($inspection->vacuum_gauge_condition) || !empty($inspection->vacuum_value)))
-                 <div class="section-title">F. VACUUM SYSTEM</div>
-                 <table class="checklist-table">
-                    <tr><td>Gauge / Port</td><td style="text-align:right">{!! badge($inspection->vacuum_gauge_condition) !!} / {!! badge($inspection->vacuum_port_suction_condition) !!}</td></tr>
-                    <tr><td colspan="2" style="color: #666; padding-left: 5px;">
-                        Value: {{ $inspection->vacuum_value ? number_format((float)$inspection->vacuum_value, 2) : '-' }} {{ $inspection->vacuum_unit ?? 'mtorr' }}
-                        ({{ $inspection->vacuum_temperature ?? '-' }} °C)
-                    </td></tr>
-                    <tr><td colspan="2" style="color: #666; padding-left: 5px;">
-                        Check Date: {{ $inspection->vacuum_check_datetime ? \Carbon\Carbon::parse($inspection->vacuum_check_datetime)->format('d M Y H:i') : '-' }}
-                    </td></tr>
-                 </table>
-                 @endif
-
-            </td>
-            
-            <!-- RIGHT COLUMN: C (Valves), E (Instruments), G (PSV) -->
-            <td style="width: 49%; vertical-align: top; padding-left: 5px; border: none;">
-                
-                <div class="section-title">C. VALVES & PIPING</div>
-                 <table class="checklist-table">
-                    @forelse($itemsC as $item)
-                        @php $val = $inspection->{$item->code} ?? ($jsonData[$item->code] ?? null); @endphp
-                        <tr>
-                            <td style="width: 70%;">{{ $item->label }}</td>
-                            <td style="text-align: right;">{!! badge($val) !!}</td>
-                        </tr>
-                    @empty
-                         <tr><td colspan="2">No items.</td></tr>
-                    @endforelse
-                </table>
-
-                {{-- E. INSTRUMENTS (T75 ONLY - T11/T50 use General Section) --}}
-                @if(($isotank->tank_category == 'T75' || !$isotank->tank_category) && (!empty($inspection->pressure_gauge_condition) || !empty($inspection->pressure_1)))
-                <div class="section-title">E. INSTRUMENTS</div>
-                <table class="checklist-table">
-                    <tr>
-                        <td><b>Pressure Gauge</b></td>
-                        <td style="text-align: right;">{!! badge($inspection->pressure_gauge_condition) !!}</td>
-                    </tr>
-                    <tr><td colspan="2" style="color: #666; padding-left: 5px;">
-                        #1: {{ $inspection->pressure_1 ? $inspection->pressure_1.' MPa' : '-' }}
-                        @if($inspection->pressure_1_timestamp)
-                            <small>({{ \Carbon\Carbon::parse($inspection->pressure_1_timestamp)->format('H:i') }})</small>
-                        @endif
-                        <br>
-                        #2: {{ $inspection->pressure_2 ? $inspection->pressure_2.' MPa' : '-' }}
-                        @if($inspection->pressure_2_timestamp)
-                            <small>({{ \Carbon\Carbon::parse($inspection->pressure_2_timestamp)->format('H:i') }})</small>
-                        @endif
-                    </td></tr>
+    @if($tankCat == 'T75')
+        {{-- T75 LEGACY 2-COLUMN LAYOUT --}}
+        <table style="width: 100%; border-collapse: collapse; margin-top: 0;">
+            <tr>
+                <!-- LEFT COLUMN: B (General), D (IBOX), F (Vacuum) -->
+                <td style="width: 49%; vertical-align: top; padding-right: 5px; border: none;">
                     
-                    <tr>
-                        <td><b>Level Gauge</b></td>
-                        <td style="text-align: right;">{!! badge($inspection->level_gauge_condition) !!}</td>
-                    </tr>
-                    <tr><td colspan="2" style="color: #666; padding-left: 5px;">
-                         #1: {{ $inspection->level_1 ? $inspection->level_1.' %' : '-' }}
-                        @if($inspection->level_1_timestamp)
-                            <small>({{ \Carbon\Carbon::parse($inspection->level_1_timestamp)->format('H:i') }})</small>
-                        @endif
-                        <br>
-                         #2: {{ $inspection->level_2 ? $inspection->level_2.' %' : '-' }}
-                        @if($inspection->level_2_timestamp)
-                            <small>({{ \Carbon\Carbon::parse($inspection->level_2_timestamp)->format('H:i') }})</small>
-                        @endif
-                    </td></tr>
-                </table>
-                @endif
+                    <div class="section-title">B. GENERAL CONDITION</div>
+                    <table class="checklist-table">
+                        @foreach($itemsB as $item)
+                            @php 
+                                $val = $inspection->{$item->code} ?? ($jsonData[$item->code] ?? null); 
+                                if(!$val && isset($legacyMap[$item->label])) {
+                                    $lKey = $legacyMap[$item->label];
+                                    $val = $inspection->{$lKey} ?? ($jsonData[$lKey] ?? null);
+                                }
+                            @endphp
+                            <tr>
+                                <td style="width: 70%;">{{ $item->label }}</td>
+                                <td style="text-align: right;">{!! badge($val) !!}</td>
+                            </tr>
+                        @endforeach
 
-                @if(!empty($inspection->psv1_condition) || !empty($inspection->psv2_condition) || !empty($inspection->psv3_condition) || !empty($inspection->psv4_condition))
-                 <div class="section-title">G. SAFETY VALVES (PSV)</div>
-                 <table class="checklist-table">
-                    @for($i=1; $i<=4; $i++)
-                        @php $cond = $inspection->{"psv{$i}_condition"}; @endphp
-                        @if($cond)
+                        {{-- UNMAPPED ITEMS LOGIC --}}
+                        @php
+                            $standardCodes = $masterItems->pluck('code')->toArray();
+                            foreach($jsonData as $k => $v) {
+                                if(!in_array($k, $standardCodes) && 
+                                   !in_array($k, ['inspection_date', 'inspector_name', 'filling_status', 'remarks', 'signature', 'longitude', 'latitude', 'location_name']) &&
+                                   is_string($v) && strlen($v) < 50) {
+                                     // Exclude hardcoded legacy fields
+                                     if(!str_contains($k, 'ibox') && !str_contains($k, 'vacuum') && !str_contains($k, 'pressure_gauge') && !str_contains($k, 'psv')) {
+                        @endphp
+                            <tr>
+                                <td style="width: 70%;">{{ ucwords(str_replace('_', ' ', $k)) }}</td>
+                                <td style="text-align: right;">{!! badge($v) !!}</td>
+                            </tr>
+                        @php
+                                     }
+                                }
+                            }
+                        @endphp
+                    </table>
+                    
+                    {{-- D. IBOX SYSTEM (T75 ONLY) --}}
+                    @if(!empty($inspection->ibox_condition) || !empty($inspection->ibox_pressure))
+                    <div class="section-title">D. IBOX SYSTEM</div>
+                    <table class="checklist-table">
+                        <tr><td style="width: 70%;">Condition</td><td style="text-align:right">{!! badge($inspection->ibox_condition) !!}</td></tr>
+                        <tr><td>Battery</td><td style="text-align:right">{{ $inspection->ibox_battery_percent ? $inspection->ibox_battery_percent.'%' : '-' }}</td></tr>
+                        <tr><td>Pressure (Digital)</td><td style="text-align:right">{{ $inspection->ibox_pressure ?? '-' }}</td></tr>
                         <tr>
-                            <td><b>PSV #{{ $i }}</b> <small>({{ $inspection->{"psv{$i}_serial_number"} ?? '-' }})</small></td>
-                            <td style="text-align: right;">{!! badge($cond) !!}</td>
+                             <td>Temp #1 (Digital)</td>
+                             <td style="text-align:right">
+                                 {{ $inspection->ibox_temperature_1 ?? $inspection->ibox_temperature ?? '-' }}
+                                 @if($inspection->ibox_temperature_1_timestamp)
+                                 <br><small style="color:#666; font-size:6pt;">({{ \Carbon\Carbon::parse($inspection->ibox_temperature_1_timestamp)->format('H:i') }})</small>
+                                 @endif
+                             </td>
                         </tr>
-                        @endif
-                    @endfor
-                 </table>
-                 @endif
+                        <tr>
+                             <td>Temp #2 (Digital)</td>
+                             <td style="text-align:right">
+                                 {{ $inspection->ibox_temperature_2 ?? '-' }}
+                                 @if($inspection->ibox_temperature_2_timestamp)
+                                 <br><small style="color:#666; font-size:6pt;">({{ \Carbon\Carbon::parse($inspection->ibox_temperature_2_timestamp)->format('H:i') }})</small>
+                                 @endif
+                             </td>
+                        </tr>
+                        <tr><td>Level (Digital)</td><td style="text-align:right">{{ $inspection->ibox_level ?? '-' }}</td></tr>
+                    </table>
+                    @endif
 
-            </td>
-        </tr>
-    </table>
+                    {{-- F. VACUUM SYSTEM (T75 ONLY) --}}
+                    @if(!empty($inspection->vacuum_gauge_condition) || !empty($inspection->vacuum_value))
+                     <div class="section-title">F. VACUUM SYSTEM</div>
+                     <table class="checklist-table">
+                        <tr><td>Gauge / Port</td><td style="text-align:right">{!! badge($inspection->vacuum_gauge_condition) !!} / {!! badge($inspection->vacuum_port_suction_condition) !!}</td></tr>
+                        <tr><td colspan="2" style="color: #666; padding-left: 5px;">
+                            Value: {{ $inspection->vacuum_value ? number_format((float)$inspection->vacuum_value, 2) : '-' }} {{ $inspection->vacuum_unit ?? 'mtorr' }}
+                            ({{ $inspection->vacuum_temperature ?? '-' }} °C)
+                        </td></tr>
+                        <tr><td colspan="2" style="color: #666; padding-left: 5px;">
+                            Check Date: {{ $inspection->vacuum_check_datetime ? \Carbon\Carbon::parse($inspection->vacuum_check_datetime)->format('d M Y H:i') : '-' }}
+                        </td></tr>
+                     </table>
+                     @endif
+
+                </td>
+                
+                <!-- RIGHT COLUMN: C (Valves), E (Instruments), G (PSV) -->
+                <td style="width: 49%; vertical-align: top; padding-left: 5px; border: none;">
+                    
+                    <div class="section-title">C. VALVES & PIPING</div>
+                     <table class="checklist-table">
+                        @foreach($itemsC as $item)
+                            @php 
+                                $val = $inspection->{$item->code} ?? ($jsonData[$item->code] ?? null); 
+                                if(!$val && isset($legacyMap[$item->label])) {
+                                    $lKey = $legacyMap[$item->label];
+                                    $val = $inspection->{$lKey} ?? ($jsonData[$lKey] ?? null);
+                                }
+                            @endphp
+                            <tr>
+                                <td style="width: 70%;">{{ $item->label }}</td>
+                                <td style="text-align: right;">{!! badge($val) !!}</td>
+                            </tr>
+                        @endforeach
+                    </table>
+
+                    {{-- E. INSTRUMENTS (T75 ONLY) --}}
+                    @if(!empty($inspection->pressure_gauge_condition) || !empty($inspection->pressure_1))
+                    <div class="section-title">E. INSTRUMENTS</div>
+                    <table class="checklist-table">
+                        <tr>
+                            <td><b>Pressure Gauge</b></td>
+                            <td style="text-align: right;">{!! badge($inspection->pressure_gauge_condition) !!}</td>
+                        </tr>
+                        <tr><td colspan="2" style="color: #666; padding-left: 5px;">
+                            #1: {{ $inspection->pressure_1 ? $inspection->pressure_1.' MPa' : '-' }}
+                            @if($inspection->pressure_1_timestamp)
+                                <small>({{ \Carbon\Carbon::parse($inspection->pressure_1_timestamp)->format('H:i') }})</small>
+                            @endif
+                            <br>
+                            #2: {{ $inspection->pressure_2 ? $inspection->pressure_2.' MPa' : '-' }}
+                            @if($inspection->pressure_2_timestamp)
+                                <small>({{ \Carbon\Carbon::parse($inspection->pressure_2_timestamp)->format('H:i') }})</small>
+                            @endif
+                        </td></tr>
+                        
+                        <tr>
+                            <td><b>Level Gauge</b></td>
+                            <td style="text-align: right;">{!! badge($inspection->level_gauge_condition) !!}</td>
+                        </tr>
+                        <tr><td colspan="2" style="color: #666; padding-left: 5px;">
+                             #1: {{ $inspection->level_1 ? $inspection->level_1.' %' : '-' }}
+                            @if($inspection->level_1_timestamp)
+                                <small>({{ \Carbon\Carbon::parse($inspection->level_1_timestamp)->format('H:i') }})</small>
+                            @endif
+                            <br>
+                             #2: {{ $inspection->level_2 ? $inspection->level_2.' %' : '-' }}
+                            @if($inspection->level_2_timestamp)
+                                <small>({{ \Carbon\Carbon::parse($inspection->level_2_timestamp)->format('H:i') }})</small>
+                            @endif
+                        </td></tr>
+                    </table>
+                    @endif
+
+                    @if(!empty($inspection->psv1_condition) || !empty($inspection->psv2_condition) || !empty($inspection->psv3_condition) || !empty($inspection->psv4_condition))
+                     <div class="section-title">G. SAFETY VALVES (PSV)</div>
+                     <table class="checklist-table">
+                        @for($i=1; $i<=4; $i++)
+                            @php $cond = $inspection->{"psv{$i}_condition"}; @endphp
+                            @if($cond)
+                            <tr>
+                                <td><b>PSV #{{ $i }}</b> <small>({{ $inspection->{"psv{$i}_serial_number"} ?? '-' }})</small></td>
+                                <td style="text-align: right;">{!! badge($cond) !!}</td>
+                            </tr>
+                            @endif
+                        @endfor
+                     </table>
+                     @endif
+
+                </td>
+            </tr>
+        </table>
+    @else
+        {{-- T11/T50 DYNAMIC LAYOUT --}}
+        @php
+            $categoryNames = $groupedItems->keys();
+            $midPoint = ceil($categoryNames->count() / 2);
+            $leftCategories = $categoryNames->slice(0, $midPoint);
+            $rightCategories = $categoryNames->slice($midPoint);
+        @endphp
+
+        <table style="width: 100%; border-collapse: collapse; margin-top: 5px;">
+            <tr>
+                <!-- LEFT COLUMN -->
+                <td style="width: 49%; vertical-align: top; padding-right: 5px; border: none;">
+                    @foreach($leftCategories as $catName)
+                        <div class="section-title">{{ strtoupper($catName) }}</div>
+                        <table class="checklist-table">
+                            @foreach($groupedItems[$catName] as $item)
+                                @php 
+                                    $val = $inspection->{$item->code} ?? ($jsonData[$item->code] ?? null); 
+                                    if(!$val && isset($legacyMap[$item->label])) {
+                                        $lKey = $legacyMap[$item->label];
+                                        $val = $inspection->{$lKey} ?? ($jsonData[$lKey] ?? null);
+                                    }
+                                @endphp
+                                <tr>
+                                    <td style="width: 70%;">{{ $item->label }}</td>
+                                    <td style="text-align: right;">{!! badge($val) !!}</td>
+                                </tr>
+                            @endforeach
+                        </table>
+                    @endforeach
+                </td>
+
+                <!-- RIGHT COLUMN -->
+                <td style="width: 49%; vertical-align: top; padding-left: 5px; border: none;">
+                    @foreach($rightCategories as $catName)
+                        <div class="section-title">{{ strtoupper($catName) }}</div>
+                        <table class="checklist-table">
+                            @foreach($groupedItems[$catName] as $item)
+                                @php 
+                                    $val = $inspection->{$item->code} ?? ($jsonData[$item->code] ?? null); 
+                                    if(!$val && isset($legacyMap[$item->label])) {
+                                        $lKey = $legacyMap[$item->label];
+                                        $val = $inspection->{$lKey} ?? ($jsonData[$lKey] ?? null);
+                                    }
+                                @endphp
+                                <tr>
+                                    <td style="width: 70%;">{{ $item->label }}</td>
+                                    <td style="text-align: right;">{!! badge($val) !!}</td>
+                                </tr>
+                            @endforeach
+                        </table>
+                    @endforeach
+                </td>
+            </tr>
+        </table>
+    @endif
 
     {{-- OUTGOING: RECEIVER CONFIRMATION TABLE --}}
     @if($type === 'outgoing' && isset($receiverConfirmations))
@@ -286,7 +383,7 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach(\App\Services\PdfGenerationService::getGeneralConditionItems() as $key)
+                @foreach(\App\Services\PdfGenerationService::getGeneralConditionItems($tankCat) as $key)
                     @php
                         $label = \App\Services\PdfGenerationService::getItemDisplayName($key);
                         $inspectorVal = $inspection->$key ?? ($jsonData[$key] ?? null);
