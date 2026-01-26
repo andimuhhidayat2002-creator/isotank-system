@@ -107,21 +107,18 @@
                             }
                         @endphp
 
-                        <!-- SECTION B: GENERAL CONDITION (Dynamic + Hybrid + Unmapped) -->
-                        <tr class="table-secondary"><th colspan="2">B. GENERAL CONDITION</th></tr>
+                        <!-- DYNAMIC CATEGORIES LOOP -->
                         @php
-                             $tankCat = $log->isotank->tank_category ?? 'T75'; // Default to T75
-                             
-                             // Filter items that are 'b', 'general', or 'external' AND match Tank Category
-                             $generalItems = $inspectionItems->filter(fn($i) => 
-                                $i->category && (
-                                    str_starts_with(strtolower($i->category), 'b') || 
-                                    str_contains(strtolower($i->category), 'general') ||
-                                    in_array(strtolower($i->category), ['external'])
-                                ) && in_array($tankCat, $i->applicable_categories ?? [])
+                            // 1. Filter items STRICTLY by Tank Category
+                            $catSpecificItems = $inspectionItems->filter(fn($i) => 
+                                 in_array($tankCat, $i->applicable_categories ?? [])
                             );
                             
-                            $legacyMap = [
+                            // 2. Group by Category
+                            $grouped = $catSpecificItems->groupBy('category');
+                            
+                            // Merged Legacy Map
+                             $legacyMap = [
                                 'Surface Condition' => 'surface', 'Tank Surface & Paint Condition' => 'surface',
                                 'Frame Condition' => 'frame', 'Frame Structure' => 'frame',
                                 'Tank Name Plate' => 'tank_plate', 'Data Plate' => 'tank_plate',
@@ -131,49 +128,6 @@
                                 'Document Container' => 'document_container',
                                 'Valve Box Door' => 'valve_box_door',
                                 'Grounding System' => 'grounding_system',
-                            ];
-                        @endphp
-                        
-                        @foreach($generalItems as $item)
-                             @php 
-                                $code = $item->code; 
-                                $val = $logData[$code] ?? ($log->$code ?? null);
-                                // Fallback
-                                if(!$val && isset($legacyMap[$item->label])) {
-                                    $lKey = $legacyMap[$item->label];
-                                    $val = $logData[$lKey] ?? ($log->$lKey ?? null);
-                                }
-                             @endphp
-                             <tr>
-                                <td class="ps-3">{{ $item->label }}</td>
-                                <td class="text-center">
-                                    @include('admin.reports.partials.badge', ['status' => $val ?: '-'])
-                                </td>
-                             </tr>
-                        @endforeach
-                        
-                        {{-- RENDER UNMAPPED / EXTRA ITEMS HERE INSIDE SECTION B --}}
-                        @if(!empty($unmapped))
-                             @foreach($unmapped as $k => $v)
-                                <tr>
-                                    <td class="ps-3">{{ ucwords(str_replace('_', ' ', $k)) }}</td>
-                                    <td class="text-center">@include('admin.reports.partials.badge', ['status' => $v])</td>
-                                </tr>
-                             @endforeach
-                        @endif
-
-                        <!-- SECTION C: VALVE & PIPE SYSTEM (Dynamic + Hybrid) -->
-                        <tr class="table-secondary"><th colspan="2">C. VALVE & PIPE SYSTEM</th></tr>
-                        @php
-                            $valveItems = $inspectionItems->filter(fn($i) => 
-                                $i->category && (
-                                    str_starts_with(strtolower($i->category), 'c') || 
-                                    str_contains(strtolower($i->category), 'valve') ||
-                                    str_contains(strtolower($i->category), 'piping')
-                                ) && in_array($tankCat, $i->applicable_categories ?? [])
-                            );
-                            
-                            $legacyValveMap = [
                                 'Valve Condition' => 'valve_condition',
                                 'Valve Position' => 'valve_position',
                                 'Pipe Joint' => 'pipe_joint',
@@ -183,22 +137,38 @@
                                 'PRV' => 'prv'
                             ];
                         @endphp
-                         @foreach($valveItems as $item)
-                             @php 
-                                $code = $item->code; 
-                                $val = $logData[$code] ?? ($log->$code ?? null); 
-                                if(!$val && isset($legacyValveMap[$item->label])) {
-                                    $lKey = $legacyValveMap[$item->label];
-                                    $val = $logData[$lKey] ?? ($log->$lKey ?? null);
-                                }
-                             @endphp
-                             <tr>
-                                <td class="ps-3">{{ $item->label }}</td>
-                                <td class="text-center">
-                                     @include('admin.reports.partials.badge', ['status' => $val ?: '-'])
-                                </td>
-                             </tr>
+
+                        @foreach($grouped as $categoryName => $items)
+                            <tr class="table-secondary"><th colspan="2">{{ strtoupper($categoryName) }}</th></tr>
+                            @foreach($items as $item)
+                                 @php 
+                                    $code = $item->code; 
+                                    $val = $logData[$code] ?? ($log->$code ?? null);
+                                    // Fallback logic
+                                    if(!$val && isset($legacyMap[$item->label])) {
+                                        $lKey = $legacyMap[$item->label];
+                                        $val = $logData[$lKey] ?? ($log->$lKey ?? null);
+                                    }
+                                 @endphp
+                                 <tr>
+                                    <td class="ps-3">{{ $item->label }}</td>
+                                    <td class="text-center">
+                                        @include('admin.reports.partials.badge', ['status' => $val ?: '-'])
+                                    </td>
+                                 </tr>
+                            @endforeach
                         @endforeach
+
+                        {{-- Unmapped items (Last) --}}
+                        @if(!empty($unmapped))
+                            <tr class="table-secondary"><th colspan="2">ADDITIONAL ITEMS</th></tr>
+                            @foreach($unmapped as $k => $v)
+                                <tr>
+                                    <td class="ps-3">{{ ucwords(str_replace('_', ' ', $k)) }}</td>
+                                    <td class="text-center">@include('admin.reports.partials.badge', ['status' => $v])</td>
+                                </tr>
+                            @endforeach
+                        @endif
 
                         @if($tankCat == 'T75')
                         <!-- SECTION D: IBOX SYSTEM (Hardcoded Legacy) -->
