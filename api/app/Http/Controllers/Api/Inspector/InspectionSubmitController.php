@@ -1206,21 +1206,24 @@ class InspectionSubmitController extends Controller
     // FILTERED BY ISOTANK CATEGORY
     $category = $job->isotank->tank_category ?? 'T75';
 
-    $dynamicItems = \App\Models\InspectionItem::where('is_active', true)
-        ->where(function($q) {
-             $q->where('category', 'like', 'b%')
-               ->orWhere('category', 'like', '%general%')
-               ->orWhere('category', 'external')
-                // Include safety items if mapped to these categories
-               ;
-        })
+    $dynamicItemsQuery = \App\Models\InspectionItem::where('is_active', true)
         ->where(function($q) use ($category) {
             // Check if category is in the JSON array OR if column is null (legacy/global)
             $q->whereJsonContains('applicable_categories', $category)
               ->orWhereNull('applicable_categories');
-        })
-        ->orderBy('order')
-        ->get();
+        });
+
+    // CRITICAL: For T75, we only show specific sections to the receiver
+    // For T11/T50, we show EVERYTHING as per requested layout
+    if ($category === 'T75') {
+        $dynamicItemsQuery->where(function($q) {
+             $q->where('category', 'like', 'b%')
+               ->orWhere('category', 'like', '%general%')
+               ->orWhere('category', 'external');
+        });
+    }
+
+    $dynamicItems = $dynamicItemsQuery->orderBy('order')->get();
 
     $items = [];
     // Ensure inspection_data is accessible as array
