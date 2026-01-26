@@ -120,6 +120,17 @@ class PdfGenerationService
         return $path;
     }
     
+    public static function getT11ReceiverCodes(): array 
+    {
+        return [
+            'T11_A_01', 'T11_A_02',
+            'T11_B_01', 'T11_B_02', 'T11_B_03', 'T11_B_09',
+            'T11_C_01', 'T11_C_02',
+            'T11_D_01', 'T11_D_02', 'T11_D_04',
+            'T11_E_01', 'T11_E_02', 'T11_E_09'
+        ];
+    }
+
     /**
      * Get general condition items for receiver confirmation (Category-aware)
      * 
@@ -128,7 +139,7 @@ class PdfGenerationService
      */
     public static function getGeneralConditionItems(string $tankCat = 'T75'): array
     {
-        // 1. Try to fetch DYNAMIC items from Database first (Single Source of Truth)
+        // 1. Try to fetch DYNAMIC items from Database first
         try {
             if (class_exists(\App\Models\InspectionItem::class)) {
                 $query = \App\Models\InspectionItem::where('is_active', true);
@@ -141,23 +152,22 @@ class PdfGenerationService
                     }
                 });
 
-                // For Receiver Confirmation, T75 has specific sections. 
-                // T11/T50 shows everything tagged.
+                // FOR RECEIVER: We apply strict lists
                 if ($tankCat === 'T75') {
                     $query->where(function($q) {
                         $q->whereIn('category', ['b', 'external', 'general'])
                           ->orWhere('category', 'like', 'b%');
                     });
+                } elseif ($tankCat === 'T11') {
+                    // ONLY the 14 items from the photo
+                    $query->whereIn('code', self::getT11ReceiverCodes());
                 }
                 
                 $dynamicItems = $query->orderBy('order', 'asc')
                     ->pluck('code')
                     ->toArray();
 
-                // If we found items in DB, utilize them strictly to match Inspector's view
-                if (!empty($dynamicItems)) {
-                    return $dynamicItems;
-                }
+                if (!empty($dynamicItems)) return $dynamicItems;
             }
         } catch (\Exception $e) {
             \Log::error('Failed to fetch dynamic inspection items for PDF: ' . $e->getMessage());

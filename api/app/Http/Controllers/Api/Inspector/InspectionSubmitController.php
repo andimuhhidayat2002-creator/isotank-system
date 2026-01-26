@@ -188,7 +188,7 @@ class InspectionSubmitController extends Controller
             'filling_status_desc' => 'nullable|string',
             
             // Dynamic Data
-            'inspection_data' => 'nullable|json',
+            'inspection_data' => 'nullable',
         ];
 
         // DYNAMIC RULES: Add validation for active InspectionItems
@@ -455,7 +455,8 @@ class InspectionSubmitController extends Controller
                 
                 // Dynamic Inspection Items Data
                 'inspection_data' => (function() use ($request, $validated, $dynamicItems) {
-                    $data = $request->input('inspection_data') ? json_decode($request->input('inspection_data'), true) : [];
+                    $rawData = $request->input('inspection_data');
+                    $data = is_array($rawData) ? $rawData : (is_string($rawData) ? json_decode($rawData, true) : []);
                     if (!is_array($data)) $data = [];
                     
                     // Add top-level dynamic fields to inspection_data
@@ -997,7 +998,6 @@ class InspectionSubmitController extends Controller
         
         $dynamicItemsQuery = \App\Models\InspectionItem::where('is_active', true);
 
-        // CRITICAL: For T75, we keep legacy filtering logic
         if ($category === 'T75') {
             $dynamicItemsQuery->where(function($q) use ($category) {
                 $q->whereJsonContains('applicable_categories', $category)
@@ -1008,8 +1008,13 @@ class InspectionSubmitController extends Controller
                    ->orWhere('category', 'external');
             });
         } else {
-            // For T11/T50: ONLY show items explicitly tagged for this category
-            $dynamicItemsQuery->whereJsonContains('applicable_categories', $category);
+            // FOR RECEIVER: We apply strict lists
+            if ($category === 'T11') {
+                $dynamicItemsQuery->whereIn('code', \App\Services\PdfGenerationService::getT11ReceiverCodes());
+            } else {
+                // For T50 or others: Show everything tagged
+                $dynamicItemsQuery->whereJsonContains('applicable_categories', $category);
+            }
         }
 
         $dynamicItems = $dynamicItemsQuery->orderBy('order')->get();
@@ -1223,8 +1228,13 @@ class InspectionSubmitController extends Controller
                ->orWhere('category', 'external');
         });
     } else {
-        // For T11/T50: ONLY show items explicitly tagged for this category to avoid "trash" items
-        $dynamicItemsQuery->whereJsonContains('applicable_categories', $category);
+        // FOR RECEIVER: We apply strict lists
+        if ($category === 'T11') {
+            $dynamicItemsQuery->whereIn('code', \App\Services\PdfGenerationService::getT11ReceiverCodes());
+        } else {
+            // For T50 or others: Show everything tagged
+            $dynamicItemsQuery->whereJsonContains('applicable_categories', $category);
+        }
     }
 
     $dynamicItems = $dynamicItemsQuery->orderBy('order')->get();
