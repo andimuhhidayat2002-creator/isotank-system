@@ -991,11 +991,19 @@ class InspectionSubmitController extends Controller
         }
 
         // Validate confirmations based on ACTIVE DYNAMIC ITEMS (Single Source of Truth)
+        // FILTERED BY ISOTANK CATEGORY
+        $category = $job->isotank->tank_category ?? 'T75';
+        
         $dynamicItems = \App\Models\InspectionItem::where('is_active', true)
             ->where(function($q) {
                  $q->where('category', 'like', 'b%')
                    ->orWhere('category', 'like', '%general%')
                    ->orWhere('category', 'external');
+            })
+            ->where(function($q) use ($category) {
+                // Check if category is in the JSON array OR if column is null (legacy/global)
+                $q->whereJsonContains('applicable_categories', $category)
+                  ->orWhereNull('applicable_categories');
             })
             ->orderBy('order')
             ->get();
@@ -1193,14 +1201,22 @@ class InspectionSubmitController extends Controller
 
         // Get general condition items DYNAMICALLY from Master Data
     // Matches the logic in Inspection Form and Report View for Category B
+    // Matches the logic in Inspection Form and Report View for Category B
+    // FILTERED BY ISOTANK CATEGORY
+    $category = $job->isotank->tank_category ?? 'T75';
+
     $dynamicItems = \App\Models\InspectionItem::where('is_active', true)
         ->where(function($q) {
              $q->where('category', 'like', 'b%')
                ->orWhere('category', 'like', '%general%')
                ->orWhere('category', 'external')
-               // Also include formerly 'safety' items if they are now mapped to G but user wants 'General' consistency
-               // But usually we just follow 'General'. If safety were moved to B, they are covered.
+                // Include safety items if mapped to these categories
                ;
+        })
+        ->where(function($q) use ($category) {
+            // Check if category is in the JSON array OR if column is null (legacy/global)
+            $q->whereJsonContains('applicable_categories', $category)
+              ->orWhereNull('applicable_categories');
         })
         ->orderBy('order')
         ->get();

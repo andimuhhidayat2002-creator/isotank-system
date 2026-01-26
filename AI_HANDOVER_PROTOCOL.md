@@ -29,7 +29,7 @@ We follow a strict **GIT-FLOW** sync looking like this:
 *   **API Logic:** `InspectionItemApiController` automatically filters items. If no `tank_category` param is provided, it defaults to **T75** (Backward Compatibility).
 
 ### B. Dynamic Receiver Validation
-*   **Source of Truth:** Validation for Receiver Confirmation (`InspectionSubmitController`) is now **DYNAMIC**, sourced from `inspection_items` table.
+*   **Source of Truth:** Validation for Receiver Confirmation (`InspectionSubmitController`) is now **DYNAMIC**, sourced from `inspection_items` table (Filtered by `applicable_categories` to match the specific Tank Category).
 *   **Do Not Hardcode:** Never revert to using `PdfGenerationService::getGeneralConditionItems()` for validation rules.
 
 ### C. Excel Import/Export
@@ -40,6 +40,7 @@ We follow a strict **GIT-FLOW** sync looking like this:
 *   **Master Condition & Maintenance:** Now have filtering tabs (All, T75, T11, T50).
 *   **Dynamic Columns:** `latest_inspections.blade.php` is refactored to dynamically render columns based on the selected category's inspection items.
 *   **Legacy Hiding:** Hardcoded sections (IBOX, VACUUM, INSTRUMENTS, PSV) are **HIDDEN** for T11/T50 unless viewing 'All' or 'T75', or if data exists.
+*   **Unified Reports:** Daily & Weekly Reports (Email) now show breakdown of Incoming, Outgoing, and Stock by **Category** (T75/T11/T50).
 
 ### E. Digital Signatures & PDF
 *   **Signature Fix:** `User` model now correctly allows `signature_path` update.
