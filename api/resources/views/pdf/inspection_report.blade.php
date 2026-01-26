@@ -167,79 +167,171 @@
         }
     @endphp
 
-    {{-- UNIFIED 3-COLUMN TABLE LAYOUT (USER REQUEST) --}}
-    @php
-        $receiverCodes = \App\Services\PdfGenerationService::getGeneralConditionItems($tankCat);
-    @endphp
+    @if($tankCat == 'T75')
+        {{-- T75 LEGACY 2-COLUMN LAYOUT (RESTORED) --}}
+        <table style="width: 100%; border-collapse: collapse; margin-top: 0;">
+            <tr>
+                <!-- LEFT COLUMN: B (General), D (IBOX), F (Vacuum) -->
+                <td style="width: 49%; vertical-align: top; padding-right: 5px; border: none;">
+                    
+                    <div class="section-title">B. GENERAL CONDITION</div>
+                    <table class="checklist-table">
+                        @foreach($itemsB as $item)
+                            @php 
+                                $val = $inspection->{$item->code} ?? ($jsonData[$item->code] ?? null); 
+                                if(!$val && isset($legacyMap[$item->label])) {
+                                    $lKey = $legacyMap[$item->label];
+                                    $val = $inspection->{$lKey} ?? ($jsonData[$lKey] ?? null);
+                                }
+                            @endphp
+                            <tr>
+                                <td style="width: 70%;">{{ $item->label }}</td>
+                                <td style="text-align: right;">{!! badge($val) !!}</td>
+                            </tr>
+                        @endforeach
+                    </table>
+                    
+                    {{-- D. IBOX SYSTEM (T75 ONLY) --}}
+                    @if(!empty($inspection->ibox_condition) || !empty($inspection->ibox_pressure))
+                    <div class="section-title">D. IBOX SYSTEM</div>
+                    <table class="checklist-table">
+                        <tr><td style="width: 70%;">Condition</td><td style="text-align:right">{!! badge($inspection->ibox_condition) !!}</td></tr>
+                        <tr><td>Battery</td><td style="text-align:right">{{ $inspection->ibox_battery_percent ? $inspection->ibox_battery_percent.'%' : '-' }}</td></tr>
+                        <tr><td>Pressure (Digital)</td><td style="text-align:right">{{ $inspection->ibox_pressure ?? '-' }}</td></tr>
+                        <tr><td>Level (Digital)</td><td style="text-align:right">{{ $inspection->ibox_level ?? '-' }}</td></tr>
+                    </table>
+                    @endif
 
-    <div style="margin-top: 10px;">
-        <table class="checklist-table" style="border: 1px solid #ddd;">
-            <thead>
-                <tr>
-                    <th style="width: 50%; border: 1px solid #ddd;">DESCRIPTION</th>
-                    <th style="width: 25%; border: 1px solid #ddd; text-align: center;">INSPECTOR</th>
-                    <th style="width: 25%; border: 1px solid #ddd; text-align: center;">RECEIVER</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($applicableItems->groupBy('category') as $catName => $items)
+                    {{-- F. VACUUM SYSTEM (T75 ONLY) --}}
+                    @if(!empty($inspection->vacuum_gauge_condition) || !empty($inspection->vacuum_value))
+                     <div class="section-title">F. VACUUM SYSTEM</div>
+                     <table class="checklist-table">
+                        <tr><td>Gauge / Port</td><td style="text-align:right">{!! badge($inspection->vacuum_gauge_condition) !!} / {!! badge($inspection->vacuum_port_suction_condition) !!}</td></tr>
+                        <tr><td colspan="2" style="color: #666;">
+                            Value: {{ $inspection->vacuum_value ?? '-' }} ({{ $inspection->vacuum_temperature ?? '-' }} °C)
+                        </td></tr>
+                     </table>
+                     @endif
+                </td>
+                
+                <!-- RIGHT COLUMN: C (Valves), E (Instruments), G (PSV) -->
+                <td style="width: 49%; vertical-align: top; padding-left: 5px; border: none;">
+                    <div class="section-title">C. VALVES & PIPING</div>
+                     <table class="checklist-table">
+                        @foreach($itemsC as $item)
+                            @php 
+                                $val = $inspection->{$item->code} ?? ($jsonData[$item->code] ?? null); 
+                                if(!$val && isset($legacyMap[$item->label])) {
+                                    $lKey = $legacyMap[$item->label];
+                                    $val = $inspection->{$lKey} ?? ($jsonData[$lKey] ?? null);
+                                }
+                            @endphp
+                            <tr>
+                                <td style="width: 70%;">{{ $item->label }}</td>
+                                <td style="text-align: right;">{!! badge($val) !!}</td>
+                            </tr>
+                        @endforeach
+                    </table>
+
+                    {{-- E. INSTRUMENTS --}}
+                    @if(!empty($inspection->pressure_gauge_condition) || !empty($inspection->pressure_1))
+                    <div class="section-title">E. INSTRUMENTS</div>
+                    <table class="checklist-table">
+                        <tr><td><b>Pressure Gauge</b></td><td style="text-align: right;">{!! badge($inspection->pressure_gauge_condition) !!}</td></tr>
+                        <tr><td><b>Level Gauge</b></td><td style="text-align: right;">{!! badge($inspection->level_gauge_condition) !!}</td></tr>
+                    </table>
+                    @endif
+
+                    {{-- G/PSV --}}
+                    @if(!empty($inspection->psv1_condition) || !empty($inspection->psv2_condition))
+                     <div class="section-title">G. SAFETY VALVES (PSV)</div>
+                     <table class="checklist-table">
+                        @for($i=1; $i<=2; $i++)
+                            @php $cond = $inspection->{"psv{$i}_condition"}; @endphp
+                            @if($cond)
+                            <tr><td><b>PSV #{{ $i }}</b></td><td style="text-align: right;">{!! badge($cond) !!}</td></tr>
+                            @endif
+                        @endfor
+                     </table>
+                     @endif
+                </td>
+            </tr>
+        </table>
+    @else
+        {{-- T11/T50 DYNAMIC 3-COLUMN LAYOUT (COMPACT) --}}
+        @php
+            $receiverCodes = \App\Services\PdfGenerationService::getGeneralConditionItems($tankCat);
+        @endphp
+
+        <div style="margin-top: 5px;">
+            <table class="checklist-table" style="border: 1px solid #ddd; width: 100%;">
+                <thead>
                     <tr>
-                        <td colspan="3" class="section-title" style="margin: 0; background-color: #f9f9f9; border: 1px solid #ddd;">
-                            {{ strtoupper($catName) }}
-                        </td>
+                        <th style="width: 50%; border: 1px solid #ddd; background: #f5f5f5; font-size: 6.5pt;">DESCRIPTION</th>
+                        <th style="width: 25%; border: 1px solid #ddd; text-align: center; background: #f5f5f5; font-size: 6.5pt;">INSPECTOR</th>
+                        <th style="width: 25%; border: 1px solid #ddd; text-align: center; background: #f5f5f5; font-size: 6.5pt;">RECEIVER</th>
                     </tr>
-                    @foreach($items as $item)
-                        @php 
-                            $val = $inspection->{$item->code} ?? ($jsonData[$item->code] ?? null); 
-                            if(!$val && isset($legacyMap[$item->label])) {
-                                $lKey = $legacyMap[$item->label];
-                                $val = $inspection->{$lKey} ?? ($jsonData[$lKey] ?? null);
-                            }
-                            
-                            $isConfirmedItem = in_array($item->code, $receiverCodes);
-                            $conf = $recvConfirmations[$item->code] ?? null;
-                        @endphp
+                </thead>
+                <tbody>
+                    @foreach($applicableItems->groupBy('category') as $catName => $items)
                         <tr>
-                            <td style="border: 1px solid #eee; padding: 4px;">
-                                <strong>{{ $item->label }}</strong>
-                                @if($conf && $conf->receiver_remark)
-                                    <div style="font-size: 6.5pt; color: #666; font-style: italic; margin-top: 1px;">
-                                        Note: {{ $conf->receiver_remark }}
-                                    </div>
-                                @endif
-                            </td>
-                            <td style="border: 1px solid #eee; text-align: center; vertical-align: middle;">
-                                {!! badge($val) !!}
-                            </td>
-                            <td style="border: 1px solid #eee; text-align: center; vertical-align: middle;">
-                                @if($type === 'outgoing')
-                                    @if($isConfirmedItem)
-                                        @if($conf)
-                                            <span class="status-badge {{ $conf->receiver_decision === 'ACCEPT' ? 'bg-green' : 'bg-red' }}">
-                                                {{ $conf->receiver_decision }}
-                                            </span>
-                                        @else
-                                            <span class="status-badge bg-grey">WAITING</span>
-                                        @endif
-                                    @else
-                                        <span style="color: #bbb; font-size: 7pt;">NOT REQ.</span>
-                                    @endif
-                                @else
-                                    <span style="color: #bbb; font-size: 7pt;">-</span>
-                                @endif
+                            <td colspan="3" class="section-title" style="margin: 0; background-color: #f9f9f9; border: 1px solid #ddd; font-size: 7pt; padding: 1px 3px;">
+                                {{ strtoupper($catName) }}
                             </td>
                         </tr>
+                        @foreach($items as $item)
+                            @php 
+                                $val = $inspection->{$item->code} ?? ($jsonData[$item->code] ?? null); 
+                                if(!$val && isset($legacyMap[$item->label])) {
+                                    $lKey = $legacyMap[$item->label];
+                                    $val = $inspection->{$lKey} ?? ($jsonData[$lKey] ?? null);
+                                }
+                                
+                                $isConfirmedItem = in_array($item->code, $receiverCodes);
+                                $conf = $recvConfirmations[$item->code] ?? null;
+                            @endphp
+                            <tr style="line-height: 1;">
+                                <td style="border: 1px solid #eee; padding: 1px 3px; font-size: 6.8pt;">
+                                    {{ $item->label }}
+                                    @if($conf && $conf->receiver_remark)
+                                        <div style="font-size: 5.5pt; color: #666; font-style: italic;">
+                                            Note: {{ $conf->receiver_remark }}
+                                        </div>
+                                    @endif
+                                </td>
+                                <td style="border: 1px solid #eee; text-align: center; vertical-align: middle; padding: 1px;">
+                                    {!! badge($val) !!}
+                                </td>
+                                <td style="border: 1px solid #eee; text-align: center; vertical-align: middle; padding: 1px;">
+                                    @if($type === 'outgoing')
+                                        @if($isConfirmedItem)
+                                            @if($conf)
+                                                <span class="status-badge {{ $conf->receiver_decision === 'ACCEPT' ? 'bg-green' : 'bg-red' }}" style="font-size: 5.5pt; min-width: 30px;">
+                                                    {{ $conf->receiver_decision }}
+                                                </span>
+                                            @else
+                                                <span class="status-badge bg-grey" style="font-size: 5.5pt; min-width: 30px;">WAITING</span>
+                                            @endif
+                                        @else
+                                            <span style="color: #bbb; font-size: 6pt;">N/A</span>
+                                        @endif
+                                    @else
+                                        <span style="color: #bbb; font-size: 6pt;">-</span>
+                                    @endif
+                                </td>
+                            </tr>
+                        @endforeach
                     @endforeach
-                @endforeach
-            </tbody>
-        </table>
-    </div>
-
-    {{-- OUTGOING: RECEIVER CONFIRMATION SUMMARY --}}
-    @if($type === 'outgoing')
-        <div style="font-size: 7.5pt; color: #333; margin-top: 10px; padding: 6px; border: 1px solid #c8e6c9; background-color: #f1f8e9;">
-            "I, <strong>{{ $inspection->receiver_name ?? ($job->receiver_name ?? 'N/A') }}</strong>, hereby confirm that I have reviewed the inspector's findings listed in the sections above and accept the current condition of the isotank as documented."
+                </tbody>
+            </table>
         </div>
+
+        {{-- OUTGOING: RECEIVER CONFIRMATION SUMMARY --}}
+        @if($type === 'outgoing')
+            <div style="font-size: 7pt; color: #333; margin-top: 5px; padding: 4px; border: 1px solid #c8e6c9; background-color: #f1f8e9;">
+                "I, <strong>{{ $inspection->receiver_name ?? ($job->receiver_name ?? 'N/A') }}</strong>, hereby confirm that I have reviewed the inspector's findings listed in the sections above and accept the current condition of the isotank as documented."
+            </div>
+        @endif
     @endif
 
     {{-- SIGNATURES --}}
