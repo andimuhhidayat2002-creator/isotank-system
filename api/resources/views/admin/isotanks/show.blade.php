@@ -172,12 +172,6 @@
                                                 @endforeach
                                             @endif
 
-                                            @if($tankCat == 'T11')
-                                            <!-- SECTION F: IBOX READINGS (T11 Specific) -->
-                                            <tr class="table-secondary"><th colspan="2">F. IBOX READINGS</th></tr>
-                                            <tr><td class="ps-3">Temperature</td><td class="text-center">{{ $log->ibox_temperature ?? '-' }}</td></tr>
-                                            <tr><td class="ps-3">Pressure (Digital)</td><td class="text-center">{{ $log->ibox_pressure ?? '-' }}</td></tr>
-                                            <tr><td class="ps-3">Level</td><td class="text-center">{{ $log->ibox_level ?? '-' }}</td></tr>
                                             @endif
 
                                             @if($tankCat == 'T75')
