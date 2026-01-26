@@ -43,7 +43,8 @@ We operate on **TWO SEPARATE** repositories. Always verify which one you are wor
 ### D. Web Admin Dynamic Views (Jan 25, 2026)
 *   **Global Dashboard:** Added Category Filter (All, T75, T11, T50) to filter all statistics (Active, Maintenance, Inspection, Alerts).
 *   **Master Condition & Maintenance:** 'All' tab REMOVED. Default is now T75. Tabs: T75, T11, T50.
-*   **Strict Category Display:** `isotanks/show.blade.php` and `inspection_show.blade.php` now STRICTLY filter items based on tank category. T75-specific sections (IBOX, Vacuum, Instruments) are totally hidden for T11/T50.
+*   **Strict Category Display:** `isotanks/show.blade.php` and `inspection_show.blade.php` now STRICTLY filter items based on tank category. T75-specific sections (IBOX, Vacuum, Instruments, PSV) are totally hidden for T11/T50.
+*   **T11 IBOX Integration:** IBOX readings (Temperature, Pressure, Level) for T11 are now integrated as **dynamic items** in Section C (Right Side) instead of being a standalone hardcoded section. This ensures they appear in the correct sequence (Section C) rather than jumping to Section F.
 *   **Legacy Data Fallback:** Implemented `$legacyMap` to ensure old inspection data (e.g. key `frame` vs dynamic item `Frame`) displays correctly without "N/A" errors.
 *   **Unified Reports:** Daily & Weekly Reports (Email) now show breakdown of Incoming, Outgoing, and Stock by **Category** (T75/T11/T50).
 
@@ -55,5 +56,9 @@ We operate on **TWO SEPARATE** repositories. Always verify which one you are wor
 *   **T11/T50 Items:** Specific items for T11 and T50 have been seeded.
 *   **Category Logic:** Use `applicable_categories` in `InspectionItem` to control visibility.
 
+### G. Stability Fixes (Jan 26, 2026)
+*   **Null Safety:** Added null-safe operators and explicit checks for `$log->isotank` to prevent 500 errors on legacy logs or logs with missing relationships.
+*   **Syntax Integrity:** Fixed blade syntax errors (duplicate `@endif`) in report templates.
+
 ---
-*Last Updated: Jan 25, 2026 - Antigravity Agent*
+*Last Updated: Jan 26, 2026 - Antigravity Agent*
