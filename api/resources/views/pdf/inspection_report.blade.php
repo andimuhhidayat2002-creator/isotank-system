@@ -189,6 +189,25 @@
                                 <td style="text-align: right;">{!! badge($val) !!}</td>
                             </tr>
                         @endforeach
+
+                        {{-- UNMAPPED ITEMS LOGIC --}}
+                        @php
+                            $standardCodes = $masterItems->pluck('code')->toArray();
+                            foreach($jsonData as $k => $v) {
+                                if(!in_array($k, $standardCodes) && 
+                                   !in_array($k, ['inspection_date', 'inspector_name', 'filling_status', 'remarks', 'signature', 'longitude', 'latitude', 'location_name']) &&
+                                   is_string($v) && strlen($v) < 50) {
+                                     if(!str_contains($k, 'ibox') && !str_contains($k, 'vacuum') && !str_contains($k, 'pressure_gauge') && !str_contains($k, 'psv')) {
+                        @endphp
+                            <tr>
+                                <td style="width: 70%;">{{ ucwords(str_replace('_', ' ', $k)) }}</td>
+                                <td style="text-align: right;">{!! badge($v) !!}</td>
+                            </tr>
+                        @php
+                                     }
+                                }
+                            }
+                        @endphp
                     </table>
                     
                     {{-- D. IBOX SYSTEM (T75 ONLY) --}}
@@ -198,6 +217,24 @@
                         <tr><td style="width: 70%;">Condition</td><td style="text-align:right">{!! badge($inspection->ibox_condition) !!}</td></tr>
                         <tr><td>Battery</td><td style="text-align:right">{{ $inspection->ibox_battery_percent ? $inspection->ibox_battery_percent.'%' : '-' }}</td></tr>
                         <tr><td>Pressure (Digital)</td><td style="text-align:right">{{ $inspection->ibox_pressure ?? '-' }}</td></tr>
+                        <tr>
+                             <td>Temp #1 (Digital)</td>
+                             <td style="text-align:right">
+                                 {{ $inspection->ibox_temperature_1 ?? $inspection->ibox_temperature ?? '-' }}
+                                 @if($inspection->ibox_temperature_1_timestamp)
+                                 <br><small style="color:#666; font-size:6.5pt;">({{ \Carbon\Carbon::parse($inspection->ibox_temperature_1_timestamp)->format('H:i') }})</small>
+                                 @endif
+                             </td>
+                        </tr>
+                        <tr>
+                             <td>Temp #2 (Digital)</td>
+                             <td style="text-align:right">
+                                 {{ $inspection->ibox_temperature_2 ?? '-' }}
+                                 @if($inspection->ibox_temperature_2_timestamp)
+                                 <br><small style="color:#666; font-size:6.5pt;">({{ \Carbon\Carbon::parse($inspection->ibox_temperature_2_timestamp)->format('H:i') }})</small>
+                                 @endif
+                             </td>
+                        </tr>
                         <tr><td>Level (Digital)</td><td style="text-align:right">{{ $inspection->ibox_level ?? '-' }}</td></tr>
                     </table>
                     @endif
@@ -208,8 +245,14 @@
                      <table class="checklist-table">
                         <tr><td>Gauge / Port</td><td style="text-align:right">{!! badge($inspection->vacuum_gauge_condition) !!} / {!! badge($inspection->vacuum_port_suction_condition) !!}</td></tr>
                         <tr><td colspan="2" style="color: #666;">
-                            Value: {{ $inspection->vacuum_value ?? '-' }} ({{ $inspection->vacuum_temperature ?? '-' }} °C)
+                            Value: {{ $inspection->vacuum_value ? (is_numeric($inspection->vacuum_value) ? number_format((float)$inspection->vacuum_value, 2) : $inspection->vacuum_value) : '-' }} {{ $inspection->vacuum_unit ?? 'mtorr' }}
+                            @if($inspection->vacuum_temperature) ({{ $inspection->vacuum_temperature }} °C) @endif
                         </td></tr>
+                        @if($inspection->vacuum_check_datetime)
+                        <tr><td colspan="2" style="color:#666; font-size:6pt;">
+                             Check Date: {{ \Carbon\Carbon::parse($inspection->vacuum_check_datetime)->format('d M Y H:i') }}
+                        </td></tr>
+                        @endif
                      </table>
                      @endif
                 </td>
@@ -238,18 +281,32 @@
                     <div class="section-title">E. INSTRUMENTS</div>
                     <table class="checklist-table">
                         <tr><td><b>Pressure Gauge</b></td><td style="text-align: right;">{!! badge($inspection->pressure_gauge_condition) !!}</td></tr>
+                        <tr><td colspan="2" style="color: #666; font-size: 6.5pt;">
+                            #1: {{ $inspection->pressure_1 ? $inspection->pressure_1.' MPa' : '-' }} @if($inspection->pressure_1_timestamp) ({{ \Carbon\Carbon::parse($inspection->pressure_1_timestamp)->format('H:i') }}) @endif
+                            <br>
+                            #2: {{ $inspection->pressure_2 ? $inspection->pressure_2.' MPa' : '-' }} @if($inspection->pressure_2_timestamp) ({{ \Carbon\Carbon::parse($inspection->pressure_2_timestamp)->format('H:i') }}) @endif
+                        </td></tr>
+                        
                         <tr><td><b>Level Gauge</b></td><td style="text-align: right;">{!! badge($inspection->level_gauge_condition) !!}</td></tr>
+                        <tr><td colspan="2" style="color: #666; font-size: 6.5pt;">
+                             #1: {{ $inspection->level_1 ? $inspection->level_1.' %' : '-' }} @if($inspection->level_1_timestamp) ({{ \Carbon\Carbon::parse($inspection->level_1_timestamp)->format('H:i') }}) @endif
+                             <br>
+                             #2: {{ $inspection->level_2 ? $inspection->level_2.' %' : '-' }} @if($inspection->level_2_timestamp) ({{ \Carbon\Carbon::parse($inspection->level_2_timestamp)->format('H:i') }}) @endif
+                        </td></tr>
                     </table>
                     @endif
 
                     {{-- G/PSV --}}
-                    @if(!empty($inspection->psv1_condition) || !empty($inspection->psv2_condition))
+                    @if(!empty($inspection->psv1_condition) || !empty($inspection->psv2_condition) || !empty($inspection->psv3_condition) || !empty($inspection->psv4_condition))
                      <div class="section-title">G. SAFETY VALVES (PSV)</div>
                      <table class="checklist-table">
-                        @for($i=1; $i<=2; $i++)
+                        @for($i=1; $i<=4; $i++)
                             @php $cond = $inspection->{"psv{$i}_condition"}; @endphp
                             @if($cond)
-                            <tr><td><b>PSV #{{ $i }}</b></td><td style="text-align: right;">{!! badge($cond) !!}</td></tr>
+                            <tr>
+                                <td><b>PSV #{{ $i }}</b> <small>({{ $inspection->{"psv{$i}_serial_number"} ?? '-' }})</small></td>
+                                <td style="text-align: right;">{!! badge($cond) !!}</td>
+                            </tr>
                             @endif
                         @endfor
                      </table>
