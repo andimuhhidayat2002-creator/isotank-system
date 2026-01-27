@@ -15,13 +15,34 @@ class InspectionItemController extends Controller
     {
         $items = InspectionItem::orderBy('order')->orderBy('label')->get();
         
-        $categories = [
+        // T75 Categories (Original system with IBOX, Instruments, Vacuum, PSV)
+        $categoriesT75 = [
             'b' => 'B. General Condition',
             'c' => 'C. Valve & Piping',
             'd' => 'D. IBOX System',
             'e' => 'E. Instruments',
             'f' => 'F. Vacuum System',
             'g' => 'G. PSV & Safety',
+            'other' => 'Other / Internal',
+        ];
+        
+        // T11 Categories (Position-based: Front, Rear, Right, Left, Top)
+        $categoriesT11 = [
+            'a' => 'A. FRONT',
+            'b' => 'B. REAR',
+            'c' => 'C. RIGHT',
+            'd' => 'D. LEFT',
+            'e' => 'E. TOP',
+            'other' => 'Other / Internal',
+        ];
+        
+        // T50 Categories (Similar to T11 but with descriptive names)
+        $categoriesT50 = [
+            'a' => 'A. Front Out Side View',
+            'b' => 'B. Rear Out Side View',
+            'c' => 'C. Right Side/Valve Box Observation',
+            'd' => 'D. Left Side',
+            'e' => 'E. Top',
             'other' => 'Other / Internal',
         ];
         
@@ -33,7 +54,7 @@ class InspectionItemController extends Controller
             'boolean' => 'Yes/No',
         ];
         
-        return view('admin.inspection_items.index', compact('items', 'categories', 'inputTypes'));
+        return view('admin.inspection_items.index', compact('items', 'categoriesT75', 'categoriesT11', 'categoriesT50', 'inputTypes'));
     }
 
     /**

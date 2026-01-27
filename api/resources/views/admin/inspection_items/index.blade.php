@@ -267,11 +267,12 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Category</label>
-                            <select class="form-select" name="category">
+                            <select class="form-select category-select" name="category" 
+                                    data-t75='@json($categoriesT75)' 
+                                    data-t11='@json($categoriesT11)' 
+                                    data-t50='@json($categoriesT50)'>
                                 <option value="">-- No Category --</option>
-                                @foreach($categories as $key => $label)
-                                    <option value="{{ $key }}">{{ $label }}</option>
-                                @endforeach
+                                {{-- Options will be populated dynamically by JavaScript --}}
                             </select>
                         </div>
                         <div class="col-md-6 mb-3">
@@ -387,7 +388,7 @@ $(document).ready(function() {
         }
     });
 
-    // Dynamic Category Filtering based on Tank Type
+    // Dynamic Category Population based on Tank Type
     function updateCategoryOptions() {
         // Get all checked tank types
         var checkedTypes = [];
@@ -395,35 +396,57 @@ $(document).ready(function() {
             checkedTypes.push($(this).val());
         });
 
-        // Define which categories are T75-only
-        var t75OnlyCategories = ['d', 'e', 'f', 'g']; // D, E, F, G are T75 only
-
         // Get all category selects (both Add and Edit modals)
-        $('select[name="category"]').each(function() {
+        $('.category-select').each(function() {
             var $select = $(this);
             var currentValue = $select.val();
-
-            // Show/hide options based on tank types
-            $select.find('option').each(function() {
-                var optionValue = $(this).val();
-                
-                // If this is a T75-only category
-                if (t75OnlyCategories.includes(optionValue)) {
-                    // Only show if T75 is checked
-                    if (checkedTypes.includes('T75')) {
-                        $(this).show().prop('disabled', false);
-                    } else {
-                        $(this).hide().prop('disabled', true);
-                        // If this was selected, clear it
-                        if (currentValue === optionValue) {
-                            $select.val('');
-                        }
-                    }
-                } else {
-                    // B, C, and "No Category" are always available
-                    $(this).show().prop('disabled', false);
+            
+            // Get category data from data attributes
+            var t75Categories = $select.data('t75');
+            var t11Categories = $select.data('t11');
+            var t50Categories = $select.data('t50');
+            
+            // Clear existing options except the first one (-- No Category --)
+            $select.find('option:not(:first)').remove();
+            
+            // Determine which categories to show
+            var categoriesToShow = {};
+            
+            if (checkedTypes.length === 0) {
+                // No types selected, show T75 by default
+                categoriesToShow = t75Categories;
+            } else if (checkedTypes.length === 1) {
+                // Only one type selected
+                if (checkedTypes.includes('T75')) {
+                    categoriesToShow = t75Categories;
+                } else if (checkedTypes.includes('T11')) {
+                    categoriesToShow = t11Categories;
+                } else if (checkedTypes.includes('T50')) {
+                    categoriesToShow = t50Categories;
                 }
+            } else {
+                // Multiple types selected - show union of categories
+                // For simplicity, if T75 is included, show T75 categories
+                // Otherwise show T11 categories (as they're similar to T50)
+                if (checkedTypes.includes('T75')) {
+                    categoriesToShow = t75Categories;
+                } else {
+                    // Both T11 and T50 selected - use T11 categories as base
+                    categoriesToShow = t11Categories;
+                }
+            }
+            
+            // Populate options
+            $.each(categoriesToShow, function(key, label) {
+                $select.append($('<option></option>').attr('value', key).text(label));
             });
+            
+            // Restore previous selection if it still exists
+            if (currentValue && $select.find('option[value="' + currentValue + '"]').length > 0) {
+                $select.val(currentValue);
+            } else {
+                $select.val('');
+            }
         });
     }
 
