@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>Inspection Detail: {{ $log->isotank->iso_number }}</h2>
+    <h2>Inspection Detail: {{ $log->isotank ? $log->isotank->iso_number : 'UNKNOWN ISO' }}</h2>
     <div>
         <div class="btn-group me-2">
             @if($log->pdf_path)

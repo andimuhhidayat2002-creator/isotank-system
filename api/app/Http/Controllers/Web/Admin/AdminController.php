@@ -1172,6 +1172,16 @@ class AdminController extends Controller
         $job = $inspection->inspectionJob; // Ensure $job variable is available
         $type = ($inspection->inspection_type == 'incoming_inspection') ? 'incoming' : 'outgoing';
 
+        // Safety check for missing isotank to prevent 500 Error
+        if (!$isotank) {
+             $isotank = new MasterIsotank([
+                 'iso_number' => 'UNKNOWN-ISO', 
+                 'tank_category' => 'T75', 
+                 'location' => 'Unknown', 
+                 'owner' => 'Unknown'
+             ]);
+        }
+
         // Prepare additional data for report
         $receiverConfirmations = null;
         $allAccepted = false;
@@ -1193,7 +1203,7 @@ class AdminController extends Controller
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.inspection_report', compact('inspection', 'isotank', 'inspector', 'job', 'type', 'receiverConfirmations', 'openMaintenance', 'allAccepted'));
         $pdf->setPaper('a4', 'portrait');
         
-        return $pdf->download('Inspection_' . $isotank->iso_number . '_' . $inspection->created_at->format('Ymd') . '.pdf');
+        return $pdf->download('Inspection_' . ($isotank->iso_number ?? 'UNKNOWN') . '_' . $inspection->created_at->format('Ymd') . '.pdf');
     }
 
     public function exportLocationInventory($location)
