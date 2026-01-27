@@ -409,6 +409,88 @@
                         @endforeach
                     @endforeach
                 </tbody>
+                {{-- INJECT SPECIAL T75 SECTIONS FOR OUTGOING DYNAMIC LAYOUT --}}
+                @if($tankCat == 'T75' && $type === 'outgoing')
+                    <tbody class="special-t75-sections">
+                        {{-- 1. IBOX SYSTEM --}}
+                         @if(!empty($inspection->ibox_condition) || !empty($inspection->ibox_pressure))
+                            <tr><td colspan="3" class="section-title" style="background:#f9f9f9;font-weight:bold;border:1px solid #ddd;padding:2px;">D. IBOX SYSTEM</td></tr>
+                            
+                            {{-- Condition --}}
+                            <tr>
+                                <td style="border:1px solid #eee;">Condition</td>
+                                <td style="border:1px solid #eee;text-align:center;">{!! badge($inspection->ibox_condition) !!}</td>
+                                <td style="border:1px solid #eee;text-align:center;color:#bbb;">-</td>
+                            </tr>
+                             {{-- Values with No specific receiver confirm usually --}}
+                             <tr><td style="border:1px solid #eee;">Battery</td><td style="border:1px solid #eee;text-align:center;">{{ $inspection->ibox_battery_percent ? $inspection->ibox_battery_percent.'%' : '-' }}</td><td style="border:1px solid #eee;color:#bbb;text-align:center;">-</td></tr>
+                             <tr><td style="border:1px solid #eee;">Pressure</td><td style="border:1px solid #eee;text-align:center;">{{ $inspection->ibox_pressure ?? '-' }}</td><td style="border:1px solid #eee;color:#bbb;text-align:center;">-</td></tr>
+                             <tr><td style="border:1px solid #eee;">Temp #1</td><td style="border:1px solid #eee;text-align:center;">{{ $inspection->ibox_temperature_1 ?? '-' }}</td><td style="border:1px solid #eee;color:#bbb;text-align:center;">-</td></tr>
+                             <tr><td style="border:1px solid #eee;">Temp #2</td><td style="border:1px solid #eee;text-align:center;">{{ $inspection->ibox_temperature_2 ?? '-' }}</td><td style="border:1px solid #eee;color:#bbb;text-align:center;">-</td></tr>
+                             <tr><td style="border:1px solid #eee;">Level</td><td style="border:1px solid #eee;text-align:center;">{{ $inspection->ibox_level ?? '-' }}</td><td style="border:1px solid #eee;color:#bbb;text-align:center;">-</td></tr>
+                         @endif
+
+                         {{-- 2. VACUUM SYSTEM --}}
+                         @if(!empty($inspection->vacuum_gauge_condition) || !empty($inspection->vacuum_value))
+                            <tr><td colspan="3" class="section-title" style="background:#f9f9f9;font-weight:bold;border:1px solid #ddd;padding:2px;">F. VACUUM SYSTEM</td></tr>
+                            <tr>
+                                <td style="border:1px solid #eee;">Gauge Condition</td>
+                                <td style="border:1px solid #eee;text-align:center;">{!! badge($inspection->vacuum_gauge_condition) !!}</td>
+                                <td style="border:1px solid #eee;text-align:center;color:#bbb;">-</td>
+                            </tr>
+                            <tr>
+                                <td style="border:1px solid #eee;">Value</td>
+                                <td style="border:1px solid #eee;text-align:center;">
+                                    {{ $inspection->vacuum_value ?? '-' }} {{ $inspection->vacuum_unit ?? 'mtorr' }}
+                                    @if($inspection->vacuum_temperature)(at {{ $inspection->vacuum_temperature }}°C)@endif
+                                </td>
+                                <td style="border:1px solid #eee;text-align:center;color:#bbb;">-</td>
+                            </tr>
+                         @endif
+
+                         {{-- 3. INSTRUMENTS (Section E) & PSV (Section G) - Manually check if they exist --}}
+                          @php
+                             // These might not be in $groupedItems if they are columns, so we render them manually if needed
+                             // Usually they are already in groupedItems if defined as InspectionItem. 
+                             // But legacy PSV/Instruments were often hardcoded columns.
+                             // Let's check for specific hardcoded columns usually used in T75
+                          @endphp
+
+                          {{-- E. INSTRUMENTS --}}
+                          @if(!empty($inspection->pressure_gauge_1_condition) || !empty($inspection->level_gauge_1_condition))
+                            <tr><td colspan="3" class="section-title" style="background:#f9f9f9;font-weight:bold;border:1px solid #ddd;padding:2px;">E. INSTRUMENTS</td></tr>
+                            @if($inspection->pressure_gauge_1_condition)
+                                <tr>
+                                    <td style="border:1px solid #eee;">Pressure Gauge #1</td>
+                                    <td style="border:1px solid #eee;text-align:center;">{!! badge($inspection->pressure_gauge_1_condition) !!}</td>
+                                    <td style="border:1px solid #eee;text-align:center;color:#bbb;">-</td>
+                                </tr>
+                            @endif
+                            @if($inspection->level_gauge_1_condition)
+                                <tr>
+                                    <td style="border:1px solid #eee;">Level Gauge #1</td>
+                                    <td style="border:1px solid #eee;text-align:center;">{!! badge($inspection->level_gauge_1_condition) !!}</td>
+                                    <td style="border:1px solid #eee;text-align:center;color:#bbb;">-</td>
+                                </tr>
+                            @endif
+                          @endif
+
+                         {{-- G. SAFETY VALVES (PSV) --}}
+                         @if(!empty($inspection->p8v_1_condition) || !empty($inspection->p8v_2_condition))
+                            <tr><td colspan="3" class="section-title" style="background:#f9f9f9;font-weight:bold;border:1px solid #ddd;padding:2px;">G. SAFETY VALVES (PSV)</td></tr>
+                            @for($i=1; $i<=4; $i++)
+                                @php $key = "p8v_{$i}_condition"; @endphp
+                                @if(!empty($inspection->$key))
+                                <tr>
+                                    <td style="border:1px solid #eee;">P8V #{{$i}}</td>
+                                    <td style="border:1px solid #eee;text-align:center;">{!! badge($inspection->$key) !!}</td>
+                                    <td style="border:1px solid #eee;text-align:center;color:#bbb;">-</td>
+                                </tr>
+                                @endif
+                            @endfor
+                         @endif
+                    </tbody>
+                @endif
             </table>
         </div>
 
