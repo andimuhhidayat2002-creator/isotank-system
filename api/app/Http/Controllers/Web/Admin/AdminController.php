@@ -1237,6 +1237,16 @@ class AdminController extends Controller
             // Use semicolon delimiter for better Excel Parsing in some regions
             fputcsv($file, $columns, ';');
 
+            foreach($isotanks as $tank) {
+                fputcsv($file, [
+                    $tank->iso_number,
+                    $tank->status,
+                    $tank->filling_status ?? '-',
+                    $tank->description ?? '-',
+                    $tank->capacity ?? '-',
+                    $tank->owner ?? '-',
+                    $tank->tank_category ?? 'T75'
+                ], ';');
             }
             
             fclose($file);
