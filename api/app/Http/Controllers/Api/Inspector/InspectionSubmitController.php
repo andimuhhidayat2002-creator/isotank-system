@@ -895,7 +895,7 @@ class InspectionSubmitController extends Controller
     {
         $data = $log->toArray();
         // Remove fields that shouldn't be in the snapshot or cause issues
-        unset($data['id'], $data['inspection_job_id'], $data['created_at'], $data['updated_at']);
+        unset($data['id'], $data['inspection_job_id'], $data['created_at'], $data['updated_at'], $data['is_draft']);
         
         $data['inspection_log_id'] = $log->id;
 
