@@ -136,7 +136,7 @@
                                     <div class="row">
                                         <div class="col-md-6 mb-3">
                                             <label class="form-label">Category</label>
-                                            <select class="form-select" name="category">
+                                            <select class="form-select category-select" name="category">
                                                 <option value="">-- No Category --</option>
                                                 @foreach($categories as $key => $label)
                                                     <option value="{{ $key }}" @if($item->category === $key) selected @endif>{{ $label }}</option>
@@ -417,64 +417,71 @@ $(document).ready(function() {
         'other': 'Other / Internal'
     };
 
-    function updateCategoryOptions() {
-        // Get all checked tank types
+    function updateCategoryOptions(context) {
+        // If context is given, look within it. Otherwise lookup all but that's risky.
+        var $context = context ? $(context) : $('.modal.show');
+        if ($context.length === 0) return;
+
+        // Get all checked tank types WITHIN THIS MODAL
         var checkedTypes = [];
-        $('input[name="applicable_categories[]"]:checked').each(function() {
+        $context.find('input[name="applicable_categories[]"]:checked').each(function() {
             checkedTypes.push($(this).val());
         });
 
-        // Get all category selects
-        $('.category-select').each(function() {
-            var $select = $(this);
-            var currentValue = $select.val();
-            
-            // Clear existing options except the first one (-- No Category --)
-            $select.find('option:not(:first)').remove();
-            
-            // Determine which categories to show
-            var categoriesToShow = {};
-            
-            if (checkedTypes.length === 0 || checkedTypes.includes('T75')) {
-                // No types selected or T75 selected, show T75 categories
-                categoriesToShow = categoriesT75;
-            } else if (checkedTypes.includes('T11') && !checkedTypes.includes('T50')) {
-                // Only T11 selected
-                categoriesToShow = categoriesT11;
-            } else if (checkedTypes.includes('T50') && !checkedTypes.includes('T11')) {
-                // Only T50 selected
-                categoriesToShow = categoriesT50;
-            } else {
-                // Both T11 and T50 selected - use T11 categories as base
-                categoriesToShow = categoriesT11;
-            }
-            
-            // Populate options
-            $.each(categoriesToShow, function(key, label) {
-                $select.append($('<option></option>').attr('value', key).text(label));
-            });
-            
-            // Restore previous selection if it still exists
-            if (currentValue && $select.find('option[value="' + currentValue + '"]').length > 0) {
-                $select.val(currentValue);
-            } else {
-                $select.val('');
-            }
+        // Get the category select WITHIN THIS MODAL
+        var $select = $context.find('.category-select');
+        if ($select.length === 0) return;
+
+        var currentValue = $select.val();
+        
+        // Clear existing options except the first one (-- No Category --)
+        $select.find('option:not(:first)').remove();
+        
+        // Determine which categories to show
+        var categoriesToShow = {};
+        
+        if (checkedTypes.length === 0 || checkedTypes.includes('T75')) {
+            // Default to T75
+            categoriesToShow = categoriesT75;
+        } else if (checkedTypes.includes('T11') && !checkedTypes.includes('T50')) {
+            categoriesToShow = categoriesT11;
+        } else if (checkedTypes.includes('T50') && !checkedTypes.includes('T11')) {
+            categoriesToShow = categoriesT50;
+        } else {
+            // Both T11 and T50 -> use T11
+            categoriesToShow = categoriesT11;
+        }
+        
+        // Populate options
+        $.each(categoriesToShow, function(key, label) {
+            $select.append($('<option></option>').attr('value', key).text(label));
         });
+        
+        // Restore previous selection if it still exists
+        if (currentValue && $select.find('option[value="' + currentValue + '"]').length > 0) {
+            $select.val(currentValue);
+        } else {
+            // Keep current value if it was selected via Blade @if(selected) 
+            // but the populator might have cleared it.
+            // If the modal was just opened, we might need to handle the initial database value.
+        }
     }
 
-    // Run on checkbox change
-    $('input[name="applicable_categories[]"]').on('change', function() {
-        updateCategoryOptions();
+    // Run when checkbox changes, restricted to the parent modal
+    $(document).on('change', 'input[name="applicable_categories[]"]', function() {
+        var $modal = $(this).closest('.modal');
+        updateCategoryOptions($modal);
     });
 
-    // Run on modal show
-    $('#addItemModal, #editItemModal').on('show.bs.modal', function() {
-        setTimeout(updateCategoryOptions, 100);
+    // Run when ANY modal is opened
+    $(document).on('shown.bs.modal', '.modal', function() {
+        updateCategoryOptions(this);
     });
 
-    // Initial run
-    updateCategoryOptions();
+    // Initial run for anything already visible (unlikely but safe)
+    $('.modal.show').each(function() {
+        updateCategoryOptions(this);
+    });
 });
 </script>
 <style>
