@@ -475,7 +475,7 @@
                                  <td style="border:1px solid #eee;text-align:center;color:#bbb;">-</td>
                              </tr>
                          @endforeach
-                         @endif
+
                     </tbody>
                 @endif
             </table>
