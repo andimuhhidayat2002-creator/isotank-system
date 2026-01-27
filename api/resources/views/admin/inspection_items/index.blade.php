@@ -461,7 +461,7 @@ $(document).ready(function() {
         if (currentValue && $select.find('option[value="' + currentValue + '"]').length > 0) {
             $select.val(currentValue);
         } else {
-            // Keep current value if it was selected via Blade @if(selected) 
+            // Keep current value if it was selected via Blade 
             // but the populator might have cleared it.
             // If the modal was just opened, we might need to handle the initial database value.
         }
