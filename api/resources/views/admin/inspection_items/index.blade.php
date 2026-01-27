@@ -162,6 +162,27 @@
                                             </select>
                                         </div>
                                         <div class="col-md-4 mb-3">
+                                            <label class="form-label d-block">Tank Type Applicability <span class="text-danger">*</span></label>
+                                            @php 
+                                                 // Ensure it's an array if it's null or string 
+                                                 $appCats = $item->applicable_categories;
+                                                 if(is_string($appCats)) $appCats = json_decode($appCats, true);
+                                                 if(!is_array($appCats)) $appCats = [];
+                                            @endphp
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input" type="checkbox" name="applicable_categories[]" value="T75" id="edit_t75_{{$item->id}}" @if(in_array('T75', $appCats)) checked @endif>
+                                                <label class="form-check-label" for="edit_t75_{{$item->id}}">T75</label>
+                                            </div>
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input" type="checkbox" name="applicable_categories[]" value="T11" id="edit_t11_{{$item->id}}" @if(in_array('T11', $appCats)) checked @endif>
+                                                <label class="form-check-label" for="edit_t11_{{$item->id}}">T11</label>
+                                            </div>
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input" type="checkbox" name="applicable_categories[]" value="T50" id="edit_t50_{{$item->id}}" @if(in_array('T50', $appCats)) checked @endif>
+                                                <label class="form-check-label" for="edit_t50_{{$item->id}}">T50</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
                                             <label class="form-label">Display Order <span class="text-danger">*</span></label>
                                             <input type="number" class="form-control" name="order" value="{{ $item->order }}" required min="0">
                                         </div>
@@ -270,6 +291,21 @@
                                 <option value="incoming">Incoming Only</option>
                                 <option value="outgoing">Outgoing Only</option>
                             </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label d-block">Tank Type Applicability <span class="text-danger">*</span></label>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" name="applicable_categories[]" value="T75" id="add_t75" checked>
+                                <label class="form-check-label" for="add_t75">T75</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" name="applicable_categories[]" value="T11" id="add_t11">
+                                <label class="form-check-label" for="add_t11">T11</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" name="applicable_categories[]" value="T50" id="add_t50">
+                                <label class="form-check-label" for="add_t50">T50</label>
+                            </div>
                         </div>
                         <div class="col-md-4 mb-3">
                             <label class="form-label">Display Order <span class="text-danger">*</span></label>

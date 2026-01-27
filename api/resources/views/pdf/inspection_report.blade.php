@@ -359,10 +359,20 @@
                     </tr>
                 </thead>
                 <tbody>
+                    @php
+                        $categoryMap = [
+                            'b' => 'B. GENERAL CONDITION',
+                            'c' => 'C. VALVES & PIPING',
+                            'd' => 'D. IBOX SYSTEM',
+                            'e' => 'E. INSTRUMENTS',
+                            'f' => 'F. VACUUM SYSTEM',
+                            'g' => 'G. SAFETY VALVES (PSV)',
+                        ];
+                    @endphp
                     @foreach($applicableItems->groupBy('category') as $catName => $items)
                         <tr>
                             <td colspan="3" class="section-title" style="margin: 0; background-color: #f9f9f9; border: 1px solid #ddd; font-size: 7pt; padding: 1px 3px;">
-                                {{ strtoupper($catName) }}
+                                {{ $categoryMap[$catName] ?? strtoupper($catName) }}
                             </td>
                         </tr>
                         @foreach($items as $item)

@@ -146,8 +146,21 @@
                             ];
                         @endphp
 
-                        @foreach($grouped as $categoryName => $items)
-                            <tr class="table-secondary"><th colspan="2">{{ strtoupper($categoryName) }}</th></tr>
+                        @if($isotank->tank_category != 'T75' || $log->type == 'outgoing')
+                        {{-- Dynamic Items for T11/T50 or T75 Outgoing --}}
+                        @php
+                            $categoryMap = [
+                                'b' => 'B. GENERAL CONDITION',
+                                'c' => 'C. VALVES & PIPING',
+                                'd' => 'D. IBOX SYSTEM',
+                                'e' => 'E. INSTRUMENTS',
+                                'f' => 'F. VACUUM SYSTEM',
+                                'g' => 'G. SAFETY VALVES (PSV)',
+                            ];
+                        @endphp
+                        @foreach($applicableItems->groupBy('category') as $categoryName => $items)
+                            @if($categoryName !== 'd' && $categoryName !== 'e' && $categoryName !== 'f' && $categoryName !== 'g')
+                            <tr class="table-secondary"><th colspan="2">{{ $categoryMap[$categoryName] ?? strtoupper($categoryName) }}</th></tr>
                             @foreach($items as $item)
                                  @php 
                                     $code = $item->code; 

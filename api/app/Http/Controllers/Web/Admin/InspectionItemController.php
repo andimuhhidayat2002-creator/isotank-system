@@ -51,6 +51,8 @@ class InspectionItemController extends Controller
             'is_required' => 'boolean',
             'is_active' => 'boolean',
             'applies_to' => 'required|in:both,incoming,outgoing',
+            'applicable_categories' => 'required|array',
+            'applicable_categories.*' => 'in:T75,T11,T50',
         ]);
 
         InspectionItem::create($validated);
@@ -75,6 +77,8 @@ class InspectionItemController extends Controller
             'is_required' => 'boolean',
             'is_active' => 'boolean',
             'applies_to' => 'required|in:both,incoming,outgoing',
+            'applicable_categories' => 'required|array',
+            'applicable_categories.*' => 'in:T75,T11,T50',
         ]);
 
         $item->update($validated);
