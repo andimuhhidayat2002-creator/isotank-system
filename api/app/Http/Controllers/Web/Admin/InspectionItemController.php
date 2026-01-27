@@ -16,7 +16,7 @@ class InspectionItemController extends Controller
         $items = InspectionItem::orderBy('order')->orderBy('label')->get();
         
         // T75 Categories (Original system with IBOX, Instruments, Vacuum, PSV)
-        $categoriesT75 = [
+        $categories = [
             'b' => 'B. General Condition',
             'c' => 'C. Valve & Piping',
             'd' => 'D. IBOX System',
@@ -54,7 +54,7 @@ class InspectionItemController extends Controller
             'boolean' => 'Yes/No',
         ];
         
-        return view('admin.inspection_items.index', compact('items', 'categoriesT75', 'categoriesT11', 'categoriesT50', 'inputTypes'));
+        return view('admin.inspection_items.index', compact('items', 'categories', 'categoriesT11', 'categoriesT50', 'inputTypes'));
     }
 
     /**

@@ -269,7 +269,7 @@
                             <label class="form-label">Category</label>
                             <select class="form-select category-select" name="category" id="add_category">
                                 <option value="">-- No Category --</option>
-                                @foreach($categoriesT75 as $key => $label)
+                                @foreach($categories as $key => $label)
                                     <option value="{{ $key }}">{{ $label }}</option>
                                 @endforeach
                             </select>
