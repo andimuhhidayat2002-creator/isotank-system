@@ -440,6 +440,9 @@
                                 <td style="border:1px solid #eee;text-align:center;">
                                     {{ $inspection->vacuum_value ?? '-' }} {{ $inspection->vacuum_unit ?? 'mtorr' }}
                                     @if($inspection->vacuum_temperature)(at {{ $inspection->vacuum_temperature }}°C)@endif
+                                    @if($inspection->vacuum_check_datetime)
+                                        <br><span style="font-size: 5.5pt; color: #777;">Checked: {{ \Carbon\Carbon::parse($inspection->vacuum_check_datetime)->format('Y-m-d H:i') }}</span>
+                                    @endif
                                 </td>
                                 <td style="border:1px solid #eee;text-align:center;color:#bbb;">-</td>
                             </tr>
@@ -455,15 +458,33 @@
                           {{-- E. INSTRUMENTS --}}
                          {{-- E. INSTRUMENTS --}}
                          <tr><td colspan="3" class="section-title" style="background:#f9f9f9;font-weight:bold;border:1px solid #ddd;padding:2px;">E. INSTRUMENTS</td></tr>
+                         
+                         <!-- Pressure Gauge -->
                          <tr>
                             <td style="border:1px solid #eee;">Pressure Gauge Condition</td>
                             <td style="border:1px solid #eee;text-align:center;">{!! badge($inspection->pressure_gauge_condition) !!}</td>
                             <td style="border:1px solid #eee;text-align:center;color:#bbb;">-</td>
                          </tr>
                          <tr>
+                            <td colspan="3" style="border:1px solid #eee; padding-left: 15px; font-size: 6pt; color: #555;">
+                                SN: {{ $inspection->pressure_gauge_serial_number ?? '-' }} | 
+                                Cal. Date: {{ $inspection->pressure_gauge_calibration_date ? \Carbon\Carbon::parse($inspection->pressure_gauge_calibration_date)->format('Y-m-d') : '-' }}<br>
+                                Reading (P1): {{ $inspection->pressure_1 ? (float)$inspection->pressure_1.' MPa' : '-' }} {{ $inspection->pressure_1_timestamp ? '('. \Carbon\Carbon::parse($inspection->pressure_1_timestamp)->format('H:i') .')' : '' }}<br>
+                                Reading (P2): {{ $inspection->pressure_2 ? (float)$inspection->pressure_2.' MPa' : '-' }} {{ $inspection->pressure_2_timestamp ? '('. \Carbon\Carbon::parse($inspection->pressure_2_timestamp)->format('H:i') .')' : '' }}
+                            </td>
+                         </tr>
+
+                         <!-- Level Gauge -->
+                         <tr>
                             <td style="border:1px solid #eee;">Level Gauge Condition</td>
                             <td style="border:1px solid #eee;text-align:center;">{!! badge($inspection->level_gauge_condition) !!}</td>
                             <td style="border:1px solid #eee;text-align:center;color:#bbb;">-</td>
+                         </tr>
+                         <tr>
+                             <td colspan="3" style="border:1px solid #eee; padding-left: 15px; font-size: 6pt; color: #555;">
+                                Reading (L1): {{ $inspection->level_1 ? (float)$inspection->level_1.' %' : '-' }} {{ $inspection->level_1_timestamp ? '('. \Carbon\Carbon::parse($inspection->level_1_timestamp)->format('H:i') .')' : '' }}<br>
+                                Reading (L2): {{ $inspection->level_2 ? (float)$inspection->level_2.' %' : '-' }} {{ $inspection->level_2_timestamp ? '('. \Carbon\Carbon::parse($inspection->level_2_timestamp)->format('H:i') .')' : '' }}
+                             </td>
                          </tr>
 
                          {{-- G. SAFETY VALVES (PSV) --}}
@@ -473,6 +494,13 @@
                                  <td style="border:1px solid #eee;">{{ strtoupper($p) }} Condition</td>
                                  <td style="border:1px solid #eee;text-align:center;">{!! badge($inspection->{$p.'_condition'}) !!}</td>
                                  <td style="border:1px solid #eee;text-align:center;color:#bbb;">-</td>
+                             </tr>
+                             <tr>
+                                 <td colspan="3" style="border:1px solid #eee; padding-left: 15px; font-size: 6pt; color: #555;">
+                                     STATUS: {{ strtoupper($inspection->{$p.'_status'} ?? '-') }} | SN: {{ $inspection->{$p.'_serial_number'} ?? '-' }} | 
+                                     Cal. Date: {{ $inspection->{$p.'_calibration_date'} ? \Carbon\Carbon::parse($inspection->{$p.'_calibration_date'})->format('Y-m-d') : '-' }} |
+                                     Valid Until: {{ $inspection->{$p.'_valid_until'} ? \Carbon\Carbon::parse($inspection->{$p.'_valid_until'})->format('Y-m-d') : '-' }}
+                                 </td>
                              </tr>
                          @endforeach
 
