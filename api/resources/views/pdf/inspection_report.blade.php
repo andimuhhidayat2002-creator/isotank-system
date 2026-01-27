@@ -413,7 +413,6 @@
                 @if($tankCat == 'T75' && $type === 'outgoing')
                     <tbody class="special-t75-sections">
                         {{-- 1. IBOX SYSTEM --}}
-                         @if(!empty($inspection->ibox_condition) || !empty($inspection->ibox_pressure))
                             <tr><td colspan="3" class="section-title" style="background:#f9f9f9;font-weight:bold;border:1px solid #ddd;padding:2px;">D. IBOX SYSTEM</td></tr>
                             
                             {{-- Condition --}}
@@ -428,10 +427,8 @@
                              <tr><td style="border:1px solid #eee;">Temp #1</td><td style="border:1px solid #eee;text-align:center;">{{ $inspection->ibox_temperature_1 ?? '-' }}</td><td style="border:1px solid #eee;color:#bbb;text-align:center;">-</td></tr>
                              <tr><td style="border:1px solid #eee;">Temp #2</td><td style="border:1px solid #eee;text-align:center;">{{ $inspection->ibox_temperature_2 ?? '-' }}</td><td style="border:1px solid #eee;color:#bbb;text-align:center;">-</td></tr>
                              <tr><td style="border:1px solid #eee;">Level</td><td style="border:1px solid #eee;text-align:center;">{{ $inspection->ibox_level ?? '-' }}</td><td style="border:1px solid #eee;color:#bbb;text-align:center;">-</td></tr>
-                         @endif
 
                          {{-- 2. VACUUM SYSTEM --}}
-                         @if(!empty($inspection->vacuum_gauge_condition) || !empty($inspection->vacuum_value))
                             <tr><td colspan="3" class="section-title" style="background:#f9f9f9;font-weight:bold;border:1px solid #ddd;padding:2px;">F. VACUUM SYSTEM</td></tr>
                             <tr>
                                 <td style="border:1px solid #eee;">Gauge Condition</td>
@@ -446,7 +443,6 @@
                                 </td>
                                 <td style="border:1px solid #eee;text-align:center;color:#bbb;">-</td>
                             </tr>
-                         @endif
 
                          {{-- 3. INSTRUMENTS (Section E) & PSV (Section G) - Manually check if they exist --}}
                           @php
@@ -457,37 +453,28 @@
                           @endphp
 
                           {{-- E. INSTRUMENTS --}}
-                          @if(!empty($inspection->pressure_gauge_1_condition) || !empty($inspection->level_gauge_1_condition))
-                            <tr><td colspan="3" class="section-title" style="background:#f9f9f9;font-weight:bold;border:1px solid #ddd;padding:2px;">E. INSTRUMENTS</td></tr>
-                            @if($inspection->pressure_gauge_1_condition)
-                                <tr>
-                                    <td style="border:1px solid #eee;">Pressure Gauge #1</td>
-                                    <td style="border:1px solid #eee;text-align:center;">{!! badge($inspection->pressure_gauge_1_condition) !!}</td>
-                                    <td style="border:1px solid #eee;text-align:center;color:#bbb;">-</td>
-                                </tr>
-                            @endif
-                            @if($inspection->level_gauge_1_condition)
-                                <tr>
-                                    <td style="border:1px solid #eee;">Level Gauge #1</td>
-                                    <td style="border:1px solid #eee;text-align:center;">{!! badge($inspection->level_gauge_1_condition) !!}</td>
-                                    <td style="border:1px solid #eee;text-align:center;color:#bbb;">-</td>
-                                </tr>
-                            @endif
-                          @endif
+                         {{-- E. INSTRUMENTS --}}
+                         <tr><td colspan="3" class="section-title" style="background:#f9f9f9;font-weight:bold;border:1px solid #ddd;padding:2px;">E. INSTRUMENTS</td></tr>
+                         <tr>
+                            <td style="border:1px solid #eee;">Pressure Gauge Condition</td>
+                            <td style="border:1px solid #eee;text-align:center;">{!! badge($inspection->pressure_gauge_condition) !!}</td>
+                            <td style="border:1px solid #eee;text-align:center;color:#bbb;">-</td>
+                         </tr>
+                         <tr>
+                            <td style="border:1px solid #eee;">Level Gauge Condition</td>
+                            <td style="border:1px solid #eee;text-align:center;">{!! badge($inspection->level_gauge_condition) !!}</td>
+                            <td style="border:1px solid #eee;text-align:center;color:#bbb;">-</td>
+                         </tr>
 
                          {{-- G. SAFETY VALVES (PSV) --}}
-                         @if(!empty($inspection->p8v_1_condition) || !empty($inspection->p8v_2_condition))
-                            <tr><td colspan="3" class="section-title" style="background:#f9f9f9;font-weight:bold;border:1px solid #ddd;padding:2px;">G. SAFETY VALVES (PSV)</td></tr>
-                            @for($i=1; $i<=4; $i++)
-                                @php $key = "p8v_{$i}_condition"; @endphp
-                                @if(!empty($inspection->$key))
-                                <tr>
-                                    <td style="border:1px solid #eee;">P8V #{{$i}}</td>
-                                    <td style="border:1px solid #eee;text-align:center;">{!! badge($inspection->$key) !!}</td>
-                                    <td style="border:1px solid #eee;text-align:center;color:#bbb;">-</td>
-                                </tr>
-                                @endif
-                            @endfor
+                         <tr><td colspan="3" class="section-title" style="background:#f9f9f9;font-weight:bold;border:1px solid #ddd;padding:2px;">G. SAFETY VALVES (PSV)</td></tr>
+                         @foreach(['psv1', 'psv2', 'psv3', 'psv4'] as $p)
+                             <tr>
+                                 <td style="border:1px solid #eee;">{{ strtoupper($p) }} Condition</td>
+                                 <td style="border:1px solid #eee;text-align:center;">{!! badge($inspection->{$p.'_condition'}) !!}</td>
+                                 <td style="border:1px solid #eee;text-align:center;color:#bbb;">-</td>
+                             </tr>
+                         @endforeach
                          @endif
                     </tbody>
                 @endif
