@@ -79,9 +79,16 @@ class MasterIsotankController extends Controller
     {
         $isotank = MasterIsotank::with([
             'classSurveys',
-            'inspectionJobs',
-            'maintenanceJobs',
             'itemStatuses',
+            'lastInspectionLog.inspector',
+            'lastMaintenanceJob',
+            'lastVacuumLog',
+            'inspectionLogs' => function($q) {
+                $q->latest()->take(5);
+            },
+            'maintenanceJobs' => function($q) {
+                $q->latest()->take(5);
+            },
         ])->findOrFail($id);
 
         return response()->json([

@@ -100,6 +100,21 @@ class MasterIsotank extends Model
         return $this->hasOne(MasterLatestInspection::class, 'isotank_id');
     }
 
+    public function lastInspectionLog()
+    {
+        return $this->hasOne(InspectionLog::class, 'isotank_id')->latestOfMany();
+    }
+
+    public function lastMaintenanceJob()
+    {
+        return $this->hasOne(MaintenanceJob::class, 'isotank_id')->latestOfMany();
+    }
+
+    public function lastVacuumLog()
+    {
+        return $this->hasOne(VacuumLog::class, 'isotank_id')->latestOfMany();
+    }
+
     // Constants for filling status codes
     public const FILLING_STATUS_ONGOING_INSPECTION = 'ongoing_inspection';
     public const FILLING_STATUS_READY_TO_FILL = 'ready_to_fill';
