@@ -37,7 +37,7 @@
                     @foreach($logs as $log)
                     <tr>
                         <td>{{ $log->inspection_date }}</td>
-                        <td class="fw-bold"><a href="{{ route('admin.isotanks.show', $log->isotank_id) }}" class="text-decoration-none text-primary">{{ $log->isotank->iso_number ?? '-' }}</a></td>
+                        <td class="fw-bold"><a href="{{ route('admin.isotanks.show', $log->isotank_id) }}" class="text-decoration-none text-primary">{{ $log->isotank->iso_number ?? 'UNKNOWN' }}</a></td>
                         <td class="text-dark">{{ str_replace('_', ' ', strtoupper($log->inspection_type)) }}</td>
                         <td class="text-muted">{{ $log->inspector->name ?? '-' }}</td>
                         <td><span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle">LOGGED</span></td>
