@@ -1200,7 +1200,9 @@ class AdminController extends Controller
             ->with('triggeredByInspection')
             ->get();
 
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.inspection_report', compact('inspection', 'isotank', 'inspector', 'job', 'type', 'receiverConfirmations', 'openMaintenance', 'allAccepted'));
+        $t75Data = $this->getT75Data($inspection);
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.inspection_report', compact('inspection', 'isotank', 'inspector', 'job', 'type', 'receiverConfirmations', 'openMaintenance', 'allAccepted', 't75Data'));
         $pdf->setPaper('a4', 'portrait');
         
         return $pdf->download('Inspection_' . ($isotank->iso_number ?? 'UNKNOWN') . '_' . $inspection->created_at->format('Ymd') . '.pdf');
@@ -1235,22 +1237,66 @@ class AdminController extends Controller
             // Use semicolon delimiter for better Excel Parsing in some regions
             fputcsv($file, $columns, ';');
 
-            foreach ($isotanks as $tank) {
-                $row = [];
-                $row[]  = $tank->iso_number;
-                $row[]    = $tank->status;
-                $row[]    = $tank->filling_status_code ?? '-';
-                $row[]  = $tank->filling_status_desc ?? '-';
-                $row[]  = $tank->capacity;
-                $row[]  = $tank->owner;
-                $row[]  = $tank->type;
-
-                fputcsv($file, $row, ';');
             }
-
+            
             fclose($file);
         };
 
         return response()->stream($callback, 200, $headers);
+    }
+
+    private function getT75Data($log) {
+        $fmtFloat = fn($v) => $v ? (float)$v : null;
+        $fmtDate = fn($v, $f='Y-m-d') => $v ? \Carbon\Carbon::parse($v)->format($f) : '-';
+        $fmtTime = fn($v) => $v ? \Carbon\Carbon::parse($v)->format('H:i') : '';
+        $fmtDateTime = fn($v) => $v ? \Carbon\Carbon::parse($v)->format('Y-m-d H:i') : '-';
+
+        return [
+            'ibox' => [
+                'condition' => $log->ibox_condition,
+                'battery' => $log->ibox_battery_percent ? $log->ibox_battery_percent.'%' : '-',
+                'pressure' => $log->ibox_pressure ?? '-',
+                'temp1' => $log->ibox_temperature_1 ?? $log->ibox_temperature ?? '-',
+                'temp1_time' => $log->ibox_temperature_1_timestamp ? '('.$fmtTime($log->ibox_temperature_1_timestamp).')' : '',
+                'temp2' => $log->ibox_temperature_2 ?? '-',
+                'temp2_time' => $log->ibox_temperature_2_timestamp ? '('.$fmtTime($log->ibox_temperature_2_timestamp).')' : '',
+                'level' => $log->ibox_level ?? '-',
+            ],
+            'instruments' => [
+                'pressure_gauge' => [
+                    'condition' => $log->pressure_gauge_condition,
+                    'sn' => $log->pressure_gauge_serial_number ?? '-',
+                    'cal_date' => $fmtDate($log->pressure_gauge_calibration_date),
+                    'p1' => $fmtFloat($log->pressure_1) ? $fmtFloat($log->pressure_1).' MPa' : '-',
+                    'p1_time' => $log->pressure_1_timestamp ? '('.$fmtTime($log->pressure_1_timestamp).')' : '',
+                    'p2' => $fmtFloat($log->pressure_2) ? $fmtFloat($log->pressure_2).' MPa' : '-',
+                    'p2_time' => $log->pressure_2_timestamp ? '('.$fmtTime($log->pressure_2_timestamp).')' : '',
+                ],
+                'level_gauge' => [
+                    'condition' => $log->level_gauge_condition,
+                    'l1' => $fmtFloat($log->level_1) ? $fmtFloat($log->level_1).' %' : '-',
+                    'l1_time' => $log->level_1_timestamp ? '('.$fmtTime($log->level_1_timestamp).')' : '',
+                    'l2' => $fmtFloat($log->level_2) ? $fmtFloat($log->level_2).' %' : '-',
+                    'l2_time' => $log->level_2_timestamp ? '('.$fmtTime($log->level_2_timestamp).')' : '',
+                ]
+            ],
+            'vacuum' => [
+                'gauge_condition' => $log->vacuum_gauge_condition,
+                'port_condition' => $log->vacuum_port_suction_condition,
+                'value' => $fmtFloat($log->vacuum_value) ? $fmtFloat($log->vacuum_value).' '.($log->vacuum_unit ?? 'mtorr') : '-',
+                'temp' => $fmtFloat($log->vacuum_temperature) ? $fmtFloat($log->vacuum_temperature).' C' : '-',
+                'check_date' => $fmtDateTime($log->vacuum_check_datetime),
+            ],
+            'psv' => collect(['psv1','psv2','psv3','psv4'])->map(function($p) use ($log, $fmtDate) {
+                 return [
+                    'label' => strtoupper($p),
+                    'condition' => $log->{$p.'_condition'},
+                    'status' => strtoupper($log->{$p.'_status'} ?? '-'),
+                    'sn' => $log->{$p.'_serial_number'} ?? '-',
+                    'cal_date' => $fmtDate($log->{$p.'_calibration_date'}),
+                    'valid_until' => $fmtDate($log->{$p.'_valid_until'}),
+                 ];
+            })    
+        ];
     }
 }
