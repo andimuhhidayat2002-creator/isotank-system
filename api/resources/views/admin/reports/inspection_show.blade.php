@@ -146,7 +146,7 @@
                             ];
                         @endphp
 
-                        @if($tankCat != 'T75' || $log->inspection_type == 'outgoing_inspection')
+                        @if(($tankCat ?? 'T75') != 'T75' || $log->inspection_type == 'outgoing_inspection')
                         {{-- Dynamic Items for T11/T50 or T75 Outgoing --}}
                         @php
                             $categoryMap = [
