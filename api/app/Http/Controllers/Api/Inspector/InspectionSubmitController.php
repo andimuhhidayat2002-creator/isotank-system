@@ -1019,8 +1019,10 @@ class InspectionSubmitController extends Controller
             // FOR RECEIVER: We apply strict lists
             if ($category === 'T11') {
                 $dynamicItemsQuery->whereIn('code', \App\Services\PdfGenerationService::getT11ReceiverCodes());
+            } elseif ($category === 'T50') {
+                $dynamicItemsQuery->whereIn('code', \App\Services\PdfGenerationService::getT50ReceiverCodes());
             } else {
-                // For T50 or others: Show everything tagged
+                // For others: Show everything tagged
                 $dynamicItemsQuery->whereJsonContains('applicable_categories', $category);
             }
         }
@@ -1240,8 +1242,10 @@ class InspectionSubmitController extends Controller
         // FOR RECEIVER: We apply strict lists
         if ($category === 'T11') {
             $dynamicItemsQuery->whereIn('code', \App\Services\PdfGenerationService::getT11ReceiverCodes());
+        } elseif ($category === 'T50') {
+            $dynamicItemsQuery->whereIn('code', \App\Services\PdfGenerationService::getT50ReceiverCodes());
         } else {
-            // For T50 or others: Show everything tagged
+            // For others: Show everything tagged
             $dynamicItemsQuery->whereJsonContains('applicable_categories', $category);
         }
     }
