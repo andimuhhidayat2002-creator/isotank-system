@@ -71,7 +71,8 @@ We operate on **TWO SEPARATE** repositories. Always verify which one you are wor
 *   **Submission Sync:** `InspectionLog` for T50 now expects the new prefixed labels for correct parsing.
 *   **Technical Diagram:** Added T50 technical diagram (Rear, Side, Top view) to the PDF report specifically for T50 category tanks.
 *   **Numeric Readings:** Added numeric input items for T50: Level Gauge (%), Thermometer (°C), and Pressure Gauge (MPa) placed below their respective condition items.
+*   **Valve Box Addition:** Added "Valve Box" inspection items to both Left Side and Right Side sections for T50.
 *   **Master Sync Fix:** Updated `InspectionSubmitController` to exclude numeric values from `MasterIsotankItemStatus` to prevent "Data truncated" errors (only condition strings are allowed in that table).
 
 ---
-*Last Updated: Jan 27, 2026 06:40 - Antigravity Agent*
+*Last Updated: Jan 27, 2026 14:55 - Antigravity Agent*

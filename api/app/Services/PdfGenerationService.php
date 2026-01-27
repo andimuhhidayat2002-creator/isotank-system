@@ -152,7 +152,9 @@ class PdfGenerationService
                     }
                 });
 
-                // FOR RECEIVER: We apply strict lists
+                // FOR RECEIVER: We apply strict lists and ONLY 'condition' type items
+                $query->where('input_type', 'condition');
+
                 if ($tankCat === 'T75') {
                     $query->where(function($q) {
                         $q->whereIn('category', ['b', 'external', 'general'])
