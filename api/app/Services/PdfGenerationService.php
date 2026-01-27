@@ -131,6 +131,17 @@ class PdfGenerationService
         ];
     }
 
+    public static function getT50ReceiverCodes(): array 
+    {
+        return [
+            'T50_A_01', 'T50_A_02',
+            'T50_B_01', 'T50_B_02', 'T50_B_03', 'T50_B_04', 'T50_B_06',
+            'T50_C_01', 'T50_C_02', 'T50_C_08',
+            'T50_D_01', 'T50_D_02', 'T50_D_08',
+            'T50_E_01', 'T50_E_02', 'T50_E_05'
+        ];
+    }
+
     /**
      * Get general condition items for receiver confirmation (Category-aware)
      * 
@@ -163,6 +174,9 @@ class PdfGenerationService
                 } elseif ($tankCat === 'T11') {
                     // ONLY the 14 items from the photo
                     $query->whereIn('code', self::getT11ReceiverCodes());
+                } elseif ($tankCat === 'T50') {
+                    // ONLY the 16 items from the provided T50 receiver checklist
+                    $query->whereIn('code', self::getT50ReceiverCodes());
                 }
                 
                 $dynamicItems = $query->orderBy('order', 'asc')
