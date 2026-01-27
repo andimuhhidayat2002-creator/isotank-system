@@ -178,6 +178,7 @@
                                     </td>
                                  </tr>
                             @endforeach
+                            @endif
                         @endforeach
 
                         {{-- Unmapped items (Last) --}}
