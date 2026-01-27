@@ -386,6 +386,59 @@ $(document).ready(function() {
             });
         }
     });
+
+    // Dynamic Category Filtering based on Tank Type
+    function updateCategoryOptions() {
+        // Get all checked tank types
+        var checkedTypes = [];
+        $('input[name="applicable_categories[]"]:checked').each(function() {
+            checkedTypes.push($(this).val());
+        });
+
+        // Define which categories are T75-only
+        var t75OnlyCategories = ['d', 'e', 'f', 'g']; // D, E, F, G are T75 only
+
+        // Get all category selects (both Add and Edit modals)
+        $('select[name="category"]').each(function() {
+            var $select = $(this);
+            var currentValue = $select.val();
+
+            // Show/hide options based on tank types
+            $select.find('option').each(function() {
+                var optionValue = $(this).val();
+                
+                // If this is a T75-only category
+                if (t75OnlyCategories.includes(optionValue)) {
+                    // Only show if T75 is checked
+                    if (checkedTypes.includes('T75')) {
+                        $(this).show().prop('disabled', false);
+                    } else {
+                        $(this).hide().prop('disabled', true);
+                        // If this was selected, clear it
+                        if (currentValue === optionValue) {
+                            $select.val('');
+                        }
+                    }
+                } else {
+                    // B, C, and "No Category" are always available
+                    $(this).show().prop('disabled', false);
+                }
+            });
+        });
+    }
+
+    // Run on checkbox change
+    $('input[name="applicable_categories[]"]').on('change', function() {
+        updateCategoryOptions();
+    });
+
+    // Run on modal show
+    $('#addItemModal, #editItemModal').on('show.bs.modal', function() {
+        setTimeout(updateCategoryOptions, 100);
+    });
+
+    // Initial run
+    updateCategoryOptions();
 });
 </script>
 <style>
