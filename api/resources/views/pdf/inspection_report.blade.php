@@ -157,13 +157,13 @@
         });
         
         // Grouping for Display
-        if ($tankCat == 'T75') {
-            // T75: Use legacy B/C layout
+        if ($tankCat == 'T75' && $type !== 'outgoing') {
+            // T75 INCOMING: Use legacy B/C layout (2 Columns)
             $itemsB = $applicableItems->filter(fn($i) => in_array($i->category, ['b', 'external', 'general']));
             $itemsC = $applicableItems->filter(fn($i) => in_array($i->category, ['c', 'valve', 'piping']) || empty($i->category));
             $groupedItems = [];
         } else {
-            // T11/T50: Use dynamic grouping
+            // T75 OUTGOING + T11/T50: Use dynamic grouping (3 Columns: Desc | Insp | Recv)
             $groupedItems = $applicableItems->groupBy('category');
             $itemsB = collect();
             $itemsC = collect();
@@ -196,8 +196,8 @@
         }
     @endphp
 
-    @if($tankCat == 'T75')
-        {{-- T75 LEGACY 2-COLUMN LAYOUT (RESTORED) --}}
+    @if($tankCat == 'T75' && $type !== 'outgoing')
+        {{-- T75 LEGACY 2-COLUMN LAYOUT (RESTORED for INCOMING/History) --}}
         <table style="width: 100%; border-collapse: collapse; margin-top: 0;">
             <tr>
                 <!-- LEFT COLUMN: B (General), D (IBOX), F (Vacuum) -->
@@ -344,7 +344,7 @@
             </tr>
         </table>
     @else
-        {{-- T11/T50 DYNAMIC 3-COLUMN LAYOUT (COMPACT) --}}
+        {{-- T11/T50 + T75 OUTGOING: DYNAMIC 3-COLUMN LAYOUT (COMPACT) --}}
         @php
             $receiverCodes = \App\Services\PdfGenerationService::getGeneralConditionItems($tankCat);
         @endphp
