@@ -149,14 +149,35 @@
                         @if(($tankCat ?? 'T75') != 'T75' || $log->inspection_type == 'outgoing_inspection')
                         {{-- Dynamic Items for T11/T50 or T75 Outgoing --}}
                         @php
-                            $categoryMap = [
-                                'b' => 'B. GENERAL CONDITION',
-                                'c' => 'C. VALVES & PIPING',
-                                'd' => 'D. IBOX SYSTEM',
-                                'e' => 'E. INSTRUMENTS',
-                                'f' => 'F. VACUUM SYSTEM',
-                                'g' => 'G. SAFETY VALVES (PSV)',
-                            ];
+                            $tankCat = $tankCat ?? 'T75';
+                            if ($tankCat === 'T11') {
+                                $categoryMap = [
+                                    'a' => 'A. FRONT',
+                                    'b' => 'B. REAR',
+                                    'c' => 'C. RIGHT',
+                                    'd' => 'D. LEFT',
+                                    'e' => 'E. TOP',
+                                    'other' => 'Other / Internal'
+                                ];
+                            } elseif ($tankCat === 'T50') {
+                                $categoryMap = [
+                                    'a' => 'A. FRONT OUT SIDE VIEW',
+                                    'b' => 'B. REAR OUT SIDE VIEW',
+                                    'c' => 'C. RIGHT SIDE/VALVE BOX OBSERVATION',
+                                    'd' => 'D. LEFT SIDE',
+                                    'e' => 'E. TOP',
+                                    'other' => 'Other / Internal'
+                                ];
+                            } else {
+                                $categoryMap = [
+                                    'b' => 'B. GENERAL CONDITION',
+                                    'c' => 'C. VALVES & PIPING',
+                                    'd' => 'D. IBOX SYSTEM',
+                                    'e' => 'E. INSTRUMENTS',
+                                    'f' => 'F. VACUUM SYSTEM',
+                                    'g' => 'G. SAFETY VALVES (PSV)',
+                                ];
+                            }
                         @endphp
                         @foreach($catSpecificItems->groupBy('category') as $categoryName => $items)
                             @if(($tankCat ?? 'T75') !== 'T75' || ($categoryName !== 'd' && $categoryName !== 'e' && $categoryName !== 'f' && $categoryName !== 'g'))

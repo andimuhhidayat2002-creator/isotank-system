@@ -31,14 +31,35 @@
                         {{-- DYNAMIC CATEGORY HEADERS --}}
                         @php 
                             $colorToggle = true; 
-                            $categoryMap = [
-                                'b' => 'B. GENERAL CONDITION',
-                                'c' => 'C. VALVES & PIPING',
-                                'd' => 'D. IBOX SYSTEM',
-                                'e' => 'E. INSTRUMENTS',
-                                'f' => 'F. VACUUM SYSTEM',
-                                'g' => 'G. SAFETY VALVES (PSV)',
-                            ];
+                            $tCat = $category ?? 'T75';
+                            if ($tCat === 'T11') {
+                                $categoryMap = [
+                                    'a' => 'A. FRONT',
+                                    'b' => 'B. REAR',
+                                    'c' => 'C. RIGHT',
+                                    'd' => 'D. LEFT',
+                                    'e' => 'E. TOP',
+                                    'other' => 'Other / Internal'
+                                ];
+                            } elseif ($tCat === 'T50') {
+                                $categoryMap = [
+                                    'a' => 'A. FRONT OUT SIDE VIEW',
+                                    'b' => 'B. REAR OUT SIDE VIEW',
+                                    'c' => 'C. RIGHT SIDE/VALVE BOX OBSERVATION',
+                                    'd' => 'D. LEFT SIDE',
+                                    'e' => 'E. TOP',
+                                    'other' => 'Other / Internal'
+                                ];
+                            } else {
+                                $categoryMap = [
+                                    'b' => 'B. GENERAL CONDITION',
+                                    'c' => 'C. VALVES & PIPING',
+                                    'd' => 'D. IBOX SYSTEM',
+                                    'e' => 'E. INSTRUMENTS',
+                                    'f' => 'F. VACUUM SYSTEM',
+                                    'g' => 'G. SAFETY VALVES (PSV)',
+                                ];
+                            }
                         @endphp
                         @foreach($groupedItems as $catName => $items)
                             <th colspan="{{ $items->count() }}" class="{{ $colorToggle ? 'bg-primary' : 'bg-success bg-opacity-75' }} text-white" style="border-bottom: 2px solid white;">
