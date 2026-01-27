@@ -267,12 +267,11 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Category</label>
-                            <select class="form-select category-select" name="category" 
-                                    data-t75='@json($categoriesT75)' 
-                                    data-t11='@json($categoriesT11)' 
-                                    data-t50='@json($categoriesT50)'>
+                            <select class="form-select category-select" name="category" id="add_category">
                                 <option value="">-- No Category --</option>
-                                {{-- Options will be populated dynamically by JavaScript --}}
+                                @foreach($categoriesT75 as $key => $label)
+                                    <option value="{{ $key }}">{{ $label }}</option>
+                                @endforeach
                             </select>
                         </div>
                         <div class="col-md-6 mb-3">
@@ -389,6 +388,35 @@ $(document).ready(function() {
     });
 
     // Dynamic Category Population based on Tank Type
+    // Define categories for each tank type
+    var categoriesT75 = {
+        'b': 'B. General Condition',
+        'c': 'C. Valve & Piping',
+        'd': 'D. IBOX System',
+        'e': 'E. Instruments',
+        'f': 'F. Vacuum System',
+        'g': 'G. PSV & Safety',
+        'other': 'Other / Internal'
+    };
+    
+    var categoriesT11 = {
+        'a': 'A. FRONT',
+        'b': 'B. REAR',
+        'c': 'C. RIGHT',
+        'd': 'D. LEFT',
+        'e': 'E. TOP',
+        'other': 'Other / Internal'
+    };
+    
+    var categoriesT50 = {
+        'a': 'A. Front Out Side View',
+        'b': 'B. Rear Out Side View',
+        'c': 'C. Right Side/Valve Box Observation',
+        'd': 'D. Left Side',
+        'e': 'E. Top',
+        'other': 'Other / Internal'
+    };
+
     function updateCategoryOptions() {
         // Get all checked tank types
         var checkedTypes = [];
@@ -396,15 +424,10 @@ $(document).ready(function() {
             checkedTypes.push($(this).val());
         });
 
-        // Get all category selects (both Add and Edit modals)
+        // Get all category selects
         $('.category-select').each(function() {
             var $select = $(this);
             var currentValue = $select.val();
-            
-            // Get category data from data attributes
-            var t75Categories = $select.data('t75');
-            var t11Categories = $select.data('t11');
-            var t50Categories = $select.data('t50');
             
             // Clear existing options except the first one (-- No Category --)
             $select.find('option:not(:first)').remove();
@@ -412,28 +435,18 @@ $(document).ready(function() {
             // Determine which categories to show
             var categoriesToShow = {};
             
-            if (checkedTypes.length === 0) {
-                // No types selected, show T75 by default
-                categoriesToShow = t75Categories;
-            } else if (checkedTypes.length === 1) {
-                // Only one type selected
-                if (checkedTypes.includes('T75')) {
-                    categoriesToShow = t75Categories;
-                } else if (checkedTypes.includes('T11')) {
-                    categoriesToShow = t11Categories;
-                } else if (checkedTypes.includes('T50')) {
-                    categoriesToShow = t50Categories;
-                }
+            if (checkedTypes.length === 0 || checkedTypes.includes('T75')) {
+                // No types selected or T75 selected, show T75 categories
+                categoriesToShow = categoriesT75;
+            } else if (checkedTypes.includes('T11') && !checkedTypes.includes('T50')) {
+                // Only T11 selected
+                categoriesToShow = categoriesT11;
+            } else if (checkedTypes.includes('T50') && !checkedTypes.includes('T11')) {
+                // Only T50 selected
+                categoriesToShow = categoriesT50;
             } else {
-                // Multiple types selected - show union of categories
-                // For simplicity, if T75 is included, show T75 categories
-                // Otherwise show T11 categories (as they're similar to T50)
-                if (checkedTypes.includes('T75')) {
-                    categoriesToShow = t75Categories;
-                } else {
-                    // Both T11 and T50 selected - use T11 categories as base
-                    categoriesToShow = t11Categories;
-                }
+                // Both T11 and T50 selected - use T11 categories as base
+                categoriesToShow = categoriesT11;
             }
             
             // Populate options
