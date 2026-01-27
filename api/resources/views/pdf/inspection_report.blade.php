@@ -431,19 +431,28 @@
                          {{-- 2. VACUUM SYSTEM --}}
                             <tr><td colspan="3" class="section-title" style="background:#f9f9f9;font-weight:bold;border:1px solid #ddd;padding:2px;">F. VACUUM SYSTEM</td></tr>
                             <tr>
-                                <td style="border:1px solid #eee;">Gauge Condition</td>
+                                <td style="border:1px solid #eee;">Vacuum Gauge Condition</td>
                                 <td style="border:1px solid #eee;text-align:center;">{!! badge($inspection->vacuum_gauge_condition) !!}</td>
                                 <td style="border:1px solid #eee;text-align:center;color:#bbb;">-</td>
                             </tr>
                             <tr>
-                                <td style="border:1px solid #eee;">Value</td>
-                                <td style="border:1px solid #eee;text-align:center;">
-                                    {{ $inspection->vacuum_value ?? '-' }} {{ $inspection->vacuum_unit ?? 'mtorr' }}
-                                    @if($inspection->vacuum_temperature)(at {{ $inspection->vacuum_temperature }}°C)@endif
-                                    @if($inspection->vacuum_check_datetime)
-                                        <br><span style="font-size: 5.5pt; color: #777;">Checked: {{ \Carbon\Carbon::parse($inspection->vacuum_check_datetime)->format('Y-m-d H:i') }}</span>
-                                    @endif
-                                </td>
+                                <td style="border:1px solid #eee;">Port Suction Condition</td>
+                                <td style="border:1px solid #eee;text-align:center;">{!! badge($inspection->vacuum_port_suction_condition) !!}</td>
+                                <td style="border:1px solid #eee;text-align:center;color:#bbb;">-</td>
+                            </tr>
+                            <tr>
+                                <td style="border:1px solid #eee;">Vacuum Value</td>
+                                <td style="border:1px solid #eee;text-align:center;">{{ $inspection->vacuum_value ? (float)$inspection->vacuum_value . ' mTorr' : '-' }}</td>
+                                <td style="border:1px solid #eee;text-align:center;color:#bbb;">-</td>
+                            </tr>
+                            <tr>
+                                <td style="border:1px solid #eee;">Vacuum Temperature</td>
+                                <td style="border:1px solid #eee;text-align:center;">{{ $inspection->vacuum_temperature ? (float)$inspection->vacuum_temperature . ' C' : '-' }}</td>
+                                <td style="border:1px solid #eee;text-align:center;color:#bbb;">-</td>
+                            </tr>
+                            <tr>
+                                <td style="border:1px solid #eee;">Check Datetime</td>
+                                <td style="border:1px solid #eee;text-align:center;">{{ $inspection->vacuum_check_datetime ? \Carbon\Carbon::parse($inspection->vacuum_check_datetime)->format('Y-m-d H:i') : '-' }}</td>
                                 <td style="border:1px solid #eee;text-align:center;color:#bbb;">-</td>
                             </tr>
 
