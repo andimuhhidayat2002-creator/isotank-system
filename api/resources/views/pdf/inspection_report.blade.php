@@ -418,41 +418,40 @@
                             {{-- Condition --}}
                             <tr>
                                 <td style="border:1px solid #eee;">Condition</td>
-                                <td style="border:1px solid #eee;text-align:center;">{!! badge($inspection->ibox_condition) !!}</td>
+                                <td style="border:1px solid #eee;text-align:center;">{!! badge($t75Data['ibox']['condition']) !!}</td>
                                 <td style="border:1px solid #eee;text-align:center;color:#bbb;">-</td>
                             </tr>
-                             {{-- Values with No specific receiver confirm usually --}}
-                             <tr><td style="border:1px solid #eee;">Battery</td><td style="border:1px solid #eee;text-align:center;">{{ $inspection->ibox_battery_percent ? $inspection->ibox_battery_percent.'%' : '-' }}</td><td style="border:1px solid #eee;color:#bbb;text-align:center;">-</td></tr>
-                             <tr><td style="border:1px solid #eee;">Pressure</td><td style="border:1px solid #eee;text-align:center;">{{ $inspection->ibox_pressure ?? '-' }}</td><td style="border:1px solid #eee;color:#bbb;text-align:center;">-</td></tr>
-                             <tr><td style="border:1px solid #eee;">Temp #1</td><td style="border:1px solid #eee;text-align:center;">{{ $inspection->ibox_temperature_1 ?? '-' }}</td><td style="border:1px solid #eee;color:#bbb;text-align:center;">-</td></tr>
-                             <tr><td style="border:1px solid #eee;">Temp #2</td><td style="border:1px solid #eee;text-align:center;">{{ $inspection->ibox_temperature_2 ?? '-' }}</td><td style="border:1px solid #eee;color:#bbb;text-align:center;">-</td></tr>
-                             <tr><td style="border:1px solid #eee;">Level</td><td style="border:1px solid #eee;text-align:center;">{{ $inspection->ibox_level ?? '-' }}</td><td style="border:1px solid #eee;color:#bbb;text-align:center;">-</td></tr>
+                             <tr><td style="border:1px solid #eee;">Battery</td><td style="border:1px solid #eee;text-align:center;">{{ $t75Data['ibox']['battery'] }}</td><td style="border:1px solid #eee;color:#bbb;text-align:center;">-</td></tr>
+                             <tr><td style="border:1px solid #eee;">Pressure</td><td style="border:1px solid #eee;text-align:center;">{{ $t75Data['ibox']['pressure'] }}</td><td style="border:1px solid #eee;color:#bbb;text-align:center;">-</td></tr>
+                             <tr><td style="border:1px solid #eee;">Temp #1</td><td style="border:1px solid #eee;text-align:center;">{{ $t75Data['ibox']['temp1'] }} {{ $t75Data['ibox']['temp1_time'] }}</td><td style="border:1px solid #eee;color:#bbb;text-align:center;">-</td></tr>
+                             <tr><td style="border:1px solid #eee;">Temp #2</td><td style="border:1px solid #eee;text-align:center;">{{ $t75Data['ibox']['temp2'] }} {{ $t75Data['ibox']['temp2_time'] }}</td><td style="border:1px solid #eee;color:#bbb;text-align:center;">-</td></tr>
+                             <tr><td style="border:1px solid #eee;">Level</td><td style="border:1px solid #eee;text-align:center;">{{ $t75Data['ibox']['level'] }}</td><td style="border:1px solid #eee;color:#bbb;text-align:center;">-</td></tr>
 
                          {{-- 2. VACUUM SYSTEM --}}
                             <tr><td colspan="3" class="section-title" style="background:#f9f9f9;font-weight:bold;border:1px solid #ddd;padding:2px;">F. VACUUM SYSTEM</td></tr>
                             <tr>
                                 <td style="border:1px solid #eee;">Vacuum Gauge Condition</td>
-                                <td style="border:1px solid #eee;text-align:center;">{!! badge($inspection->vacuum_gauge_condition) !!}</td>
+                                <td style="border:1px solid #eee;text-align:center;">{!! badge($t75Data['vacuum']['gauge_condition']) !!}</td>
                                 <td style="border:1px solid #eee;text-align:center;color:#bbb;">-</td>
                             </tr>
                             <tr>
                                 <td style="border:1px solid #eee;">Port Suction Condition</td>
-                                <td style="border:1px solid #eee;text-align:center;">{!! badge($inspection->vacuum_port_suction_condition) !!}</td>
+                                <td style="border:1px solid #eee;text-align:center;">{!! badge($t75Data['vacuum']['port_condition']) !!}</td>
                                 <td style="border:1px solid #eee;text-align:center;color:#bbb;">-</td>
                             </tr>
                             <tr>
                                 <td style="border:1px solid #eee;">Vacuum Value</td>
-                                <td style="border:1px solid #eee;text-align:center;">{{ $inspection->vacuum_value ? (float)$inspection->vacuum_value . ' mTorr' : '-' }}</td>
+                                <td style="border:1px solid #eee;text-align:center;">{{ $t75Data['vacuum']['value'] }}</td>
                                 <td style="border:1px solid #eee;text-align:center;color:#bbb;">-</td>
                             </tr>
                             <tr>
                                 <td style="border:1px solid #eee;">Vacuum Temperature</td>
-                                <td style="border:1px solid #eee;text-align:center;">{{ $inspection->vacuum_temperature ? (float)$inspection->vacuum_temperature . ' C' : '-' }}</td>
+                                <td style="border:1px solid #eee;text-align:center;">{{ $t75Data['vacuum']['temp'] }}</td>
                                 <td style="border:1px solid #eee;text-align:center;color:#bbb;">-</td>
                             </tr>
                             <tr>
                                 <td style="border:1px solid #eee;">Check Datetime</td>
-                                <td style="border:1px solid #eee;text-align:center;">{{ $inspection->vacuum_check_datetime ? \Carbon\Carbon::parse($inspection->vacuum_check_datetime)->format('Y-m-d H:i') : '-' }}</td>
+                                <td style="border:1px solid #eee;text-align:center;">{{ $t75Data['vacuum']['check_date'] }}</td>
                                 <td style="border:1px solid #eee;text-align:center;color:#bbb;">-</td>
                             </tr>
 
