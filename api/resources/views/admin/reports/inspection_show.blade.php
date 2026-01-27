@@ -192,6 +192,7 @@
                             @endforeach
                         @endif
                         @endif {{-- Close @if($log->isotank) from line 114 --}}
+                        @endif {{-- Close dynamic items condition from line 149 --}}
 
                         @if($tankCat == 'T75')
                         <!-- SECTION D: IBOX SYSTEM (Hardcoded Legacy) -->
