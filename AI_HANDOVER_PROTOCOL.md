@@ -74,5 +74,14 @@ We operate on **TWO SEPARATE** repositories. Always verify which one you are wor
 *   **Valve Box Addition:** Added "Valve Box" inspection items to both Left Side and Right Side sections for T50.
 *   **Master Sync Fix:** Updated `InspectionSubmitController` to exclude numeric values from `MasterIsotankItemStatus` to prevent "Data truncated" errors (only condition strings are allowed in that table).
 
+### J. Dynamic Item Management & Descriptive Headers (Jan 27, 2026 19:35)
+*   **Full Headers:** Applied `$categoryMap` logic across all admin views (`inspection_show`, `isotanks/show`, `latest_inspections`) and PDF reports. Categories now show full titles (e.g., "B. GENERAL CONDITION") instead of single letters.
+*   **Dynamic Category Selection:** The `Inspection Item` management page now features a dynamic category dropdown in Add/Edit modals.
+    *   **Context Aware:** JavaScript is scoped to the active modal to prevent interference between items.
+    *   **Real-time Swap:** Options change instantly when toggling Tank Type checkboxes (T75 = Standard, T11 = Position-based FRONT/REAR, T50 = Descriptive Position).
+*   **Stability Re-engineering:**
+    *   Fixed a critical **500 ParseError** caused by the Blade engine incorrectly trying to parse an `@if` string found inside a JavaScript comment.
+    *   Resolved variable name mismatches in the inspection detail view that caused page crashes for T11/T50 tanks.
+
 ---
-*Last Updated: Jan 27, 2026 14:55 - Antigravity Agent*
+*Last Updated: Jan 27, 2026 19:35 - Antigravity Agent*

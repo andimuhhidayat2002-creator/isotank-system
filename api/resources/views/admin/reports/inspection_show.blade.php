@@ -159,7 +159,7 @@
                             ];
                         @endphp
                         @foreach($catSpecificItems->groupBy('category') as $categoryName => $items)
-                            @if($categoryName !== 'd' && $categoryName !== 'e' && $categoryName !== 'f' && $categoryName !== 'g')
+                            @if(($tankCat ?? 'T75') !== 'T75' || ($categoryName !== 'd' && $categoryName !== 'e' && $categoryName !== 'f' && $categoryName !== 'g'))
                             <tr class="table-secondary"><th colspan="2">{{ $categoryMap[$categoryName] ?? strtoupper($categoryName) }}</th></tr>
                             @foreach($items as $item)
                                  @php 
@@ -171,8 +171,11 @@
                                         $val = $logData[$lKey] ?? ($log->$lKey ?? null);
                                     }
                                  @endphp
+                                  @php
+                                     $displayLabel = str_replace(['FRONT: ', 'REAR: ', 'RIGHT: ', 'LEFT: ', 'TOP: '], '', $item->label);
+                                  @endphp
                                  <tr>
-                                    <td class="ps-3">{{ $item->label }}</td>
+                                    <td class="ps-3">{{ $displayLabel }}</td>
                                     <td class="text-center">
                                         @include('admin.reports.partials.badge', ['status' => $val ?: '-'])
                                     </td>

@@ -153,23 +153,26 @@
                                                 ];
                                             @endphp
 
-                                            @foreach($grouped as $categoryName => $items)
-                                                <tr class="table-secondary"><th colspan="2">{{ $categoryMap[$categoryName] ?? strtoupper($categoryName) }}</th></tr>
-                                                @foreach($items as $item)
-                                                     @php 
-                                                        $code = $item->code; 
-                                                        $val = $logData[$code] ?? ($log->$code ?? null);
-                                                        // Fallback logic
-                                                        if(!$val && isset($legacyMap[$item->label])) {
-                                                            $lKey = $legacyMap[$item->label];
-                                                            $val = $logData[$lKey] ?? ($log->$lKey ?? null);
-                                                        }
-                                                     @endphp
-                                                     <tr>
-                                                        <td class="ps-3">{{ $item->label }}</td>
-                                                        <td class="text-center">@include('admin.reports.partials.badge', ['status' => $val ?: '-'])</td>
-                                                     </tr>
-                                                @endforeach
+                                             @foreach($grouped as $categoryName => $items)
+                                                @if(($tankCat ?? 'T75') !== 'T75' || !in_array($categoryName, ['d', 'e', 'f', 'g']))
+                                                    <tr class="table-secondary"><th colspan="2">{{ $categoryMap[$categoryName] ?? strtoupper($categoryName) }}</th></tr>
+                                                    @foreach($items as $item)
+                                                        @php 
+                                                            $code = $item->code; 
+                                                            $val = $logData[$code] ?? ($log->$code ?? null);
+                                                            // Fallback logic
+                                                            if(!$val && isset($legacyMap[$item->label])) {
+                                                                $lKey = $legacyMap[$item->label];
+                                                                $val = $logData[$lKey] ?? ($log->$lKey ?? null);
+                                                            }
+                                                        @endphp
+                                                        @php $displayLabel = str_replace(['FRONT: ', 'REAR: ', 'RIGHT: ', 'LEFT: ', 'TOP: '], '', $item->label); @endphp
+                                                        <tr>
+                                                            <td class="ps-3">{{ $displayLabel }}</td>
+                                                            <td class="text-center">@include('admin.reports.partials.badge', ['status' => $val ?: '-'])</td>
+                                                        </tr>
+                                                    @endforeach
+                                                @endif
                                             @endforeach
 
                                             {{-- Unmapped items (Last) --}}

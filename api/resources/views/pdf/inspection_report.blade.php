@@ -214,7 +214,8 @@
                                 }
                             @endphp
                             <tr>
-                                <td style="width: 70%;">{{ $item->label }}</td>
+                                @php $displayLabel = str_replace(['FRONT: ', 'REAR: ', 'RIGHT: ', 'LEFT: ', 'TOP: '], '', $item->label); @endphp
+                                <td style="width: 70%;">{{ $displayLabel }}</td>
                                 <td style="text-align: right;">{!! badge($val) !!}</td>
                             </tr>
                         @endforeach
@@ -299,7 +300,8 @@
                                 }
                             @endphp
                             <tr>
-                                <td style="width: 70%;">{{ $item->label }}</td>
+                                @php $displayLabel = str_replace(['FRONT: ', 'REAR: ', 'RIGHT: ', 'LEFT: ', 'TOP: '], '', $item->label); @endphp
+                                <td style="width: 70%;">{{ $displayLabel }}</td>
                                 <td style="text-align: right;">{!! badge($val) !!}</td>
                             </tr>
                         @endforeach
@@ -387,8 +389,9 @@
                                 $conf = $recvConfirmations[$item->code] ?? null;
                             @endphp
                             <tr style="line-height: 1;">
+                                @php $displayLabel = str_replace(['FRONT: ', 'REAR: ', 'RIGHT: ', 'LEFT: ', 'TOP: '], '', $item->label); @endphp
                                 <td style="border: 1px solid #eee; padding: 1px 3px; font-size: 6.8pt;">
-                                    {{ $item->label }}
+                                    {{ $displayLabel }}
                                     @if($conf && $conf->receiver_remark)
                                         <div style="font-size: 5.5pt; color: #666; font-style: italic;">
                                             Note: {{ $conf->receiver_remark }}

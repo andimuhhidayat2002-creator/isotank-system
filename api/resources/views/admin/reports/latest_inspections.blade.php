@@ -59,7 +59,8 @@
                         {{-- DYNAMIC ITEM HEADERS --}}
                         @foreach($groupedItems as $catName => $items)
                             @foreach($items as $item) 
-                                <th><div>{{ $item->label }}</div></th> 
+                                @php $displayLabel = str_replace(['FRONT: ', 'REAR: ', 'RIGHT: ', 'LEFT: ', 'TOP: '], '', $item->label); @endphp
+                                <th><div>{{ $displayLabel }}</div></th> 
                             @endforeach
                         @endforeach
                         
@@ -223,7 +224,10 @@
                     <tr>
                         <th>ISO</th><th>Upd</th>
                          @foreach($groupedItems as $catName => $items)
-                             @foreach($items as $item) <th>{{ substr($item->label,0,4) }}</th> @endforeach
+                             @foreach($items as $item) 
+                                 @php $displayLabel = str_replace(['FRONT: ', 'REAR: ', 'RIGHT: ', 'LEFT: ', 'TOP: '], '', $item->label); @endphp
+                                 <th>{{ substr($displayLabel,0,4) }}</th> 
+                             @endforeach
                          @endforeach
 
                          @if($category === 'all' || $category === 'T75')
