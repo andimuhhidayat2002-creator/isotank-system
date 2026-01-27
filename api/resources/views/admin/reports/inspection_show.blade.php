@@ -191,7 +191,7 @@
                                 </tr>
                             @endforeach
                         @endif
-                        @endif
+                        @endif {{-- Close @if($log->isotank) from line 114 --}}
 
                         @if($tankCat == 'T75')
                         <!-- SECTION D: IBOX SYSTEM (Hardcoded Legacy) -->
