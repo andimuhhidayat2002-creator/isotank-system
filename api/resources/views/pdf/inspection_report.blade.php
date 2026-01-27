@@ -149,7 +149,12 @@
 
         // Filter STRICTLY by tank category
         $tankCat = $isotank->tank_category ?? 'T75';
-        $applicableItems = $masterItems->filter(fn($i) => in_array($tankCat, $i->applicable_categories ?? []));
+        $applicableItems = $masterItems->filter(function($i) use ($tankCat) {
+             $cats = $i->applicable_categories;
+             if (is_string($cats)) $cats = json_decode($cats, true); // Handle if it comes as string from DB
+             if (!is_array($cats)) $cats = []; // Safety fallback
+             return in_array($tankCat, $cats);
+        });
         
         // Grouping for Display
         if ($tankCat == 'T75') {

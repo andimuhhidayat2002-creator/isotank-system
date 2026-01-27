@@ -114,9 +114,13 @@
                         @if($log->isotank)
                         @php
                             // 1. Filter items STRICTLY by Tank Category
-                            $catSpecificItems = $inspectionItems->filter(fn($i) => 
-                                 in_array($tankCat, $i->applicable_categories ?? [])
-                            );
+                            $catSpecificItems = $inspectionItems->filter(function($i) use ($tankCat) {
+                                  // Handover Protocol: Ensure applicable_categories is treated as array
+                                  $cats = $i->applicable_categories;
+                                  if (is_string($cats)) $cats = json_decode($cats, true);
+                                  if (!is_array($cats)) $cats = [];
+                                  return in_array($tankCat, $cats);
+                            });
                             
                             // 2. Group by Category
                             $grouped = $catSpecificItems->groupBy('category');
