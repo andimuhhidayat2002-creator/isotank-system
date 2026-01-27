@@ -84,12 +84,40 @@ class MasterIsotankController extends Controller
             'lastMaintenanceJob',
             'lastVacuumLog',
             'inspectionLogs' => function($q) {
-                $q->latest()->take(5);
+                $q->with('inspector')->latest()->take(10);
             },
             'maintenanceJobs' => function($q) {
-                $q->latest()->take(5);
+                $q->latest()->take(10);
             },
         ])->findOrFail($id);
+
+        // SYNC LOGIC: If itemStatuses is empty but we have an inspection log, 
+        // provide a virtual list to Flutter so it's not empty.
+        $latestConditions = $isotank->itemStatuses;
+        
+        if ($latestConditions->isEmpty() && $isotank->lastInspectionLog) {
+            $log = $isotank->lastInspectionLog;
+            $logData = $log->inspection_data ?? [];
+            if (is_string($logData)) $logData = json_decode($logData, true) ?? [];
+            
+            // Fetch items based on tank category to rebuild list
+            $category = $isotank->tank_category ?? 'T75';
+            $items = \App\Models\InspectionItem::where('is_active', true)
+                ->whereJsonContains('applicable_categories', $category)
+                ->get();
+                
+            $virtualConditions = [];
+            foreach ($items as $item) {
+                $val = $logData[$item->code] ?? ($log->{$item->code} ?? 'na');
+                $virtualConditions[] = [
+                    'item_name' => $item->code,
+                    'description' => $item->label,
+                    'condition' => $val,
+                    'last_inspection_date' => $log->inspection_date,
+                ];
+            }
+            $isotank->setRelation('itemStatuses', collect($virtualConditions));
+        }
 
         return response()->json([
             'success' => true,
