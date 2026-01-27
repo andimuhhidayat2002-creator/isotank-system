@@ -12,7 +12,29 @@ use App\Models\MasterIsotankItemStatus;
 
 class MasterIsotankController extends Controller
 {
-    // ... index ...
+    /**
+     * Display a listing of isotanks
+     */
+    public function index(Request $request)
+    {
+        $query = MasterIsotank::query();
+
+        if ($request->has('search')) {
+            $search = $request->query('search');
+            $query->where(function($q) use ($search) {
+                $q->where('iso_number', 'like', "%$search%")
+                  ->orWhere('product', 'like', "%$search%")
+                  ->orWhere('owner', 'like', "%$search%");
+            });
+        }
+
+        $isotanks = $query->orderBy('iso_number')->paginate(20);
+
+        return response()->json([
+            'success' => true,
+            'data' => $isotanks,
+        ]);
+    }
 
     /**
      * Store a newly created isotank
