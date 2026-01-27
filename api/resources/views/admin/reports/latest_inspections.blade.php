@@ -29,10 +29,20 @@
                         <th rowspan="2" class="align-middle bg-secondary bg-opacity-75" style="width: 100px;">UPDATED AT</th>
                         
                         {{-- DYNAMIC CATEGORY HEADERS --}}
-                        @php $colorToggle = true; @endphp
+                        @php 
+                            $colorToggle = true; 
+                            $categoryMap = [
+                                'b' => 'B. GENERAL CONDITION',
+                                'c' => 'C. VALVES & PIPING',
+                                'd' => 'D. IBOX SYSTEM',
+                                'e' => 'E. INSTRUMENTS',
+                                'f' => 'F. VACUUM SYSTEM',
+                                'g' => 'G. SAFETY VALVES (PSV)',
+                            ];
+                        @endphp
                         @foreach($groupedItems as $catName => $items)
                             <th colspan="{{ $items->count() }}" class="{{ $colorToggle ? 'bg-primary' : 'bg-success bg-opacity-75' }} text-white" style="border-bottom: 2px solid white;">
-                                {{ strtoupper($catName) }}
+                                {{ $categoryMap[$catName] ?? strtoupper($catName) }}
                             </th>
                             @php $colorToggle = !$colorToggle; @endphp
                         @endforeach

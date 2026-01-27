@@ -142,8 +142,19 @@
                                                 $grouped = $catSpecificItems->groupBy('category');
                                             @endphp
 
+                                            @php
+                                                $categoryMap = [
+                                                    'b' => 'B. GENERAL CONDITION',
+                                                    'c' => 'C. VALVES & PIPING',
+                                                    'd' => 'D. IBOX SYSTEM',
+                                                    'e' => 'E. INSTRUMENTS',
+                                                    'f' => 'F. VACUUM SYSTEM',
+                                                    'g' => 'G. SAFETY VALVES (PSV)',
+                                                ];
+                                            @endphp
+
                                             @foreach($grouped as $categoryName => $items)
-                                                <tr class="table-secondary"><th colspan="2">{{ strtoupper($categoryName) }}</th></tr>
+                                                <tr class="table-secondary"><th colspan="2">{{ $categoryMap[$categoryName] ?? strtoupper($categoryName) }}</th></tr>
                                                 @foreach($items as $item)
                                                      @php 
                                                         $code = $item->code; 
