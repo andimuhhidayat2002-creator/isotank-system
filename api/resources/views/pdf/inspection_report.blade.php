@@ -4,35 +4,35 @@
     <meta charset="UTF-8">
     <title>Inspection Report - {{ $isotank->iso_number ?? 'UNKNOWN' }}</title>
     <style>
-        @page { margin: 20px 25px; }
-        body { font-family: sans-serif; font-size: 7.5pt; margin: 0; padding: 0; color: #333; line-height: 1.1; }
+        @page { margin: 10px 20px; }
+        body { font-family: sans-serif; font-size: 7pt; margin: 0; padding: 0; color: #333; line-height: 1.0; }
         
         .header { text-align: center; margin-bottom: 2px; }
-        .header img { width: 100%; height: auto; max-height: 45px; object-fit: contain; } 
+        .header img { width: 100%; height: auto; max-height: 40px; object-fit: contain; } 
         
-        .title-box { text-align: center; color: black; font-weight: bold; padding: 2px; font-size: 9.5pt; margin-bottom: 4px; border: 1px solid #ccc; background-color: #e0f7fa; }
+        .title-box { text-align: center; color: black; font-weight: bold; padding: 1px; font-size: 9pt; margin-bottom: 3px; border: 1px solid #ccc; background-color: #e0f7fa; }
         .title-box.outgoing { background-color: #e8f5e9; }
         
-        .info-table { width: 100%; border-collapse: collapse; margin-bottom: 3px; font-size: 7.5pt; }
-        .info-table td { border: 1px solid #ddd; padding: 2px 4px; }
+        .info-table { width: 100%; border-collapse: collapse; margin-bottom: 2px; font-size: 7pt; }
+        .info-table td { border: 1px solid #ddd; padding: 1px 3px; }
         .label { background-color: #f5f5f5; font-weight: bold; width: 15%; }
         
-        .section-title { background-color: #eee; font-weight: bold; font-size: 8pt; padding: 1px 4px; margin-bottom: 1px; border-left: 3px solid #333; margin-top: 3px; }
+        .section-title { background-color: #eee; font-weight: bold; font-size: 7.5pt; padding: 1px 3px; margin-bottom: 1px; border-left: 3px solid #333; margin-top: 2px; }
         
-        .checklist-table { width: 100%; border-collapse: collapse; font-size: 7pt; margin-bottom: 1px; }
+        .checklist-table { width: 100%; border-collapse: collapse; font-size: 6.5pt; margin-bottom: 1px; }
         .checklist-table td { border-bottom: 1px solid #eee; padding: 1px 2px; vertical-align: middle; }
-        .checklist-table th { background-color: #f0f0f0; padding: 1px 2px; font-weight: bold; border-bottom: 1px solid #ccc; text-align: left; font-size: 7pt; }
+        .checklist-table th { background-color: #f0f0f0; padding: 1px 2px; font-weight: bold; border-bottom: 1px solid #ccc; text-align: left; font-size: 6.5pt; }
         
-        .status-badge { padding: 1px 3px; border-radius: 2px; color: white; font-weight: bold; font-size: 6.5pt; display: inline-block; min-width: 35px; text-align: center; text-transform: uppercase; }
+        .status-badge { padding: 0px 2px; border-radius: 2px; color: white; font-weight: bold; font-size: 6pt; display: inline-block; min-width: 30px; text-align: center; text-transform: uppercase; }
         .bg-green { background-color: #2e7d32; }
         .bg-red { background-color: #c62828; }
         .bg-orange { background-color: #ef6c00; }
         .bg-grey { background-color: #9e9e9e; }
         
-        .signature-section { margin-top: 5px; width: 100%; page-break-inside: avoid; }
+        .signature-section { margin-top: 2px; width: 100%; page-break-inside: avoid; }
         .sig-box { float: left; width: 45%; margin-right: 5%; }
-        .sig-line { border-top: 1px solid #000; margin-top: 20px; padding-top: 2px; font-weight: bold; font-size: 8pt; }
-        .sig-label { font-size: 7.5pt; margin-bottom: 2px; }
+        .sig-line { border-top: 1px solid #000; margin-top: 5px; padding-top: 2px; font-weight: bold; font-size: 7.5pt; }
+        .sig-label { font-size: 7pt; margin-bottom: 2px; }
         
         .page-break { page-break-after: always; }
         .clearfix::after { content: ""; clear: both; display: table; }
@@ -522,7 +522,7 @@
         <div class="sig-box">
             <div class="sig-label">Inspector Signature</div>
             
-            <div style="height: 60px; margin-bottom: 5px;">
+            <div style="height: 40px; margin-bottom: 2px;">
                 @php
                     $inspSigPath = $inspector->signature_path ?? ($inspection->inspectionJob->inspector->signature_path ?? null);
                     $inspFullPath = null;
@@ -533,9 +533,9 @@
                 @endphp
                 
                 @if($inspFullPath)
-                    <img src="{{ $inspFullPath }}" style="max-height: 60px; max-width: 150px;">
+                    <img src="{{ $inspFullPath }}" style="max-height: 40px; max-width: 150px;">
                 @else
-                    <div style="height: 60px;"></div> {{-- Spacer if no signature --}}
+                    <div style="height: 40px;"></div> {{-- Spacer if no signature --}}
                 @endif
             </div>
 
@@ -549,7 +549,7 @@
         <div class="sig-box">
              <div class="sig-label">Receiver Signature</div>
              
-             <div style="height: 60px; margin-bottom: 5px;">
+             <div style="height: 40px; margin-bottom: 2px;">
                 @php
                     $recvSigPath = $inspection->receiver_signature_path ?? null;
                     $recvFullPath = null;
@@ -560,9 +560,9 @@
                 @endphp
                 
                 @if($recvFullPath)
-                    <img src="{{ $recvFullPath }}" style="max-height: 60px; max-width: 150px;">
+                    <img src="{{ $recvFullPath }}" style="max-height: 40px; max-width: 150px;">
                 @else
-                    <div style="height: 60px;"></div>
+                    <div style="height: 40px;"></div>
                 @endif
             </div>
             
