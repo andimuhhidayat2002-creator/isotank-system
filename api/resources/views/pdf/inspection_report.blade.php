@@ -497,17 +497,17 @@
 
                          {{-- G. SAFETY VALVES (PSV) --}}
                          <tr><td colspan="3" class="section-title" style="background:#f9f9f9;font-weight:bold;border:1px solid #ddd;padding:2px;">G. SAFETY VALVES (PSV)</td></tr>
-                         @foreach(['psv1', 'psv2', 'psv3', 'psv4'] as $p)
+                         @foreach($t75Data['psv'] as $p)
                              <tr>
-                                 <td style="border:1px solid #eee;">{{ strtoupper($p) }} Condition</td>
-                                 <td style="border:1px solid #eee;text-align:center;">{!! badge($inspection->{$p.'_condition'}) !!}</td>
+                                 <td style="border:1px solid #eee;">{{ $p['label'] }} Condition</td>
+                                 <td style="border:1px solid #eee;text-align:center;">{!! badge($p['condition']) !!}</td>
                                  <td style="border:1px solid #eee;text-align:center;color:#bbb;">-</td>
                              </tr>
                              <tr>
                                  <td colspan="3" style="border:1px solid #eee; padding-left: 15px; font-size: 6pt; color: #555;">
-                                     STATUS: {{ strtoupper($inspection->{$p.'_status'} ?? '-') }} | SN: {{ $inspection->{$p.'_serial_number'} ?? '-' }} | 
-                                     Cal. Date: {{ $inspection->{$p.'_calibration_date'} ? \Carbon\Carbon::parse($inspection->{$p.'_calibration_date'})->format('Y-m-d') : '-' }} |
-                                     Valid Until: {{ $inspection->{$p.'_valid_until'} ? \Carbon\Carbon::parse($inspection->{$p.'_valid_until'})->format('Y-m-d') : '-' }}
+                                     STATUS: {{ $p['status'] }} | SN: {{ $p['sn'] }} | 
+                                     Cal. Date: {{ $p['cal_date'] }} |
+                                     Valid Until: {{ $p['valid_until'] }}
                                  </td>
                              </tr>
                          @endforeach
