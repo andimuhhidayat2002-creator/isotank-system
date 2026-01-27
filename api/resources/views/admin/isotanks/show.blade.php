@@ -103,17 +103,27 @@
                                                 $logData = is_array($log->inspection_data) ? $log->inspection_data : json_decode($log->inspection_data, true) ?? [];
                                                 $tankCat = $isotank->tank_category ?? 'T75'; // Default to T75
 
-                                                // Legacy Map for Fallback
+                                                // Legacy Map for Fallback (Synchronized with Report View)
                                                 $legacyMap = [
                                                     'Surface Condition' => 'surface', 'Tank Surface & Paint Condition' => 'surface',
                                                     'Frame Condition' => 'frame', 'Frame Structure' => 'frame',
                                                     'Tank Name Plate' => 'tank_plate', 'Data Plate' => 'tank_plate',
                                                     'Venting Pipe' => 'venting_pipe',
                                                     'Explosion Proof Cover' => 'explosion_proof_cover',
+                                                    'Safety Label' => 'safety_label', 'DG 1972 GHS MSA_Safety_label' => 'safety_label',
+                                                    'Document Container' => 'document_container',
+                                                    'Grounding System' => 'grounding_system',
                                                     'Valve Box Door' => 'valve_box_door',
+                                                    'Valve Box Door Handle' => 'valve_box_door_handle', 'Handle lock Valve Box Door' => 'valve_box_door_handle',
                                                     'Valve Condition' => 'valve_condition',
                                                     'Valve Position' => 'valve_position',
-                                                    'Pipe Joint' => 'pipe_joint'
+                                                    'Pipe Joint' => 'pipe_joint', 'Pipe and Joint condition' => 'pipe_joint',
+                                                    'Air Source Connection' => 'air_source_connection',
+                                                    'ESDV (Emergency Shut Down Valve)' => 'esdv', 'ESDV' => 'esdv',
+                                                    'Pressure regulator ESDV' => 'pressure_regulator_esdv',
+                                                    'Blind Flange' => 'blind_flange', 'Blind Flange, nuts and bolts' => 'blind_flange',
+                                                    'PRV (Pressure Relief Valve)' => 'prv', 'PRV' => 'prv',
+                                                    'GPS/4G/LP LAN Antenna' => 'gps_antenna', 'Antena,GPS,4G' => 'gps_antenna', 'TOP: Antena,GPS,4G' => 'gps_antenna',
                                                 ];
                                                 
                                                 // Unmapped Item Logic (Same as Report)
@@ -180,11 +190,31 @@
                                                     @foreach($items as $item)
                                                         @php 
                                                             $code = $item->code; 
-                                                            $val = $logData[$code] ?? ($log->$code ?? null);
-                                                            // Fallback logic
-                                                            if(!$val && isset($legacyMap[$item->label])) {
-                                                                $lKey = $legacyMap[$item->label];
+                                                            $label = $item->label;
+                                                            
+                                                            // PRO ROBUST LOOKUP STRATEGY
+                                                            // 1. Direct Code match in JSON
+                                                            $val = $logData[$code] ?? null;
+                                                            
+                                                            // 2. Direct Column match
+                                                            if (!$val) $val = $log->$code ?? null;
+                                                            
+                                                            // 3. Underscore-version of Code in JSON
+                                                            if (!$val) {
+                                                                $uCode = str_replace([' ', '.', '/'], '_', $code);
+                                                                $val = $logData[$uCode] ?? null;
+                                                            }
+                                                            
+                                                            // 4. Legacy Map (By Label)
+                                                            if (!$val && isset($legacyMap[$label])) {
+                                                                $lKey = $legacyMap[$label];
                                                                 $val = $logData[$lKey] ?? ($log->$lKey ?? null);
+                                                            }
+                                                            
+                                                            // 5. Underscore-version of Label in JSON
+                                                            if (!$val) {
+                                                                $uLabel = str_replace([' ', '.', '/'], '_', strtolower($label));
+                                                                $val = $logData[$uLabel] ?? null;
                                                             }
                                                         @endphp
                                                         @php $displayLabel = str_replace(['FRONT: ', 'REAR: ', 'RIGHT: ', 'LEFT: ', 'TOP: '], '', $item->label); @endphp

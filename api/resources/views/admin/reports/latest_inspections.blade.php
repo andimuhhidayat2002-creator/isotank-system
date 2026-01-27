@@ -159,12 +159,31 @@
                             @foreach($items as $item)
                                 @php 
                                     $code = $item->code; 
-                                    $val = $logData[$code] ?? ($iLog->$code ?? ($log->$code ?? null));
+                                    $label = $item->label;
                                     
-                                    // Fallback for T11/T50 mapping
-                                    if(!$val && isset($legacyMap[$item->label])) {
-                                        $lKey = $legacyMap[$item->label];
+                                    // PRO ROBUST LOOKUP STRATEGY
+                                    // 1. Direct Code match in JSON
+                                    $val = $logData[$code] ?? null;
+                                    
+                                    // 2. Direct Column match
+                                    if (!$val) $val = $iLog->$code ?? ($log->$code ?? null);
+                                    
+                                    // 3. Underscore-version of Code in JSON
+                                    if (!$val) {
+                                        $uCode = str_replace([' ', '.', '/'], '_', $code);
+                                        $val = $logData[$uCode] ?? null;
+                                    }
+                                    
+                                    // 4. Legacy Map (By Label)
+                                    if (!$val && isset($legacyMap[$label])) {
+                                        $lKey = $legacyMap[$label];
                                         $val = $logData[$lKey] ?? ($iLog->$lKey ?? ($log->$lKey ?? null));
+                                    }
+                                    
+                                    // 5. Underscore-version of Label in JSON
+                                    if (!$val) {
+                                        $uLabel = str_replace([' ', '.', '/'], '_', strtolower($label));
+                                        $val = $logData[$uLabel] ?? null;
                                     }
                                 @endphp
                                 <td>@include('admin.reports.partials.badge', ['status' => $val])</td>

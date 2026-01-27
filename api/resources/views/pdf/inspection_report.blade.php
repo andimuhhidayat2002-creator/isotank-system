@@ -169,7 +169,7 @@
             $itemsC = collect();
         }
 
-        // Legacy Map for Fallback (Same as Web)
+        // Legacy Map for Fallback (Synchronized with Web Views)
         $legacyMap = [
             'Surface Condition' => 'surface', 'Tank Surface & Paint Condition' => 'surface',
             'Frame Condition' => 'frame', 'Frame Structure' => 'frame',
@@ -178,15 +178,18 @@
             'Explosion Proof Cover' => 'explosion_proof_cover',
             'Safety Label' => 'safety_label', 'DG 1972 GHS MSA_Safety_label' => 'safety_label',
             'Document Container' => 'document_container',
-            'Valve Box Door' => 'valve_box_door',
             'Grounding System' => 'grounding_system',
+            'Valve Box Door' => 'valve_box_door',
+            'Valve Box Door Handle' => 'valve_box_door_handle', 'Handle lock Valve Box Door' => 'valve_box_door_handle',
             'Valve Condition' => 'valve_condition',
             'Valve Position' => 'valve_position',
-            'Pipe Joint' => 'pipe_joint',
+            'Pipe Joint' => 'pipe_joint', 'Pipe and Joint condition' => 'pipe_joint',
             'Air Source Connection' => 'air_source_connection',
-            'ESDV' => 'esdv',
-            'Blind Flange' => 'blind_flange',
-            'PRV' => 'prv'
+            'ESDV (Emergency Shut Down Valve)' => 'esdv', 'ESDV' => 'esdv',
+            'Pressure regulator ESDV' => 'pressure_regulator_esdv',
+            'Blind Flange' => 'blind_flange', 'Blind Flange, nuts and bolts' => 'blind_flange',
+            'PRV (Pressure Relief Valve)' => 'prv', 'PRV' => 'prv',
+            'GPS/4G/LP LAN Antenna' => 'gps_antenna', 'Antena,GPS,4G' => 'gps_antenna', 'TOP: Antena,GPS,4G' => 'gps_antenna',
         ];
 
         // Fetch Receiver Confirmations if outgoing
@@ -207,10 +210,23 @@
                     <table class="checklist-table">
                         @foreach($itemsB as $item)
                             @php 
-                                $val = $inspection->{$item->code} ?? ($jsonData[$item->code] ?? null); 
-                                if(!$val && isset($legacyMap[$item->label])) {
-                                    $lKey = $legacyMap[$item->label];
-                                    $val = $inspection->{$lKey} ?? ($jsonData[$lKey] ?? null);
+                                $code = $item->code; 
+                                $label = $item->label;
+                                
+                                // PRO ROBUST LOOKUP
+                                $val = $jsonData[$code] ?? null;
+                                if (!$val) $val = $inspection->$code ?? null;
+                                if (!$val) {
+                                    $uCode = str_replace([' ', '.', '/'], '_', $code);
+                                    $val = $jsonData[$uCode] ?? null;
+                                }
+                                if (!$val && isset($legacyMap[$label])) {
+                                    $lKey = $legacyMap[$label];
+                                    $val = $inspection->$lKey ?? ($jsonData[$lKey] ?? null);
+                                }
+                                if (!$val) {
+                                    $uLabel = str_replace([' ', '.', '/'], '_', strtolower($label));
+                                    $val = $jsonData[$uLabel] ?? null;
                                 }
                             @endphp
                             <tr>
@@ -293,10 +309,23 @@
                      <table class="checklist-table">
                         @foreach($itemsC as $item)
                             @php 
-                                $val = $inspection->{$item->code} ?? ($jsonData[$item->code] ?? null); 
-                                if(!$val && isset($legacyMap[$item->label])) {
-                                    $lKey = $legacyMap[$item->label];
-                                    $val = $inspection->{$lKey} ?? ($jsonData[$lKey] ?? null);
+                                $code = $item->code; 
+                                $label = $item->label;
+                                
+                                // PRO ROBUST LOOKUP
+                                $val = $jsonData[$code] ?? null;
+                                if (!$val) $val = $inspection->$code ?? null;
+                                if (!$val) {
+                                    $uCode = str_replace([' ', '.', '/'], '_', $code);
+                                    $val = $jsonData[$uCode] ?? null;
+                                }
+                                if (!$val && isset($legacyMap[$label])) {
+                                    $lKey = $legacyMap[$label];
+                                    $val = $inspection->$lKey ?? ($jsonData[$lKey] ?? null);
+                                }
+                                if (!$val) {
+                                    $uLabel = str_replace([' ', '.', '/'], '_', strtolower($label));
+                                    $val = $jsonData[$uLabel] ?? null;
                                 }
                             @endphp
                             <tr>
@@ -400,10 +429,23 @@
                         </tr>
                         @foreach($items as $item)
                             @php 
-                                $val = $inspection->{$item->code} ?? ($jsonData[$item->code] ?? null); 
-                                if(!$val && isset($legacyMap[$item->label])) {
-                                    $lKey = $legacyMap[$item->label];
-                                    $val = $inspection->{$lKey} ?? ($jsonData[$lKey] ?? null);
+                                $code = $item->code; 
+                                $label = $item->label;
+                                
+                                // PRO ROBUST LOOKUP
+                                $val = $jsonData[$code] ?? null;
+                                if (!$val) $val = $inspection->$code ?? null;
+                                if (!$val) {
+                                    $uCode = str_replace([' ', '.', '/'], '_', $code);
+                                    $val = $jsonData[$uCode] ?? null;
+                                }
+                                if (!$val && isset($legacyMap[$label])) {
+                                    $lKey = $legacyMap[$label];
+                                    $val = $inspection->$lKey ?? ($jsonData[$lKey] ?? null);
+                                }
+                                if (!$val) {
+                                    $uLabel = str_replace([' ', '.', '/'], '_', strtolower($label));
+                                    $val = $jsonData[$uLabel] ?? null;
                                 }
                                 
                                 $isConfirmedItem = in_array($item->code, $receiverCodes);

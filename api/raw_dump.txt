@@ -1,0 +1,84 @@
+1|Surface Condition|surface|b
+2|Frame Structure|frame|b
+3|Tank Plate|tank_plate|b
+4|Grounding System|grounding_system|b
+5|Document Container|document_container|b
+6|Safety Label|safety_label|b
+7|Venting Pipe|venting_pipe|b
+8|Explosion Proof Cover|explosion_proof_cover|b
+9|Valve Box Door|valve_box_door|b
+10|Valve Box Door Handle|valve_box_door_handle|b
+11|Valve Condition|valve_condition|c
+12|Valve Position|valve_position|c
+13|Pipe Joint|pipe_joint|c
+14|Air Source Connection|air_source_connection|c
+15|ESDV (Emergency Shut Down Valve)|esdv|c
+16|Blind Flange|blind_flange|c
+17|PRV (Pressure Relief Valve)|prv|c
+18|FRONT: Tank Surface & Paint Condition|T11_A_01|a
+19|FRONT: Frame Condition|T11_A_02|a
+20|REAR: Tank Surface & Paint Condition|T11_B_01|b
+21|REAR: Frame Condition|T11_B_02|b
+22|REAR: Data Plate|T11_B_03|b
+23|Thermometer|T11_B_04|b
+24|Earth Connection|T11_B_05|b
+25|Foot Valve|T11_B_06|b
+26|Steam Inlet Pipe|T11_B_07|b
+27|Steam Outlet Pipe|T11_B_08|b
+28|REAR: Ladder|T11_B_09|b
+29|RIGHT: Tank Surface & Paint Condition|T11_C_01|c
+30|RIGHT: Frame Condition|T11_C_02|c
+31|I-Box Condition|T11_C_03|c
+32|I-Box Battery (≥ 40%)|T11_C_04|c
+33|LEFT: Tank Surface & Paint Condition|T11_D_01|d
+34|LEFT: Frame Condition|T11_D_02|d
+35|Remote Closure|T11_D_03|d
+36|LEFT: Document Holder|T11_D_04|d
+37|TOP: Tank Surface & Paint Condition|T11_E_01|e
+38|TOP: Frame Condition|T11_E_02|e
+39|Air Inlet Assembly|T11_E_03|e
+40|Top discharge Provision|T11_E_04|e
+41|Walkway Assembly|T11_E_05|e
+42|Manlid Assembly|T11_E_06|e
+43|Relief Valve Assembly|T11_E_07|e
+44|Relief Valve Provision|T11_E_08|e
+45|TOP: Antena,GPS,4G|T11_E_09|e
+46|FRONT: Tank Surface & Paint Condition|T50_A_01|a
+47|FRONT: Frame Condition|T50_A_02|a
+48|REAR: Tank Surface & Paint Condition|T50_B_01|b
+49|REAR: Frame Condition|T50_B_02|b
+50|REAR: Name Plate|T50_B_03|b
+51|REAR: Ladder|T50_B_04|b
+52|REAR: Level Gauge|T50_B_05|b
+53|REAR: Grounding|T50_B_06|b
+54|RIGHT: Tank Surface & Paint Condition|T50_C_01|c
+55|RIGHT: Frame Condition|T50_C_02|c
+56|RIGHT: Valve Liquid Phase|T50_C_03|c
+57|RIGHT: Gas Phase|T50_C_04|c
+58|RIGHT: Thermometer|T50_C_05|c
+59|RIGHT: Pressure Gauge|T50_C_06|c
+60|RIGHT: Release Valve|T50_C_07|c
+61|LEFT: Tank Surface & Paint Condition|T50_D_01|d
+62|LEFT: Frame Condition|T50_D_02|d
+63|LEFT: Valve Liquid Phase|T50_D_03|d
+64|LEFT: Gas Phase|T50_D_04|d
+65|LEFT: Thermometer|T50_D_05|d
+66|LEFT: Pressure Gauge|T50_D_06|d
+67|LEFT: Release Valve|T50_D_07|d
+68|TOP: Tank Surface & Paint Condition|T50_E_01|e
+69|TOP: Frame Condition|T50_E_02|e
+70|TOP: Safety Valve 1|T50_E_03|e
+71|TOP: Safety Valve 2|T50_E_04|e
+72|TOP: Walkway|T50_E_05|e
+73|IBOX Temperature #1 (°C)|T11_C_05|c
+74|IBOX Temperature #2 (°C)|T11_C_06|c
+75|IBOX Pressure (Bar)|T11_C_07|c
+76|IBOX Level (%)|T11_C_08|c
+77|RIGHT: Thermometer Reading (°C)|T50_C_05_VAL|c
+78|RIGHT: Pressure Gauge Reading (MPa)|T50_C_06_VAL|c
+79|LEFT: Thermometer Reading (°C)|T50_D_05_VAL|d
+80|LEFT: Pressure Gauge Reading (MPa)|T50_D_06_VAL|d
+81|REAR: Level Gauge Reading (%)|T50_B_05_VAL|b
+82|RIGHT: Valve Box|T50_C_08|c
+83|LEFT: Valve Box|T50_D_08|d
+84|GPS/4G/LP LAN Antenna|gps_antenna|b
