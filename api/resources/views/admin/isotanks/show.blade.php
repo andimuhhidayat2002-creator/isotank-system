@@ -237,50 +237,59 @@
                                                         @php 
                                                             $code = $item->code; 
                                                             $label = $item->label;
+                                                            $foundAt = null; // DEBUG: Track where value was found
                                                             
                                                             // PRO ROBUST LOOKUP STRATEGY (Synchronized with Inspection Detail View)
                                                             // 1. Direct Code match in JSON
                                                             $val = $logData[$code] ?? null;
+                                                            if ($val) $foundAt = "JSON:code";
                                                             
                                                             // 2. Underscore-version of Code in JSON
                                                             if (!$val) {
                                                                 $uCode = str_replace([' ', '.', '/'], '_', $code);
                                                                 $val = $logData[$uCode] ?? null;
+                                                                if ($val) $foundAt = "JSON:uCode";
                                                             }
                                                             
                                                             // 3. Legacy Map (By Label) in JSON
                                                             if (!$val && isset($legacyMap[$label])) {
                                                                 $lKey = $legacyMap[$label];
                                                                 $val = $logData[$lKey] ?? null;
+                                                                if ($val) $foundAt = "JSON:legacyMap";
                                                             }
 
                                                             // 4. Check for Legacy Label as Key in JSON (e.g. "GPS_4G_LP_LAN_Antenna")
                                                             if (!$val) {
                                                                 $uLabel = str_replace([' ', '.', '/'], '_', $label);
                                                                 $val = $logData[$uLabel] ?? null;
+                                                                if ($val) $foundAt = "JSON:uLabel";
                                                             }
                                                             
                                                             // 5. Try exact label in JSON
                                                             if (!$val) {
                                                                  $val = $logData[$label] ?? null;
+                                                                 if ($val) $foundAt = "JSON:label";
                                                             }
                                                             
                                                             // 6. Underscore-version of Lowercase Label in JSON
                                                             if (!$val) {
                                                                 $uLabelLower = str_replace([' ', '.', '/'], '_', strtolower($label));
                                                                 $val = $logData[$uLabelLower] ?? null;
+                                                                if ($val) $foundAt = "JSON:uLabelLower";
                                                             }
                                                             
                                                             // FALLBACK TO LEGACY COLUMNS (if JSON is empty)
                                                             // 7. Direct Column match by Code
                                                             if (!$val) {
                                                                 $val = $log->$code ?? null;
+                                                                if ($val) $foundAt = "COL:code";
                                                             }
                                                             
                                                             // 8. Legacy Column by mapped key
                                                             if (!$val && isset($legacyMap[$label])) {
                                                                 $lKey = $legacyMap[$label];
                                                                 $val = $log->$lKey ?? null;
+                                                                if ($val) $foundAt = "COL:legacyMap($lKey)";
                                                             }
                                                             
                                                             // 9. Try underscored code as column
@@ -288,13 +297,19 @@
                                                                 $uCode = str_replace([' ', '.', '/'], '_', $code);
                                                                 if (property_exists($log, $uCode)) {
                                                                     $val = $log->$uCode;
+                                                                    if ($val) $foundAt = "COL:uCode";
                                                                 }
                                                             }
                                                         @endphp
                                                         @php $displayLabel = str_replace(['FRONT: ', 'REAR: ', 'RIGHT: ', 'LEFT: ', 'TOP: '], '', $item->label); @endphp
                                                         <tr>
                                                             <td class="ps-3">{{ $displayLabel }}</td>
-                                                            <td class="text-center">@include('admin.reports.partials.badge', ['status' => $val ?: '-'])</td>
+                                                            <td class="text-center">
+                                                                @include('admin.reports.partials.badge', ['status' => $val ?: '-'])
+                                                                @if($foundAt)
+                                                                    <small class="text-muted d-block" style="font-size:8px;">{{ $foundAt }}</small>
+                                                                @endif
+                                                            </td>
                                                         </tr>
                                                     @endforeach
                                                 @endif
