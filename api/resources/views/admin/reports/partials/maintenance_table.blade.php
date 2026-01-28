@@ -4,6 +4,9 @@
             <tr>
                 <th>ISO Number</th>
                 <th>Item</th>
+                <th>Part Damage</th>
+                <th>Type</th>
+                <th>Loc</th>
                 <th>Priority</th>
                 <th>Status</th>
                 <th>Assigned To</th>
@@ -20,6 +23,9 @@
                     </a>
                 </td>
                 <td class="text-uppercase small fw-bold text-muted">{{ str_replace('_', ' ', $job->source_item) }}</td>
+                <td class="small">{{ $job->part_damage ?? '-' }}</td>
+                <td class="small">{{ $job->damage_type ?? '-' }}</td>
+                <td class="small">{{ $job->location ?? '-' }}</td>
                 <td>
                     @php
                         $pClass = 'bg-light text-dark border';
