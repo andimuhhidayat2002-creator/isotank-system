@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\MasterIsotank;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Str;
 
 use App\Models\InspectionItem;
 use App\Models\MasterIsotankItemStatus;
