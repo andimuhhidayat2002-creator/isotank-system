@@ -155,7 +155,9 @@
                             ];
                         @endphp
 
-                        @if(($tankCat ?? 'T75') != 'T75' || $log->inspection_type == 'outgoing_inspection')
+                        {{-- ENABLE DYNAMIC ITEMS FOR ALL CATEGORIES (T75, T11, T50) --}}
+                        {{-- We used to exclude T75 Incoming, but that hid Sections B and C. Now we include them. --}}
+                        @if(true)
                         {{-- Dynamic Items for T11/T50 or T75 Outgoing --}}
                         @php
                             $tankCat = $tankCat ?? 'T75';

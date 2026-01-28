@@ -702,6 +702,16 @@ class InspectionSubmitController extends Controller
             // Check direct column
             $val = $validated[$item] ?? null;
 
+             // FIX: Map Flutter Request Keys (Legacy Labels) to DB Codes
+            // Flutter sends "GPS/4G..." -> Laravel sees "GPS_4G..." -> DB expects "gps_antenna"
+            if (!$val) {
+                if ($item === 'gps_antenna') {
+                    $val = $validated['GPS_4G_LP_LAN_Antenna'] ?? $validated['GPS/4G/LP LAN Antenna'] ?? null;
+                } elseif ($item === 'pressure_regulator_esdv') {
+                    $val = $validated['Pressure_Regulator_ESDV'] ?? $validated['Pressure Regulator ESDV'] ?? null;
+                }
+            }
+
             // FIX: Check underscored key for dynamic items (e.g. "GPS/4G..." becomes "GPS_4G...")
             if (!$val) {
                 $inputKey = str_replace([' ', '.', '/'], '_', $item);

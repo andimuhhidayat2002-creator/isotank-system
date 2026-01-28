@@ -123,6 +123,10 @@ class MasterIsotankController extends Controller
              // Check Log first (if available) for immediate consistency
              if ($logData) {
                  $code = $item->code;
+                 
+                 // FIX: Map Legacy/Special Codes
+                 if ($code === 'port_suction_condition') $code = 'vacuum_port_suction_condition';
+                 
                  $uCode = str_replace([' ', '.', '/'], '_', $code);
                  
                  $val = $logData[$code] ?? $logData[$uCode] ?? ($log->{$code} ?? null);
