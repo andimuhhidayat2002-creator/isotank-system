@@ -443,7 +443,11 @@ class InspectionSubmitController extends Controller
                 'photo_additional' => $validated['photo_additional'] ?? null,
                 'photo_extra' => $validated['photo_extra'] ?? null,
                 'additional_details' => collect($allInput)->filter(function($v, $k) {
-                    return str_starts_with($k, 'remark_') || (str_starts_with($k, 'photo_') && !in_array($k, [
+                    return str_starts_with($k, 'remark_') || 
+                           str_starts_with($k, 'part_damage_') || 
+                           str_starts_with($k, 'damage_type_') || 
+                           str_starts_with($k, 'location_') || 
+                           (str_starts_with($k, 'photo_') && !in_array($k, [
                         'photo_front', 'photo_back', 'photo_left', 'photo_right', 'photo_inside_valve_box', 'photo_additional', 'photo_extra'
                     ]));
                 })->toArray(),
@@ -636,6 +640,16 @@ class InspectionSubmitController extends Controller
             if ($shouldTrigger) {
                 // Create maintenance job
                 $remark = $allInput["remark_{$item}"] ?? "Condition changed from {$oldCondition} to {$newCondition}";
+                
+                // Append detailed damage info if available
+                $details = [];
+                if (!empty($allInput["part_damage_{$item}"])) $details[] = "Part: " . $allInput["part_damage_{$item}"];
+                if (!empty($allInput["damage_type_{$item}"])) $details[] = "Type: " . $allInput["damage_type_{$item}"];
+                if (!empty($allInput["location_{$item}"])) $details[] = "Loc: " . $allInput["location_{$item}"];
+
+                if (!empty($details)) {
+                    $remark .= " | " . implode(', ', $details);
+                }
                 
                 // Determine photo path - first try specific item photo, then fallback
                 // Determine photo path - Check specific item photo first
