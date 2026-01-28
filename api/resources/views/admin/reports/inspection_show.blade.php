@@ -93,14 +93,23 @@
                             
                             // CALCULATE UNMAPPED ITEMS HERE
                             $standardCodes = $inspectionItems->pluck('code')->toArray();
+                            // Create a normalized lookup list (snake_case)
+                            $normalizedStandardCodes = array_map(function($c) { 
+                                return strtolower(str_replace([' ', '-', '.'], '_', $c)); 
+                            }, $standardCodes);
+                            
                             $unmapped = [];
                             foreach($logData as $k => $v) {
-                                // Exclude standard codes (already shown in B & C) and known system fields
-                                if(!in_array($k, $standardCodes) && 
+                                // Normalize the current key
+                                $normK = strtolower(str_replace([' ', '-', '.'], '_', $k));
+                                
+                                // Exclude standard codes (check against normalized list)
+                                if(!in_array($normK, $normalizedStandardCodes) && 
+                                   !in_array($k, $standardCodes) &&
                                    !in_array($k, ['inspection_date', 'inspector_name', 'filling_status', 'remarks', 'signature', 'longitude', 'latitude', 'location_name']) &&
                                    is_string($v) && strlen($v) < 50) {
                                      // Also exclude hardcoded legacy fields if they appear in JSON
-                                     if(!str_contains($k, 'ibox') && !str_contains($k, 'vacuum') && !str_contains($k, 'pressure_gauge') && !str_contains($k, 'psv')) {
+                                     if(!str_contains($normK, 'ibox') && !str_contains($normK, 'vacuum') && !str_contains($normK, 'pressure_gauge') && !str_contains($normK, 'psv')) {
                                          $unmapped[$k] = $v;
                                      }
                                 }
@@ -210,6 +219,11 @@
                                     if (!$val) {
                                         $uLabel = str_replace([' ', '.', '/'], '_', strtolower($label));
                                         $val = $logData[$uLabel] ?? null;
+                                    }
+
+                                    // 6. Direct Label Match (Spaces preserved)
+                                    if (!$val) {
+                                        $val = $logData[$label] ?? null;
                                     }
                                  @endphp
                                   @php
