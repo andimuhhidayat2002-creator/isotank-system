@@ -203,8 +203,11 @@ class MasterIsotankController extends Controller
                  // Vacuum System
                  if ($item->code === 'vacuum_gauge_condition') {
                       $val = $getV('vacuum_value');
+                      if ($val !== null && is_numeric($val)) {
+                          $val = (float)$val; // Removes trailing zeros (e.g. 1.2000 -> 1.2)
+                      }
                       $unit = $getV('vacuum_unit') ?? 'mTorr';
-                      $attr[] = ['Vacuum Value', $val ? "$val $unit" : '-'];
+                      $attr[] = ['Vacuum Value', $val !== null ? "$val $unit" : '-'];
                       
                       $vt = $getV('vacuum_temperature');
                       $attr[] = ['Vacuum Temp', $vt ? $vt.' °C' : '-'];
