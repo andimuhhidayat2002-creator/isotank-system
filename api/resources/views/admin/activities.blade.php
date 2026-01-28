@@ -179,6 +179,20 @@
                             <label class="form-label">Description</label>
                             <textarea name="description" class="form-control" required rows="3"></textarea>
                         </div>
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Part Damage <small class="text-muted">(Optional)</small></label>
+                                <input type="text" name="part_damage" class="form-control" placeholder="e.g. Crack, Dent">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Damage Type <small class="text-muted">(Optional)</small></label>
+                                <input type="text" name="damage_type" class="form-control" placeholder="e.g. Major, Minor">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Location <small class="text-muted">(Optional)</small></label>
+                                <input type="text" name="location" class="form-control" placeholder="e.g. Left Side">
+                            </div>
+                        </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Priority</label>
@@ -375,6 +389,8 @@
                     <div class="modal-body">
                         <div class="alert alert-info">
                             Please use the template below. Rows with empty ISO Numbers will be ignored.
+                            <br>
+                            <strong>New!</strong> You can now add optional columns: <em>Part Damage</em> (Col F), <em>Damage Type</em> (Col G), <em>Location</em> (Col H).
                             <br>
                             <a href="{{ route('admin.templates.maintenance') }}" class="btn btn-sm btn-outline-info mt-2">Download Template</a>
                         </div>
