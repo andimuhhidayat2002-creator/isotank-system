@@ -156,7 +156,7 @@ class MasterIsotankController extends Controller
                  // Pressure Gauge Details
                  if ($item->code === 'pressure_gauge_condition') {
                      $attr[] = ['Serial Number', $log->pressure_gauge_serial_number ?? '-'];
-                     $attr[] = ['Calibration Date', $log->pressure_gauge_calibration_date ? $log->pressure_gauge_calibration_date->format('Y-m-d') : '-'];
+                     $attr[] = ['Calibration Date', (!empty($log->pressure_gauge_calibration_date) && !is_string($log->pressure_gauge_calibration_date)) ? $log->pressure_gauge_calibration_date->format('Y-m-d') : ($log->pressure_gauge_calibration_date ?? '-')];
                      $attr[] = ['Reading (Pressure 1)', $log->pressure_1 ? $log->pressure_1 .' MPa': '-'];
                      $attr[] = ['Reading (Pressure 2)', $log->pressure_2 ? $log->pressure_2 .' MPa': '-'];
                  }
@@ -190,8 +190,8 @@ class MasterIsotankController extends Controller
                      $attr[] = ['STATUS: ' . $status . ' | SN: ' . $sn, '']; // Value empty, Key contains info
                      
                      // Cal Date | Valid Until Line
-                     $cal = $log->{$p.'_calibration_date'} ? $log->{$p.'_calibration_date'}->format('Y-m-d') : '-';
-                     $valid = $log->{$p.'_valid_until'} ? $log->{$p.'_valid_until'}->format('Y-m-d') : '-';
+                     $cal = (!empty($log->{$p.'_calibration_date'}) && !is_string($log->{$p.'_calibration_date'})) ? $log->{$p.'_calibration_date'}->format('Y-m-d') : ($log->{$p.'_calibration_date'} ?? '-');
+                     $valid = (!empty($log->{$p.'_valid_until'}) && !is_string($log->{$p.'_valid_until'})) ? $log->{$p.'_valid_until'}->format('Y-m-d') : ($log->{$p.'_valid_until'} ?? '-');
                      $attr[] = ['Cal. Date: ' . $cal . ' | Valid Until: ' . $valid, ''];
                  }
                  
