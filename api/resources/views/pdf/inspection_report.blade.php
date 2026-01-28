@@ -86,7 +86,7 @@
         <div style="text-align: center; margin: 2px 0; border: 1px solid #eee; padding: 1px;">
             @php $diagramPath = public_path('assets/images/t11_diagram.png'); @endphp
             @if(file_exists($diagramPath))
-                <img src="{{ $diagramPath }}" style="width: 100%; max-height: 100px; object-fit: contain;">
+                <img src="{{ $diagramPath }}" style="width: 100%; max-height: 180px; object-fit: contain;">
             @else
                 <div style="color: #999; font-style: italic; font-size: 6pt;">[ T11 ISO TANK DIAGRAM ]</div>
             @endif
@@ -98,7 +98,7 @@
         <div style="text-align: center; margin: 2px 0; border: 1px solid #eee; padding: 1px;">
             @php $diagramPath = public_path('assets/images/t50_diagram.png'); @endphp
             @if(file_exists($diagramPath))
-                <img src="{{ $diagramPath }}" style="width: 100%; max-height: 100px; object-fit: contain;">
+                <img src="{{ $diagramPath }}" style="width: 100%; max-height: 180px; object-fit: contain;">
             @else
                 <div style="color: #999; font-style: italic; font-size: 6pt;">[ T50 ISO TANK DIAGRAM ]</div>
             @endif
@@ -224,9 +224,18 @@
                                     $lKey = $legacyMap[$label];
                                     $val = $inspection->$lKey ?? ($jsonData[$lKey] ?? null);
                                 }
+                                // FIX: Check for Legacy Label as Key (e.g. "GPS_4G_LP_LAN_Antenna")
                                 if (!$val) {
-                                    $uLabel = str_replace([' ', '.', '/'], '_', strtolower($label));
+                                    $uLabel = str_replace([' ', '.', '/'], '_', $label); // Try literal label with underscores
                                     $val = $jsonData[$uLabel] ?? null;
+                                }
+                                // FIX: Try exact label too (sometimes keys have spaces if direct from Flutter map)
+                                if (!$val) {
+                                     $val = $jsonData[$label] ?? null;
+                                }
+                                if (!$val) {
+                                    $uLabelLower = str_replace([' ', '.', '/'], '_', strtolower($label));
+                                    $val = $jsonData[$uLabelLower] ?? null;
                                 }
                             @endphp
                             <tr>

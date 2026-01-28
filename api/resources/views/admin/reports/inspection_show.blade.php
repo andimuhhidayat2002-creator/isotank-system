@@ -218,9 +218,19 @@
                                     }
                                     
                                     // 5. Underscore-version of Label in JSON
+                                    // FIX: Check for Legacy Label as Key (e.g. "GPS_4G_LP_LAN_Antenna")
                                     if (!$val) {
-                                        $uLabel = str_replace([' ', '.', '/'], '_', strtolower($label));
+                                        $uLabel = str_replace([' ', '.', '/'], '_', $label); // Try literal label with underscores
                                         $val = $logData[$uLabel] ?? null;
+                                    }
+                                    // FIX: Try exact label too
+                                    if (!$val) {
+                                         $val = $logData[$label] ?? null;
+                                    }
+
+                                    if (!$val) {
+                                        $uLabelLower = str_replace([' ', '.', '/'], '_', strtolower($label));
+                                        $val = $logData[$uLabelLower] ?? null;
                                     }
 
                                     // 6. Direct Label Match (Spaces preserved)

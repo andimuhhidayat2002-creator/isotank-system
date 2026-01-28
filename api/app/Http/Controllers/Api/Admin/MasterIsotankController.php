@@ -130,6 +130,13 @@ class MasterIsotankController extends Controller
                  $uCode = str_replace([' ', '.', '/'], '_', $code);
                  
                  $val = $logData[$code] ?? $logData[$uCode] ?? ($log->{$code} ?? null);
+                 
+                 // FIX: Check for Label-based keys (Legacy Flutter Bug)
+                 if (!$val) {
+                     $label = $item->label;
+                     $uLabel = str_replace([' ', '.', '/'], '_', $label);
+                     $val = $logData[$uLabel] ?? $logData[$label] ?? null;
+                 }
              }
              
              // Check Master Status as fallback
