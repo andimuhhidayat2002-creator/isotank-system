@@ -5,7 +5,7 @@
     <title>Inspection Report - {{ $isotank->iso_number ?? 'UNKNOWN' }}</title>
     <style>
         @page { margin: 10px 15px; } /* Reduced margins */
-        body { font-family: sans-serif; font-size: 6pt; margin: 0; padding: 0; color: #333; line-height: 0.95; } /* Smaller font, tighter line-height */
+        body { font-family: sans-serif; font-size: 7pt; margin: 0; padding: 0; color: #333; line-height: 1.1; } /* Increased from 6pt to 7pt, better line-height */
         
         .header { text-align: center; margin-bottom: 0px; }
         .header img { width: 100%; height: auto; max-height: 35px; object-fit: contain; } /* Smaller header */
@@ -13,17 +13,17 @@
         .title-box { text-align: center; color: black; font-weight: bold; padding: 1px; font-size: 8pt; margin-bottom: 2px; border: 1px solid #ccc; background-color: #e0f7fa; }
         .title-box.outgoing { background-color: #e8f5e9; }
         
-        .info-table { width: 100%; border-collapse: collapse; margin-bottom: 2px; font-size: 6pt; }
+        .info-table { width: 100%; border-collapse: collapse; margin-bottom: 2px; font-size: 7pt; }
         .info-table td { border: 1px solid #ddd; padding: 0px 2px; }
         .label { background-color: #f5f5f5; font-weight: bold; width: 15%; }
         
-        .section-title { background-color: #eee; font-weight: bold; font-size: 6.5pt; padding: 0px 2px; margin-bottom: 0px; border-left: 3px solid #333; margin-top: 2px; }
+        .section-title { background-color: #eee; font-weight: bold; font-size: 7.5pt; padding: 0px 2px; margin-bottom: 0px; border-left: 3px solid #333; margin-top: 2px; }
         
-        .checklist-table { width: 100%; border-collapse: collapse; font-size: 6pt; margin-bottom: 1px; }
+        .checklist-table { width: 100%; border-collapse: collapse; font-size: 7pt; margin-bottom: 1px; }
         .checklist-table td { border-bottom: 1px solid #eee; padding: 0px 2px; vertical-align: middle; height: 10px; } /* Force minimized height */
-        .checklist-table th { background-color: #f0f0f0; padding: 0px 2px; font-weight: bold; border-bottom: 1px solid #ccc; text-align: left; font-size: 6pt; }
+        .checklist-table th { background-color: #f0f0f0; padding: 0px 2px; font-weight: bold; border-bottom: 1px solid #ccc; text-align: left; font-size: 7pt; }
         
-        .status-badge { padding: 0px 1px; border-radius: 2px; color: white; font-weight: bold; font-size: 5.5pt; display: inline-block; min-width: 25px; text-align: center; text-transform: uppercase; }
+        .status-badge { padding: 0px 1px; border-radius: 2px; color: white; font-weight: bold; font-size: 6.5pt; display: inline-block; min-width: 25px; text-align: center; text-transform: uppercase; }
         .bg-green { background-color: #2e7d32; }
         .bg-red { background-color: #c62828; }
         .bg-orange { background-color: #ef6c00; }
