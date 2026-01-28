@@ -26,7 +26,7 @@ We operate on **TWO SEPARATE** repositories. Always verify which one you are wor
 *   **To Deploy Code:** Run `.\deploy_to_vps.bat` (This script handles the git push -> ssh pull chain).
 *   **If Server is Broken:** Refer to `.agent/workflows/deployment_protocol.md`
 
-## 4. CRITICIAL ARCHITECTURE UPDATES (As of Jan 20, 2026 19:30)
+## 4. CRITICIAL ARCHITECTURE UPDATES (As of Jan 28, 2026 17:50)
 
 ### A. Multi-Category Support (T75, T11, T50)
 *   Table `master_isotanks` now has `tank_category` column (Default: T75).
@@ -80,8 +80,14 @@ We operate on **TWO SEPARATE** repositories. Always verify which one you are wor
     *   **Context Aware:** JavaScript is scoped to the active modal to prevent interference between items.
     *   **Real-time Swap:** Options change instantly when toggling Tank Type checkboxes (T75 = Standard, T11 = Position-based FRONT/REAR, T50 = Descriptive Position).
 *   **Stability Re-engineering:**
-    *   Fixed a critical **500 ParseError** caused by the Blade engine incorrectly trying to parse an `@if` string found inside a JavaScript comment.
-    *   Resolved variable name mismatches in the inspection detail view that caused page crashes for T11/T50 tanks.
+    *   **Fixed 500 ParseError**: Resolved Blade engine conflict with JS comments.
+    *   **Safety**: Added variable checks for T11/T50 crash prevention.
+
+### K. Receiver Process & Data Integrity Fixes (Jan 28, 2026 17:50)
+*   **Phantom Rejection Fix:** `receiverConfirm` endpoint now returns `all_accepted` boolean to prevent Flutter app from falsely showing "Items Rejected" message when everything is fine.
+*   **Filling Status Logic:** For Outgoing inspections, `receiverConfirm` now correctly reads the `filling_status_code` from the **InspectionLog** (Inspector's input) instead of the stale `InspectionJob` data. This ensures the Master Isotank status updates correctly after confirmation.
+*   **Key Normalization:** Fixed `updateMasterItemStatus` to robustly handle dynamic items with special characters (keys like `GPS/4G` are now correctly mapped to `GPS_4G` from the request). This resolves the issue where "GPS/4G/LP LAN" and "Pressure Regulator" were not updating in Admin Detail view.
+*   **PDF Generation:** Confirmed Outgoing PDF generation is triggered upon Receiver Confirmation.
 
 ---
-*Last Updated: Jan 27, 2026 19:35 - Antigravity Agent*
+*Last Updated: Jan 28, 2026 17:50 - Antigravity Agent*

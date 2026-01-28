@@ -701,6 +701,12 @@ class InspectionSubmitController extends Controller
         foreach ($allItems as $item) {
             // Check direct column
             $val = $validated[$item] ?? null;
+
+            // FIX: Check underscored key for dynamic items (e.g. "GPS/4G..." becomes "GPS_4G...")
+            if (!$val) {
+                $inputKey = str_replace([' ', '.', '/'], '_', $item);
+                $val = $validated[$inputKey] ?? null;
+            }
             
             // Or check inside inspection_data JSON
             if (!$val && isset($validated['inspection_data']) && is_array($validated['inspection_data'])) {
@@ -1131,7 +1137,12 @@ class InspectionSubmitController extends Controller
                 $updates['location'] = $job->destination;
             }
             
-            if ($job->filling_status_code) {
+            // FIX: Use Inspection Log data (Inspector's Input) instead of Job data
+            if ($inspectionLog->filling_status_code) {
+                $updates['filling_status_code'] = $inspectionLog->filling_status_code;
+                $updates['filling_status_desc'] = $inspectionLog->filling_status_desc;
+            } elseif ($job->filling_status_code) {
+                 // Fallback to job if log is empty (rare)
                 $updates['filling_status_code'] = $job->filling_status_code;
                 $updates['filling_status_desc'] = $job->filling_status_desc;
             }
@@ -1171,6 +1182,7 @@ class InspectionSubmitController extends Controller
                 'data' => [
                     'accept_count' => $acceptCount,
                     'reject_count' => $rejectCount,
+                    'all_accepted' => ($rejectCount === 0), // ADDED for Flutter Popup Logic
                     'job_status' => $job->status,
                     'location_updated' => true,
                     'confirmations' => $confirmations,
