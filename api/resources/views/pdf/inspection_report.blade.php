@@ -50,7 +50,7 @@
         .compact-mode .info-table td { padding: 0px 1px !important; }
     </style>
 </head>
-<body class="{{ ($tankCat == 'T75' && $type !== 'outgoing') ? 'compact-mode' : '' }}">
+<body class="{{ (($isotank->tank_category ?? 'T75') == 'T75' && $type !== 'outgoing') ? 'compact-mode' : '' }}">
     
     {{-- PAGE 1: DETAILS & CHECKLIST --}}
     
