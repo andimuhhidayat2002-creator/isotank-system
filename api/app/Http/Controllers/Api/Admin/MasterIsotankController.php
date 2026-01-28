@@ -146,60 +146,60 @@ class MasterIsotankController extends Controller
                  
                  // IBOX System Details
                  if ($item->code === 'ibox_condition') {
-                     if($log->ibox_battery_percent !== null) $attr[] = ['Battery', $log->ibox_battery_percent . ' %'];
-                     if($log->ibox_pressure !== null) $attr[] = ['Pressure', $log->ibox_pressure . ' Bar'];
-                     
-                     // Temp 1 & 2 or generic
-                     if($log->ibox_temperature_1 !== null) $attr[] = ['Temp #1', $log->ibox_temperature_1 . ' °C'];
-                     if($log->ibox_temperature_2 !== null) $attr[] = ['Temp #2', $log->ibox_temperature_2 . ' °C'];
-                     if($log->ibox_temperature !== null && $log->ibox_temperature_1 === null) $attr[] = ['Temp', $log->ibox_temperature . ' °C'];
-                     
-                     if($log->ibox_level !== null) $attr[] = ['Level', $log->ibox_level . ' %'];
+                     $attr[] = ['Battery', $log->ibox_battery_percent ? $log->ibox_battery_percent .' %' : '-'];
+                     $attr[] = ['Pressure (Digital)', $log->ibox_pressure ? $log->ibox_pressure .' Bar' : '-'];
+                     $attr[] = ['Temperature #1 (Digital)', $log->ibox_temperature_1 ? $log->ibox_temperature_1 .' °C' : ($log->ibox_temperature ? $log->ibox_temperature .' °C' : '-')];
+                     $attr[] = ['Temperature #2 (Digital)', $log->ibox_temperature_2 ? $log->ibox_temperature_2 .' °C' : '-'];
+                     $attr[] = ['Level (Digital)', $log->ibox_level ? $log->ibox_level .' %' : '-'];
                  }
                  
                  // Pressure Gauge Details
                  if ($item->code === 'pressure_gauge_condition') {
-                     if($log->pressure_gauge_serial_number) $attr[] = ['Serial No', $log->pressure_gauge_serial_number];
-                     if($log->pressure_gauge_calibration_date) $attr[] = ['Cal. Date', $log->pressure_gauge_calibration_date->format('Y-m-d')];
-                     
-                     // Readings
-                     if($log->pressure_1 !== null) $attr[] = ['Reading (P1)', $log->pressure_1 . ' MPa'];
-                     if($log->pressure_2 !== null) $attr[] = ['Reading (P2)', $log->pressure_2 . ' MPa'];
+                     $attr[] = ['Serial Number', $log->pressure_gauge_serial_number ?? '-'];
+                     $attr[] = ['Calibration Date', $log->pressure_gauge_calibration_date ? $log->pressure_gauge_calibration_date->format('Y-m-d') : '-'];
+                     $attr[] = ['Reading (Pressure 1)', $log->pressure_1 ? $log->pressure_1 .' MPa': '-'];
+                     $attr[] = ['Reading (Pressure 2)', $log->pressure_2 ? $log->pressure_2 .' MPa': '-'];
                  }
                  
                  // Level Gauge Details
                  if ($item->code === 'level_gauge_condition') {
-                     if($log->level_1 !== null) $attr[] = ['Reading (L1)', $log->level_1 . ' mm'];
-                     if($log->level_2 !== null) $attr[] = ['Reading (L2)', $log->level_2 . ' mm'];
+                     $attr[] = ['Level Gauge Condition', $log->level_gauge_condition ? strtoupper($log->level_gauge_condition) : '-'];
+                     $attr[] = ['Reading (Level 1)', $log->level_1 ? $log->level_1 .' mm' : '-'];
+                     $attr[] = ['Reading (Level 2)', $log->level_2 ? $log->level_2 .' mm' : '-'];
                  }
                  
                  // Vacuum System (Inject under Vacuum Gauge Condition usually)
                  if ($item->code === 'vacuum_gauge_condition') {
-                      if($log->vacuum_value !== null) $attr[] = ['Vacuum Value', $log->vacuum_value . ' ' . ($log->vacuum_unit ?? 'mTorr')];
-                      if($log->vacuum_temperature !== null) $attr[] = ['Vacuum Temp', $log->vacuum_temperature . ' °C'];
-                      if($log->vacuum_check_datetime !== null) $attr[] = ['Check Date', Carbon\Carbon::parse($log->vacuum_check_datetime)->format('Y-m-d H:i')];
+                      // Move Vacuum details to be injected AFTER 'vacuum_gauge_condition'
+                      // However, user list shows them at end of section F. 
+                      // Since we are looping items, attaching to vacuum_gauge_condition is the safest anchor.
+                      $attr[] = ['Vacuum Value', $log->vacuum_value ? $log->vacuum_value . ' ' . ($log->vacuum_unit ?? 'mTorr') : '-'];
+                      $attr[] = ['Vacuum Temperature', $log->vacuum_temperature ? $log->vacuum_temperature . ' °C' : '-'];
+                      $attr[] = ['Check Datetime', $log->vacuum_check_datetime ? Carbon\Carbon::parse($log->vacuum_check_datetime)->format('Y-m-d H:i') : '-'];
                  }
 
-                 // PSV Details (1-4)
-                 if (preg_match('/^psv(\d+)_condition$/', $item->code, $matches)) {
-                     $p = 'psv'.$matches[1];
-                     // Multi-line status visual
-                     $statusStr = '';
-                     if($log->{$p.'_status'}) $statusStr .= 'STATUS: ' . strtoupper($log->{$p.'_status'});
+                 // PSV Details (1-4) - SIMPLIFIED LOGIC
+                 if (Str::startsWith($item->code, 'psv') && Str::endsWith($item->code, '_condition')) {
+                     // Extract number: psv1_condition -> 1
+                     $num = substr($item->code, 3, 1); 
+                     $p = 'psv'.$num;
                      
-                     if($log->{$p.'_serial_number'}) $attr[] = ['Serial No', $log->{$p.'_serial_number'}];
-                     if($log->{$p.'_calibration_date'}) $attr[] = ['Cal. Date', $log->{$p.'_calibration_date'}->format('Y-m-d')];
-                     if($log->{$p.'_valid_until'}) $attr[] = ['Valid Until', $log->{$p.'_valid_until'}->format('Y-m-d')];
-                     if($log->{$p.'_set_pressure'}) $attr[] = ['Set Pres.', $log->{$p.'_set_pressure'}];
+                     // STATUS | SN Line
+                     $status = $log->{$p.'_status'} ? strtoupper($log->{$p.'_status'}) : '-';
+                     $sn = $log->{$p.'_serial_number'} ?? '-';
+                     $attr[] = ['STATUS: ' . $status . ' | SN: ' . $sn, '']; // Value empty, Key contains info
                      
-                     if ($statusStr) $attr[] = ['Status', $statusStr];
+                     // Cal Date | Valid Until Line
+                     $cal = $log->{$p.'_calibration_date'} ? $log->{$p.'_calibration_date'}->format('Y-m-d') : '-';
+                     $valid = $log->{$p.'_valid_until'} ? $log->{$p.'_valid_until'}->format('Y-m-d') : '-';
+                     $attr[] = ['Cal. Date: ' . $cal . ' | Valid Until: ' . $valid, ''];
                  }
                  
                  // Add attributes as "Pseudo Items"
                  foreach ($attr as $a) {
                      $finalConditions[] = [
                          'item_name' => $item->code . '_attr_' . Str::slug($a[0]),
-                         'description' => '   ↳ ' . $a[0], // Indented representation
+                         'description' => $a[0], // Exact Label from User Request
                          'condition' => $a[1], // The value
                          'is_attribute' => true, // Flag for potential UI styling
                          'last_inspection_date' => $log->inspection_date
