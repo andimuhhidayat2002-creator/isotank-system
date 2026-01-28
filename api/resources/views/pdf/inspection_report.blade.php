@@ -4,45 +4,45 @@
     <meta charset="UTF-8">
     <title>Inspection Report - {{ $isotank->iso_number ?? 'UNKNOWN' }}</title>
     <style>
-        @page { margin: 10px 20px; }
-        body { font-family: sans-serif; font-size: 7pt; margin: 0; padding: 0; color: #333; line-height: 1.0; }
+        @page { margin: 10px 15px; } /* Reduced margins */
+        body { font-family: sans-serif; font-size: 6pt; margin: 0; padding: 0; color: #333; line-height: 0.95; } /* Smaller font, tighter line-height */
         
-        .header { text-align: center; margin-bottom: 2px; }
-        .header img { width: 100%; height: auto; max-height: 40px; object-fit: contain; } 
+        .header { text-align: center; margin-bottom: 0px; }
+        .header img { width: 100%; height: auto; max-height: 35px; object-fit: contain; } /* Smaller header */
         
-        .title-box { text-align: center; color: black; font-weight: bold; padding: 1px; font-size: 9pt; margin-bottom: 3px; border: 1px solid #ccc; background-color: #e0f7fa; }
+        .title-box { text-align: center; color: black; font-weight: bold; padding: 1px; font-size: 8pt; margin-bottom: 2px; border: 1px solid #ccc; background-color: #e0f7fa; }
         .title-box.outgoing { background-color: #e8f5e9; }
         
-        .info-table { width: 100%; border-collapse: collapse; margin-bottom: 2px; font-size: 7pt; }
-        .info-table td { border: 1px solid #ddd; padding: 1px 3px; }
+        .info-table { width: 100%; border-collapse: collapse; margin-bottom: 2px; font-size: 6pt; }
+        .info-table td { border: 1px solid #ddd; padding: 0px 2px; }
         .label { background-color: #f5f5f5; font-weight: bold; width: 15%; }
         
-        .section-title { background-color: #eee; font-weight: bold; font-size: 7.5pt; padding: 1px 3px; margin-bottom: 1px; border-left: 3px solid #333; margin-top: 2px; }
+        .section-title { background-color: #eee; font-weight: bold; font-size: 6.5pt; padding: 0px 2px; margin-bottom: 0px; border-left: 3px solid #333; margin-top: 2px; }
         
-        .checklist-table { width: 100%; border-collapse: collapse; font-size: 6.5pt; margin-bottom: 1px; }
-        .checklist-table td { border-bottom: 1px solid #eee; padding: 1px 2px; vertical-align: middle; }
-        .checklist-table th { background-color: #f0f0f0; padding: 1px 2px; font-weight: bold; border-bottom: 1px solid #ccc; text-align: left; font-size: 6.5pt; }
+        .checklist-table { width: 100%; border-collapse: collapse; font-size: 6pt; margin-bottom: 1px; }
+        .checklist-table td { border-bottom: 1px solid #eee; padding: 0px 2px; vertical-align: middle; height: 10px; } /* Force minimized height */
+        .checklist-table th { background-color: #f0f0f0; padding: 0px 2px; font-weight: bold; border-bottom: 1px solid #ccc; text-align: left; font-size: 6pt; }
         
-        .status-badge { padding: 0px 2px; border-radius: 2px; color: white; font-weight: bold; font-size: 6pt; display: inline-block; min-width: 30px; text-align: center; text-transform: uppercase; }
+        .status-badge { padding: 0px 1px; border-radius: 2px; color: white; font-weight: bold; font-size: 5.5pt; display: inline-block; min-width: 25px; text-align: center; text-transform: uppercase; }
         .bg-green { background-color: #2e7d32; }
         .bg-red { background-color: #c62828; }
         .bg-orange { background-color: #ef6c00; }
         .bg-grey { background-color: #9e9e9e; }
         
-        .signature-section { margin-top: 2px; width: 100%; page-break-inside: avoid; }
+        .signature-section { margin-top: 5px; width: 100%; page-break-inside: avoid; }
         .sig-box { float: left; width: 45%; margin-right: 5%; }
-        .sig-line { border-top: 1px solid #000; margin-top: 5px; padding-top: 2px; font-weight: bold; font-size: 7.5pt; }
-        .sig-label { font-size: 7pt; margin-bottom: 2px; }
+        .sig-line { border-top: 1px solid #000; margin-top: 2px; padding-top: 1px; font-weight: bold; font-size: 7pt; }
+        .sig-label { font-size: 6pt; margin-bottom: 1px; }
         
         .page-break { page-break-after: always; }
         .clearfix::after { content: ""; clear: both; display: table; }
 
         /* Photo Grid */
-        .photo-page-title { text-align: center; font-weight: bold; font-size: 11pt; margin-bottom: 15px; padding: 5px; border-bottom: 2px solid #333; }
+        .photo-page-title { text-align: center; font-weight: bold; font-size: 10pt; margin-bottom: 10px; padding: 5px; border-bottom: 2px solid #333; }
         .photo-grid { width: 100%; text-align: center; }
-        .photo-item { width: 48%; display: inline-block; vertical-align: top; margin-bottom: 15px; margin-right: 1%; margin-left:1%; box-sizing: border-box; border: 1px solid #ddd; padding: 5px; background: #fff; border-radius: 4px; }
-        .photo-item img { width: 100%; height: 180px; object-fit: contain; background-color: #fcfcfc; border: 1px solid #eee; margin-bottom: 5px; }
-        .photo-label { font-weight: bold; font-size: 8.5pt; color: #444; }
+        .photo-item { width: 48%; display: inline-block; vertical-align: top; margin-bottom: 10px; margin-right: 1%; margin-left:1%; box-sizing: border-box; border: 1px solid #ddd; padding: 5px; background: #fff; border-radius: 4px; }
+        .photo-item img { width: 100%; height: 160px; object-fit: contain; background-color: #fcfcfc; border: 1px solid #eee; margin-bottom: 5px; }
+        .photo-label { font-weight: bold; font-size: 8pt; color: #444; }
     </style>
 </head>
 <body>
@@ -54,7 +54,7 @@
         @if(file_exists(public_path('assets/images/header_kln.png')))
             <img src="{{ public_path('assets/images/header_kln.png') }}" alt="KLN Header">
         @else
-            <h3 style="margin:0; padding:5px;">PT KAYAN LNG NUSANTARA</h3>
+            <h3 style="margin:0; padding:2px;">PT KAYAN LNG NUSANTARA</h3>
         @endif
     </div>
 
@@ -67,7 +67,7 @@
     <div class="section-title" style="margin-top: 0;">A. DATA OF TANK</div>
     <table class="info-table">
         <tr>
-            <td class="label">ISO Number</td><td style="font-size: 9pt;"><b>{{ $isotank->iso_number ?? '-' }}</b></td>
+            <td class="label">ISO Number</td><td style="font-size: 8pt;"><b>{{ $isotank->iso_number ?? '-' }}</b></td>
             <td class="label">Product</td><td>{{ $isotank->product ?? '-' }}</td>
             <td class="label">Filling Status</td>
             <td style="font-weight: bold; color: #0056b3;">
@@ -83,36 +83,36 @@
 
     {{-- T11 DIAGRAM (USER REQUEST) --}}
     @if(($isotank->tank_category ?? '') === 'T11')
-        <div style="text-align: center; margin: 5px 0; border: 1px solid #eee; padding: 2px;">
+        <div style="text-align: center; margin: 2px 0; border: 1px solid #eee; padding: 1px;">
             @php $diagramPath = public_path('assets/images/t11_diagram.png'); @endphp
             @if(file_exists($diagramPath))
-                <img src="{{ $diagramPath }}" style="width: 100%; max-height: 150px; object-fit: contain;">
+                <img src="{{ $diagramPath }}" style="width: 100%; max-height: 100px; object-fit: contain;">
             @else
-                <div style="color: #999; font-style: italic;">[ T11 ISO TANK DIAGRAM ]</div>
+                <div style="color: #999; font-style: italic; font-size: 6pt;">[ T11 ISO TANK DIAGRAM ]</div>
             @endif
         </div>
     @endif
 
     {{-- T50 DIAGRAM (USER REQUEST) --}}
     @if(($isotank->tank_category ?? '') === 'T50')
-        <div style="text-align: center; margin: 5px 0; border: 1px solid #eee; padding: 2px;">
+        <div style="text-align: center; margin: 2px 0; border: 1px solid #eee; padding: 1px;">
             @php $diagramPath = public_path('assets/images/t50_diagram.png'); @endphp
             @if(file_exists($diagramPath))
-                <img src="{{ $diagramPath }}" style="width: 100%; max-height: 150px; object-fit: contain;">
+                <img src="{{ $diagramPath }}" style="width: 100%; max-height: 100px; object-fit: contain;">
             @else
-                <div style="color: #999; font-style: italic;">[ T50 ISO TANK DIAGRAM ]</div>
+                <div style="color: #999; font-style: italic; font-size: 6pt;">[ T50 ISO TANK DIAGRAM ]</div>
             @endif
         </div>
     @endif
 
-    {{-- T75 DIAGRAM (USER REQUEST) --}}
+    {{-- T75 DIAGRAM (USER REQUEST) - REDUCED HEIGHT --}}
     @if(($isotank->tank_category ?? 'T75') === 'T75')
-        <div style="text-align: center; margin: 5px 0; border: 1px solid #eee; padding: 2px;">
+        <div style="text-align: center; margin: 2px 0; border: 1px solid #eee; padding: 1px;">
             @php $diagramPath = public_path('assets/images/t75_diagram.png'); @endphp
             @if(file_exists($diagramPath))
-                <img src="{{ $diagramPath }}" style="width: 100%; max-height: 140px; object-fit: contain;">
+                <img src="{{ $diagramPath }}" style="width: 100%; max-height: 80px; object-fit: contain;">
             @else
-                <div style="color: #999; font-style: italic;">[ T75 ISO TANK DIAGRAM ]</div>
+                <div style="color: #999; font-style: italic; font-size: 6pt;">[ T75 ISO TANK DIAGRAM ]</div>
             @endif
         </div>
     @endif
