@@ -64,6 +64,9 @@ class BulkMaintenanceUploadController extends Controller
                 $description = trim($row[2] ?? '');
                 $priority = trim($row[3] ?? '');
                 $plannedDate = $row[4] ?? null;
+                $partDamage = trim($row[5] ?? '');
+                $damageType = trim($row[6] ?? '');
+                $location = trim($row[7] ?? '');
                 
                 // 1. Validate Mandatory Fields
                 if (empty($isoNumber) || empty($itemName) || empty($description)) {
@@ -109,6 +112,9 @@ class BulkMaintenanceUploadController extends Controller
                     'priority' => $priority ?: null,
                     'planned_date' => $plannedDate ? date('Y-m-d', strtotime($plannedDate)) : null,
                     'status' => 'open',
+                    'part_damage' => $partDamage ?: null,
+                    'damage_type' => $damageType ?: null,
+                    'location' => $location ?: null,
                     'created_by' => $request->user()->id,
                 ]);
                 

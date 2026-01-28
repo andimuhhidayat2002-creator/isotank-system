@@ -26,6 +26,9 @@ class MaintenanceJob extends Model
         'triggered_by_inspection_log_id',
         'sparepart',
         'qty',
+        'part_damage',
+        'damage_type',
+        'location',
     ];
 
 
