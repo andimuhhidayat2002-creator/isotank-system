@@ -43,9 +43,14 @@
         .photo-item { width: 48%; display: inline-block; vertical-align: top; margin-bottom: 10px; margin-right: 1%; margin-left:1%; box-sizing: border-box; border: 1px solid #ddd; padding: 5px; background: #fff; border-radius: 4px; }
         .photo-item img { width: 100%; height: 160px; object-fit: contain; background-color: #fcfcfc; border: 1px solid #eee; margin-bottom: 5px; }
         .photo-label { font-weight: bold; font-size: 8pt; color: #444; }
+        
+        /* Compact mode classes for T75 incoming */
+        .compact-mode .section-title { margin-top: 1px !important; margin-bottom: 0px !important; }
+        .compact-mode .checklist-table td { padding: 0px 1px !important; height: 8px !important; }
+        .compact-mode .info-table td { padding: 0px 1px !important; }
     </style>
 </head>
-<body>
+<body class="{{ ($tankCat == 'T75' && $type !== 'outgoing') ? 'compact-mode' : '' }}">
     
     {{-- PAGE 1: DETAILS & CHECKLIST --}}
     
@@ -107,10 +112,10 @@
 
     {{-- T75 DIAGRAM (USER REQUEST) - REDUCED HEIGHT --}}
     @if(($isotank->tank_category ?? 'T75') === 'T75')
-        <div style="text-align: center; margin: 2px 0; border: 1px solid #eee; padding: 1px;">
+        <div style="text-align: center; margin: {{ $type !== 'outgoing' ? '1px 0' : '2px 0' }}; border: 1px solid #eee; padding: 1px;">
             @php $diagramPath = public_path('assets/images/t75_diagram.png'); @endphp
             @if(file_exists($diagramPath))
-                <img src="{{ $diagramPath }}" style="width: 100%; max-height: 80px; object-fit: contain;">
+                <img src="{{ $diagramPath }}" style="width: 100%; max-height: {{ $type !== 'outgoing' ? '60px' : '80px' }}; object-fit: contain;">
             @else
                 <div style="color: #999; font-style: italic; font-size: 6pt;">[ T75 ISO TANK DIAGRAM ]</div>
             @endif
