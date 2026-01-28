@@ -242,35 +242,53 @@
                                                             // 1. Direct Code match in JSON
                                                             $val = $logData[$code] ?? null;
                                                             
-                                                            // 2. Direct Column match
-                                                            if (!$val) $val = $log->$code ?? null;
-                                                            
-                                                            // 3. Underscore-version of Code in JSON
+                                                            // 2. Underscore-version of Code in JSON
                                                             if (!$val) {
                                                                 $uCode = str_replace([' ', '.', '/'], '_', $code);
                                                                 $val = $logData[$uCode] ?? null;
                                                             }
                                                             
-                                                            // 4. Legacy Map (By Label)
+                                                            // 3. Legacy Map (By Label) in JSON
                                                             if (!$val && isset($legacyMap[$label])) {
                                                                 $lKey = $legacyMap[$label];
-                                                                $val = $logData[$lKey] ?? ($log->$lKey ?? null);
+                                                                $val = $logData[$lKey] ?? null;
                                                             }
 
-                                                            // 5. Check for Legacy Label as Key (e.g. "GPS_4G_LP_LAN_Antenna")
+                                                            // 4. Check for Legacy Label as Key in JSON (e.g. "GPS_4G_LP_LAN_Antenna")
                                                             if (!$val) {
-                                                                $uLabel = str_replace([' ', '.', '/'], '_', $label); // Try literal label with underscores
+                                                                $uLabel = str_replace([' ', '.', '/'], '_', $label);
                                                                 $val = $logData[$uLabel] ?? null;
                                                             }
-                                                            // 6. Try exact label too (sometimes keys have spaces if direct from Flutter map)
+                                                            
+                                                            // 5. Try exact label in JSON
                                                             if (!$val) {
                                                                  $val = $logData[$label] ?? null;
                                                             }
                                                             
-                                                            // 7. Underscore-version of Lowercase Label in JSON
+                                                            // 6. Underscore-version of Lowercase Label in JSON
                                                             if (!$val) {
                                                                 $uLabelLower = str_replace([' ', '.', '/'], '_', strtolower($label));
                                                                 $val = $logData[$uLabelLower] ?? null;
+                                                            }
+                                                            
+                                                            // FALLBACK TO LEGACY COLUMNS (if JSON is empty)
+                                                            // 7. Direct Column match by Code
+                                                            if (!$val) {
+                                                                $val = $log->$code ?? null;
+                                                            }
+                                                            
+                                                            // 8. Legacy Column by mapped key
+                                                            if (!$val && isset($legacyMap[$label])) {
+                                                                $lKey = $legacyMap[$label];
+                                                                $val = $log->$lKey ?? null;
+                                                            }
+                                                            
+                                                            // 9. Try underscored code as column
+                                                            if (!$val) {
+                                                                $uCode = str_replace([' ', '.', '/'], '_', $code);
+                                                                if (property_exists($log, $uCode)) {
+                                                                    $val = $log->$uCode;
+                                                                }
                                                             }
                                                         @endphp
                                                         @php $displayLabel = str_replace(['FRONT: ', 'REAR: ', 'RIGHT: ', 'LEFT: ', 'TOP: '], '', $item->label); @endphp
