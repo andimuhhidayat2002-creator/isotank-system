@@ -128,6 +128,10 @@
                                                 $inspectionItems = \App\Models\InspectionItem::where('is_active', true)->orderBy('order')->get();
                                                 $logData = is_array($log->inspection_data) ? $log->inspection_data : json_decode($log->inspection_data, true) ?? [];
                                                 $tankCat = $isotank->tank_category ?? 'T75'; // Default to T75
+                                                
+                                                // DEBUG: VIEW ACTUAL KEYS
+                                                echo "<div class='alert alert-info py-1' style='font-size:10px; max-height:100px; overflow:auto;'><strong>DEBUG DATA KEYS:</strong> " . json_encode(array_keys($logData)) . "</div>";
+                                                echo "<div class='alert alert-info py-1' style='font-size:10px;'><strong>DEBUG INFO:</strong> TYPE=" . $log->inspection_type . " | CATEGORY=" . $tankCat . " | ID=" . $log->id . "</div>";
 
                                                 // Legacy Map for Fallback (Synchronized with Report View)
                                                 // Simplified to match inspection_show.blade.php
