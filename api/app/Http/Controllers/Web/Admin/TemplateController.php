@@ -130,9 +130,9 @@ class TemplateController extends Controller
             'Description', 
             'Priority', 
             'Planned Date',
-            'Status',
-            'Completion Date',
-            'Work Description' // New
+            'Part Damage',
+            'Damage Type',
+            'Location'
         ];
         
         $sheet->fromArray([$headers], NULL, 'A1');
@@ -144,9 +144,9 @@ class TemplateController extends Controller
             'Leak repair',
             'high', // low, normal, high, urgent
             date('Y-m-d'),
-            'completed', // open, completed
-            date('Y-m-d'),
-            'Replaced gasket, tightened bolts.'
+            'Crack',
+            'Major',
+            'Left Side'
         ];
         $sheet->fromArray([$example], NULL, 'A2');
 
