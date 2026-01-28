@@ -162,17 +162,10 @@
         });
         
         // Grouping for Display
-        if ($tankCat == 'T75' && $type !== 'outgoing') {
-            // T75 INCOMING: Use legacy B/C layout (2 Columns)
-            $itemsB = $applicableItems->filter(fn($i) => in_array($i->category, ['b', 'external', 'general']));
-            $itemsC = $applicableItems->filter(fn($i) => in_array($i->category, ['c', 'valve', 'piping']) || empty($i->category));
-            $groupedItems = [];
-        } else {
-            // T75 OUTGOING + T11/T50: Use dynamic grouping (3 Columns: Desc | Insp | Recv)
-            $groupedItems = $applicableItems->groupBy('category');
-            $itemsB = collect();
-            $itemsC = collect();
-        }
+        // Grouping for Display (Unified 3-Column Layout)
+        $groupedItems = $applicableItems->groupBy('category');
+        $itemsB = collect();
+        $itemsC = collect();
 
         // Legacy Map for Fallback (Synchronized with Web Views)
         $legacyMap = [
@@ -204,346 +197,119 @@
         }
     @endphp
 
-    @if($tankCat == 'T75' && $type !== 'outgoing')
-        {{-- T75 LEGACY 2-COLUMN LAYOUT (RESTORED for INCOMING/History) --}}
-        <table style="width: 100%; border-collapse: collapse; margin-top: 0;">
-            <tr>
-                <!-- LEFT COLUMN: B (General), D (IBOX), F (Vacuum) -->
-                <td style="width: 49%; vertical-align: top; padding-right: 5px; border: none;">
-                    
-                    <div class="section-title">B. GENERAL CONDITION</div>
-                    <table class="checklist-table">
-                        @foreach($itemsB as $item)
-                            @php 
-                                $code = $item->code; 
-                                $label = $item->label;
-                                
-                                // PRO ROBUST LOOKUP
-                                $val = $jsonData[$code] ?? null;
-                                if (!$val) $val = $inspection->$code ?? null;
-                                if (!$val) {
-                                    $uCode = str_replace([' ', '.', '/'], '_', $code);
-                                    $val = $jsonData[$uCode] ?? null;
-                                }
-                                if (!$val && isset($legacyMap[$label])) {
-                                    $lKey = $legacyMap[$label];
-                                    $val = $inspection->$lKey ?? ($jsonData[$lKey] ?? null);
-                                }
-                                // FIX: Check for Legacy Label as Key (e.g. "GPS_4G_LP_LAN_Antenna")
-                                if (!$val) {
-                                    $uLabel = str_replace([' ', '.', '/'], '_', $label); // Try literal label with underscores
-                                    $val = $jsonData[$uLabel] ?? null;
-                                }
-                                // FIX: Try exact label too (sometimes keys have spaces if direct from Flutter map)
-                                if (!$val) {
-                                     $val = $jsonData[$label] ?? null;
-                                }
-                                if (!$val) {
-                                    $uLabelLower = str_replace([' ', '.', '/'], '_', strtolower($label));
-                                    $val = $jsonData[$uLabelLower] ?? null;
-                                }
-                            @endphp
-                            <tr>
-                                @php $displayLabel = str_replace(['FRONT: ', 'REAR: ', 'RIGHT: ', 'LEFT: ', 'TOP: '], '', $item->label); @endphp
-                                <td style="width: 70%;">{{ $displayLabel }}</td>
-                                <td style="text-align: right;">{!! badge($val) !!}</td>
-                            </tr>
-                        @endforeach
+    @php
+        // DYNAMIC 3-COLUMN LAYOUT (Unified for ALL Types)
+        $receiverCodes = \App\Services\PdfGenerationService::getGeneralConditionItems($tankCat);
+    @endphp
 
-                        {{-- UNMAPPED ITEMS LOGIC --}}
-                        @php
-                            $standardCodes = $masterItems->pluck('code')->toArray();
-                            foreach($jsonData as $k => $v) {
-                                if(!in_array($k, $standardCodes) && 
-                                   !in_array($k, ['inspection_date', 'inspector_name', 'filling_status', 'remarks', 'signature', 'longitude', 'latitude', 'location_name']) &&
-                                   is_string($v) && strlen($v) < 50) {
-                                     if(!str_contains($k, 'ibox') && !str_contains($k, 'vacuum') && !str_contains($k, 'pressure_gauge') && !str_contains($k, 'psv')) {
-                        @endphp
-                            <tr>
-                                <td style="width: 70%;">{{ ucwords(str_replace('_', ' ', $k)) }}</td>
-                                <td style="text-align: right;">{!! badge($v) !!}</td>
-                            </tr>
-                        @php
-                                     }
-                                }
-                            }
-                        @endphp
-                    </table>
-                    
-                    {{-- D. IBOX SYSTEM (T75 ONLY) --}}
-                    @if(!empty($inspection->ibox_condition) || !empty($inspection->ibox_pressure))
-                    <div class="section-title">D. IBOX SYSTEM</div>
-                    <table class="checklist-table">
-                        <tr><td style="width: 70%;">Condition</td><td style="text-align:right">{!! badge($inspection->ibox_condition) !!}</td></tr>
-                        <tr><td>Battery</td><td style="text-align:right">{{ $inspection->ibox_battery_percent ? $inspection->ibox_battery_percent.'%' : '-' }}</td></tr>
-                        <tr><td>Pressure (Digital)</td><td style="text-align:right">{{ $inspection->ibox_pressure ?? '-' }}</td></tr>
-                        <tr>
-                             <td>Temp #1 (Digital)</td>
-                             <td style="text-align:right">
-                                 {{ $inspection->ibox_temperature_1 ?? $inspection->ibox_temperature ?? '-' }}
-                                 @if($inspection->ibox_temperature_1_timestamp)
-                                 <br><small style="color:#666; font-size:6.5pt;">({{ \Carbon\Carbon::parse($inspection->ibox_temperature_1_timestamp)->format('H:i') }})</small>
-                                 @endif
-                             </td>
-                        </tr>
-                        <tr>
-                             <td>Temp #2 (Digital)</td>
-                             <td style="text-align:right">
-                                 {{ $inspection->ibox_temperature_2 ?? '-' }}
-                                 @if($inspection->ibox_temperature_2_timestamp)
-                                 <br><small style="color:#666; font-size:6.5pt;">({{ \Carbon\Carbon::parse($inspection->ibox_temperature_2_timestamp)->format('H:i') }})</small>
-                                 @endif
-                             </td>
-                        </tr>
-                        <tr><td>Level (Digital)</td><td style="text-align:right">{{ $inspection->ibox_level ?? '-' }}</td></tr>
-                    </table>
-                    @endif
-
-                    {{-- F. VACUUM SYSTEM (T75 ONLY) --}}
-                    @if(!empty($inspection->vacuum_gauge_condition) || !empty($inspection->vacuum_value))
-                     <div class="section-title">F. VACUUM SYSTEM</div>
-                     <table class="checklist-table">
-                        <tr><td>Gauge / Port</td><td style="text-align:right">{!! badge($inspection->vacuum_gauge_condition) !!} / {!! badge($inspection->vacuum_port_suction_condition) !!}</td></tr>
-                        <tr><td colspan="2" style="color: #666;">
-                            Value: {{ $inspection->vacuum_value ? (is_numeric($inspection->vacuum_value) ? number_format((float)$inspection->vacuum_value, 2) : $inspection->vacuum_value) : '-' }} {{ $inspection->vacuum_unit ?? 'mtorr' }}
-                            @if($inspection->vacuum_temperature) ({{ $inspection->vacuum_temperature }} °C) @endif
-                        </td></tr>
-                        @if($inspection->vacuum_check_datetime)
-                        <tr><td colspan="2" style="color:#666; font-size:6pt;">
-                             Check Date: {{ \Carbon\Carbon::parse($inspection->vacuum_check_datetime)->format('d M Y H:i') }}
-                        </td></tr>
-                        @endif
-                     </table>
-                     @endif
-                </td>
-                
-                <!-- RIGHT COLUMN: C (Valves), E (Instruments), G (PSV) -->
-                <td style="width: 49%; vertical-align: top; padding-left: 5px; border: none;">
-                    <div class="section-title">C. VALVES & PIPING</div>
-                     <table class="checklist-table">
-                        @foreach($itemsC as $item)
-                            @php 
-                                $code = $item->code; 
-                                $label = $item->label;
-                                
-                                // PRO ROBUST LOOKUP
-                                $val = $jsonData[$code] ?? null;
-                                if (!$val) $val = $inspection->$code ?? null;
-                                if (!$val) {
-                                    $uCode = str_replace([' ', '.', '/'], '_', $code);
-                                    $val = $jsonData[$uCode] ?? null;
-                                }
-                                if (!$val && isset($legacyMap[$label])) {
-                                    $lKey = $legacyMap[$label];
-                                    $val = $inspection->$lKey ?? ($jsonData[$lKey] ?? null);
-                                }
-                                if (!$val) {
-                                    $uLabel = str_replace([' ', '.', '/'], '_', strtolower($label));
-                                    $val = $jsonData[$uLabel] ?? null;
-                                }
-                            @endphp
-                            <tr>
-                                @php $displayLabel = str_replace(['FRONT: ', 'REAR: ', 'RIGHT: ', 'LEFT: ', 'TOP: '], '', $item->label); @endphp
-                                <td style="width: 70%;">{{ $displayLabel }}</td>
-                                <td style="text-align: right;">{!! badge($val) !!}</td>
-                            </tr>
-                        @endforeach
-                    </table>
-
-                    {{-- E. INSTRUMENTS --}}
-                    @if(!empty($inspection->pressure_gauge_condition) || !empty($inspection->pressure_1))
-                    <div class="section-title">E. INSTRUMENTS</div>
-                    <table class="checklist-table">
-                        {{-- Pressure Gauge --}}
-                        <tr>
-                            <td>Pressure Gauge Condition</td>
-                            <td style="text-align: right;">{!! badge($inspection->pressure_gauge_condition) !!}</td>
-                        </tr>
-                        <tr>
-                            <td>Serial Number</td>
-                            <td style="text-align: right;">{{ $inspection->pressure_gauge_serial_number ?? '-' }}</td>
-                        </tr>
-                        <tr>
-                            <td>Calibration Date</td>
-                            <td style="text-align: right;">{{ $inspection->pressure_gauge_calibration_date ? \Carbon\Carbon::parse($inspection->pressure_gauge_calibration_date)->format('Y-m-d') : '-' }}</td>
-                        </tr>
-                        <tr>
-                            <td>Reading (Pressure 1)</td>
-                            <td style="text-align: right;">
-                                {{ $inspection->pressure_1 ? $inspection->pressure_1.' MPa' : '-' }}
-                                @if($inspection->pressure_1_timestamp)<span style="color:#888; font-size:5pt;">({{ \Carbon\Carbon::parse($inspection->pressure_1_timestamp)->format('H:i') }})</span>@endif
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Reading (Pressure 2)</td>
-                            <td style="text-align: right;">
-                                {{ $inspection->pressure_2 ? $inspection->pressure_2.' MPa' : '-' }}
-                                @if($inspection->pressure_2_timestamp)<span style="color:#888; font-size:5pt;">({{ \Carbon\Carbon::parse($inspection->pressure_2_timestamp)->format('H:i') }})</span>@endif
-                            </td>
-                        </tr>
-                        
-                        {{-- Level Gauge --}}
-                        <tr>
-                            <td style="border-top: 1px solid #eee; padding-top: 2px;">Level Gauge Condition</td>
-                            <td style="border-top: 1px solid #eee; text-align: right;">{!! badge($inspection->level_gauge_condition) !!}</td>
-                        </tr>
-                        <tr>
-                            <td>Reading (Level 1)</td>
-                            <td style="text-align: right;">
-                                {{ $inspection->level_1 ? $inspection->level_1.' %' : '-' }}
-                                @if($inspection->level_1_timestamp)<span style="color:#888; font-size:5pt;">({{ \Carbon\Carbon::parse($inspection->level_1_timestamp)->format('H:i') }})</span>@endif
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Reading (Level 2)</td>
-                            <td style="text-align: right;">
-                                {{ $inspection->level_2 ? $inspection->level_2.' %' : '-' }}
-                                @if($inspection->level_2_timestamp)<span style="color:#888; font-size:5pt;">({{ \Carbon\Carbon::parse($inspection->level_2_timestamp)->format('H:i') }})</span>@endif
-                            </td>
-                        </tr>
-                    </table>
-                    @endif
-
-                    {{-- G/PSV --}}
-                    @if(!empty($inspection->psv1_condition) || !empty($inspection->psv2_condition) || !empty($inspection->psv3_condition) || !empty($inspection->psv4_condition))
-                     <div class="section-title">G. SAFETY VALVES (PSV)</div>
-                     <table class="checklist-table">
-                        @for($i=1; $i<=4; $i++)
-                            @php $cond = $inspection->{"psv{$i}_condition"}; @endphp
-                            @if($cond)
-                            <tr>
-                                <td colspan="2" style="padding-bottom: 3px;">
-                                    <div style="float:left; width: 70%;">PSV{{$i}} Condition</div>
-                                    <div style="float:right; text-align:right;">{!! badge($cond) !!}</div>
-                                    <div style="clear:both;"></div>
-                                    
-                                    <div style="color: #444; font-size: 5.5pt; margin-top: 1px; padding-left: 2px;">
-                                        STATUS: {{ $inspection->{"psv{$i}_status"} ?? '-' }} | SN: {{ $inspection->{"psv{$i}_serial_number"} ?? '-' }}<br>
-                                        Cal. Date: {{ $inspection->{"psv{$i}_calibration_date"} ? \Carbon\Carbon::parse($inspection->{"psv{$i}_calibration_date"})->format('Y-m-d') : '-' }} 
-                                        &nbsp; Valid Until: {{ $inspection->{"psv{$i}_valid_until"} ? \Carbon\Carbon::parse($inspection->{"psv{$i}_valid_until"})->format('Y-m-d') : '-' }}
-                                    </div>
-                                </td>
-                            </tr>
-                            @endif
-                        @endfor
-                     </table>
-                     @endif
-                </td>
-            </tr>
-        </table>
-    @else
-        {{-- T11/T50 + T75 OUTGOING: DYNAMIC 3-COLUMN LAYOUT (COMPACT) --}}
-        @php
-            $receiverCodes = \App\Services\PdfGenerationService::getGeneralConditionItems($tankCat);
-        @endphp
-
-        <div style="margin-top: 5px;">
-            <table class="checklist-table" style="border: 1px solid #ddd; width: 100%;">
-                <thead>
+    <div style="margin-top: 5px;">
+        <table class="checklist-table" style="border: 1px solid #ddd; width: 100%;">
+            <thead>
+                <tr>
+                    <th style="width: 50%; border: 1px solid #ddd; background: #f5f5f5; font-size: 6.5pt;">DESCRIPTION</th>
+                    <th style="width: 25%; border: 1px solid #ddd; text-align: center; background: #f5f5f5; font-size: 6.5pt;">INSPECTOR</th>
+                    <th style="width: 25%; border: 1px solid #ddd; text-align: center; background: #f5f5f5; font-size: 6.5pt;">RECEIVER</th>
+                </tr>
+            </thead>
+            <tbody>
+                @php
+                    $tCat = $tankCat ?? 'T75';
+                    if ($tCat === 'T11') {
+                        $categoryMap = [
+                            'a' => 'A. FRONT',
+                            'b' => 'B. REAR',
+                            'c' => 'C. RIGHT',
+                            'd' => 'D. LEFT',
+                            'e' => 'E. TOP',
+                            'other' => 'Other / Internal'
+                        ];
+                    } elseif ($tCat === 'T50') {
+                        $categoryMap = [
+                            'a' => 'A. FRONT OUT SIDE VIEW',
+                            'b' => 'B. REAR OUT SIDE VIEW',
+                            'c' => 'C. RIGHT SIDE/VALVE BOX OBSERVATION',
+                            'd' => 'D. LEFT SIDE',
+                            'e' => 'E. TOP',
+                            'other' => 'Other / Internal'
+                        ];
+                    } else {
+                        // T75 (Both Incoming & Outgoing)
+                        $categoryMap = [
+                            'b' => 'B. GENERAL CONDITION',
+                            'c' => 'C. VALVES & PIPING',
+                            'd' => 'D. IBOX SYSTEM',
+                            'e' => 'E. INSTRUMENTS',
+                            'f' => 'F. VACUUM SYSTEM',
+                            'g' => 'G. SAFETY VALVES (PSV)',
+                        ];
+                    }
+                @endphp
+                @foreach($applicableItems->groupBy('category') as $catName => $items)
                     <tr>
-                        <th style="width: 50%; border: 1px solid #ddd; background: #f5f5f5; font-size: 6.5pt;">DESCRIPTION</th>
-                        <th style="width: 25%; border: 1px solid #ddd; text-align: center; background: #f5f5f5; font-size: 6.5pt;">INSPECTOR</th>
-                        <th style="width: 25%; border: 1px solid #ddd; text-align: center; background: #f5f5f5; font-size: 6.5pt;">RECEIVER</th>
+                        <td colspan="3" class="section-title" style="margin: 0; background-color: #f9f9f9; border: 1px solid #ddd; font-size: 7pt; padding: 1px 3px;">
+                            {{ $categoryMap[$catName] ?? strtoupper($catName) }}
+                        </td>
                     </tr>
-                </thead>
-                <tbody>
-                    @php
-                        $tCat = $tankCat ?? 'T75';
-                        if ($tCat === 'T11') {
-                            $categoryMap = [
-                                'a' => 'A. FRONT',
-                                'b' => 'B. REAR',
-                                'c' => 'C. RIGHT',
-                                'd' => 'D. LEFT',
-                                'e' => 'E. TOP',
-                                'other' => 'Other / Internal'
-                            ];
-                        } elseif ($tCat === 'T50') {
-                            $categoryMap = [
-                                'a' => 'A. FRONT OUT SIDE VIEW',
-                                'b' => 'B. REAR OUT SIDE VIEW',
-                                'c' => 'C. RIGHT SIDE/VALVE BOX OBSERVATION',
-                                'd' => 'D. LEFT SIDE',
-                                'e' => 'E. TOP',
-                                'other' => 'Other / Internal'
-                            ];
-                        } else {
-                            $categoryMap = [
-                                'b' => 'B. GENERAL CONDITION',
-                                'c' => 'C. VALVES & PIPING',
-                                'd' => 'D. IBOX SYSTEM',
-                                'e' => 'E. INSTRUMENTS',
-                                'f' => 'F. VACUUM SYSTEM',
-                                'g' => 'G. SAFETY VALVES (PSV)',
-                            ];
-                        }
-                    @endphp
-                    @foreach($applicableItems->groupBy('category') as $catName => $items)
-                        <tr>
-                            <td colspan="3" class="section-title" style="margin: 0; background-color: #f9f9f9; border: 1px solid #ddd; font-size: 7pt; padding: 1px 3px;">
-                                {{ $categoryMap[$catName] ?? strtoupper($catName) }}
+                    @foreach($items as $item)
+                        @php 
+                            $code = $item->code; 
+                            $label = $item->label;
+                            
+                            // PRO ROBUST LOOKUP
+                            $val = $jsonData[$code] ?? null;
+                            if (!$val) $val = $inspection->$code ?? null;
+                            if (!$val) {
+                                $uCode = str_replace([' ', '.', '/'], '_', $code);
+                                $val = $jsonData[$uCode] ?? null;
+                            }
+                            if (!$val && isset($legacyMap[$label])) {
+                                $lKey = $legacyMap[$label];
+                                $val = $inspection->$lKey ?? ($jsonData[$lKey] ?? null);
+                            }
+                            if (!$val) {
+                                $uLabel = str_replace([' ', '.', '/'], '_', strtolower($label));
+                                $val = $jsonData[$uLabel] ?? null;
+                            }
+                            
+                            $isConfirmedItem = in_array($item->code, $receiverCodes);
+                            $conf = $recvConfirmations[$item->code] ?? null;
+                        @endphp
+                        <tr style="line-height: 1;">
+                            @php $displayLabel = str_replace(['FRONT: ', 'REAR: ', 'RIGHT: ', 'LEFT: ', 'TOP: '], '', $item->label); @endphp
+                            <td style="border: 1px solid #eee; padding: 1px 3px; font-size: 6.8pt;">
+                                {{ $displayLabel }}
+                                @if($conf && $conf->receiver_remark)
+                                    <div style="font-size: 5.5pt; color: #666; font-style: italic;">
+                                        Note: {{ $conf->receiver_remark }}
+                                    </div>
+                                @endif
                             </td>
-                        </tr>
-                        @foreach($items as $item)
-                            @php 
-                                $code = $item->code; 
-                                $label = $item->label;
-                                
-                                // PRO ROBUST LOOKUP
-                                $val = $jsonData[$code] ?? null;
-                                if (!$val) $val = $inspection->$code ?? null;
-                                if (!$val) {
-                                    $uCode = str_replace([' ', '.', '/'], '_', $code);
-                                    $val = $jsonData[$uCode] ?? null;
-                                }
-                                if (!$val && isset($legacyMap[$label])) {
-                                    $lKey = $legacyMap[$label];
-                                    $val = $inspection->$lKey ?? ($jsonData[$lKey] ?? null);
-                                }
-                                if (!$val) {
-                                    $uLabel = str_replace([' ', '.', '/'], '_', strtolower($label));
-                                    $val = $jsonData[$uLabel] ?? null;
-                                }
-                                
-                                $isConfirmedItem = in_array($item->code, $receiverCodes);
-                                $conf = $recvConfirmations[$item->code] ?? null;
-                            @endphp
-                            <tr style="line-height: 1;">
-                                @php $displayLabel = str_replace(['FRONT: ', 'REAR: ', 'RIGHT: ', 'LEFT: ', 'TOP: '], '', $item->label); @endphp
-                                <td style="border: 1px solid #eee; padding: 1px 3px; font-size: 6.8pt;">
-                                    {{ $displayLabel }}
-                                    @if($conf && $conf->receiver_remark)
-                                        <div style="font-size: 5.5pt; color: #666; font-style: italic;">
-                                            Note: {{ $conf->receiver_remark }}
-                                        </div>
-                                    @endif
-                                </td>
-                                <td style="border: 1px solid #eee; text-align: center; vertical-align: middle; padding: 1px;">
-                                    {!! badge($val) !!}
-                                </td>
-                                <td style="border: 1px solid #eee; text-align: center; vertical-align: middle; padding: 1px;">
-                                    @if($type === 'outgoing')
-                                        @if($isConfirmedItem)
-                                            @if($conf)
-                                                <span class="status-badge {{ $conf->receiver_decision === 'ACCEPT' ? 'bg-green' : 'bg-red' }}" style="font-size: 5.5pt; min-width: 30px;">
-                                                    {{ $conf->receiver_decision }}
-                                                </span>
-                                            @else
-                                                <span class="status-badge bg-grey" style="font-size: 5.5pt; min-width: 30px;">WAITING</span>
-                                            @endif
+                            <td style="border: 1px solid #eee; text-align: center; vertical-align: middle; padding: 1px;">
+                                {!! badge($val) !!}
+                            </td>
+                            <td style="border: 1px solid #eee; text-align: center; vertical-align: middle; padding: 1px;">
+                                @if($type === 'outgoing')
+                                    @if($isConfirmedItem)
+                                        @if($conf)
+                                            <span class="status-badge {{ $conf->receiver_decision === 'ACCEPT' ? 'bg-green' : 'bg-red' }}" style="font-size: 5.5pt; min-width: 30px;">
+                                                {{ $conf->receiver_decision }}
+                                            </span>
                                         @else
-                                            <span style="color: #bbb; font-size: 6pt;">N/A</span>
+                                            <span class="status-badge bg-grey" style="font-size: 5.5pt; min-width: 30px;">WAITING</span>
                                         @endif
                                     @else
-                                        <span style="color: #bbb; font-size: 6pt;">-</span>
+                                        <span style="color: #bbb; font-size: 6pt;">N/A</span>
                                     @endif
-                                </td>
-                            </tr>
-                        @endforeach
+                                @else
+                                    <span style="color: #bbb; font-size: 6pt;">-</span>
+                                @endif
+                            </td>
+                        </tr>
                     @endforeach
-                </tbody>
-                {{-- INJECT SPECIAL T75 SECTIONS FOR OUTGOING DYNAMIC LAYOUT --}}
-                @if($tankCat == 'T75' && $type === 'outgoing')
+                @endforeach
+            </tbody>
+            {{-- INJECT SPECIAL T75 SECTIONS FOR OUTGOING & INCOMING DYNAMIC LAYOUT --}}
+            @if($tankCat == 'T75')
                     <tbody class="special-t75-sections">
                         {{-- 1. IBOX SYSTEM --}}
                             <tr><td colspan="3" class="section-title" style="background:#f9f9f9;font-weight:bold;border:1px solid #ddd;padding:2px;">D. IBOX SYSTEM</td></tr>
