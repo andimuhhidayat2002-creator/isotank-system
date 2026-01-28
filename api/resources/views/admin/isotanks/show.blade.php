@@ -132,6 +132,14 @@
                                                 // DEBUG: VIEW ACTUAL KEYS
                                                 echo "<div class='alert alert-info py-1' style='font-size:10px; max-height:100px; overflow:auto;'><strong>DEBUG DATA KEYS:</strong> " . json_encode(array_keys($logData)) . "</div>";
                                                 echo "<div class='alert alert-info py-1' style='font-size:10px;'><strong>DEBUG INFO:</strong> TYPE=" . $log->inspection_type . " | CATEGORY=" . $tankCat . " | ID=" . $log->id . "</div>";
+                                                
+                                                // DEBUG: Check if data exists in direct columns
+                                                $sampleColumns = ['surface', 'frame', 'valve_condition', 'gps_antenna', 'pressure_regulator_esdv'];
+                                                $colData = [];
+                                                foreach($sampleColumns as $col) {
+                                                    if(isset($log->$col)) $colData[$col] = $log->$col;
+                                                }
+                                                echo "<div class='alert alert-warning py-1' style='font-size:10px;'><strong>DEBUG COLUMNS:</strong> " . json_encode($colData) . "</div>";
 
                                                 // Legacy Map for Fallback (Synchronized with Report View)
                                                 // Simplified to match inspection_show.blade.php
