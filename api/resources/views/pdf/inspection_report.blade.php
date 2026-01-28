@@ -340,19 +340,53 @@
                     @if(!empty($inspection->pressure_gauge_condition) || !empty($inspection->pressure_1))
                     <div class="section-title">E. INSTRUMENTS</div>
                     <table class="checklist-table">
-                        <tr><td><b>Pressure Gauge</b></td><td style="text-align: right;">{!! badge($inspection->pressure_gauge_condition) !!}</td></tr>
-                        <tr><td colspan="2" style="color: #666; font-size: 6.5pt;">
-                            #1: {{ $inspection->pressure_1 ? $inspection->pressure_1.' MPa' : '-' }} @if($inspection->pressure_1_timestamp) ({{ \Carbon\Carbon::parse($inspection->pressure_1_timestamp)->format('H:i') }}) @endif
-                            <br>
-                            #2: {{ $inspection->pressure_2 ? $inspection->pressure_2.' MPa' : '-' }} @if($inspection->pressure_2_timestamp) ({{ \Carbon\Carbon::parse($inspection->pressure_2_timestamp)->format('H:i') }}) @endif
-                        </td></tr>
+                        {{-- Pressure Gauge --}}
+                        <tr>
+                            <td>Pressure Gauge Condition</td>
+                            <td style="text-align: right;">{!! badge($inspection->pressure_gauge_condition) !!}</td>
+                        </tr>
+                        <tr>
+                            <td>Serial Number</td>
+                            <td style="text-align: right;">{{ $inspection->pressure_gauge_serial_number ?? '-' }}</td>
+                        </tr>
+                        <tr>
+                            <td>Calibration Date</td>
+                            <td style="text-align: right;">{{ $inspection->pressure_gauge_calibration_date ? \Carbon\Carbon::parse($inspection->pressure_gauge_calibration_date)->format('Y-m-d') : '-' }}</td>
+                        </tr>
+                        <tr>
+                            <td>Reading (Pressure 1)</td>
+                            <td style="text-align: right;">
+                                {{ $inspection->pressure_1 ? $inspection->pressure_1.' MPa' : '-' }}
+                                @if($inspection->pressure_1_timestamp)<span style="color:#888; font-size:5pt;">({{ \Carbon\Carbon::parse($inspection->pressure_1_timestamp)->format('H:i') }})</span>@endif
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Reading (Pressure 2)</td>
+                            <td style="text-align: right;">
+                                {{ $inspection->pressure_2 ? $inspection->pressure_2.' MPa' : '-' }}
+                                @if($inspection->pressure_2_timestamp)<span style="color:#888; font-size:5pt;">({{ \Carbon\Carbon::parse($inspection->pressure_2_timestamp)->format('H:i') }})</span>@endif
+                            </td>
+                        </tr>
                         
-                        <tr><td><b>Level Gauge</b></td><td style="text-align: right;">{!! badge($inspection->level_gauge_condition) !!}</td></tr>
-                        <tr><td colspan="2" style="color: #666; font-size: 6.5pt;">
-                             #1: {{ $inspection->level_1 ? $inspection->level_1.' %' : '-' }} @if($inspection->level_1_timestamp) ({{ \Carbon\Carbon::parse($inspection->level_1_timestamp)->format('H:i') }}) @endif
-                             <br>
-                             #2: {{ $inspection->level_2 ? $inspection->level_2.' %' : '-' }} @if($inspection->level_2_timestamp) ({{ \Carbon\Carbon::parse($inspection->level_2_timestamp)->format('H:i') }}) @endif
-                        </td></tr>
+                        {{-- Level Gauge --}}
+                        <tr>
+                            <td style="border-top: 1px solid #eee; padding-top: 2px;">Level Gauge Condition</td>
+                            <td style="border-top: 1px solid #eee; text-align: right;">{!! badge($inspection->level_gauge_condition) !!}</td>
+                        </tr>
+                        <tr>
+                            <td>Reading (Level 1)</td>
+                            <td style="text-align: right;">
+                                {{ $inspection->level_1 ? $inspection->level_1.' %' : '-' }}
+                                @if($inspection->level_1_timestamp)<span style="color:#888; font-size:5pt;">({{ \Carbon\Carbon::parse($inspection->level_1_timestamp)->format('H:i') }})</span>@endif
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Reading (Level 2)</td>
+                            <td style="text-align: right;">
+                                {{ $inspection->level_2 ? $inspection->level_2.' %' : '-' }}
+                                @if($inspection->level_2_timestamp)<span style="color:#888; font-size:5pt;">({{ \Carbon\Carbon::parse($inspection->level_2_timestamp)->format('H:i') }})</span>@endif
+                            </td>
+                        </tr>
                     </table>
                     @endif
 
@@ -364,8 +398,17 @@
                             @php $cond = $inspection->{"psv{$i}_condition"}; @endphp
                             @if($cond)
                             <tr>
-                                <td><b>PSV #{{ $i }}</b> <small>({{ $inspection->{"psv{$i}_serial_number"} ?? '-' }})</small></td>
-                                <td style="text-align: right;">{!! badge($cond) !!}</td>
+                                <td colspan="2" style="padding-bottom: 3px;">
+                                    <div style="float:left; width: 70%;">PSV{{$i}} Condition</div>
+                                    <div style="float:right; text-align:right;">{!! badge($cond) !!}</div>
+                                    <div style="clear:both;"></div>
+                                    
+                                    <div style="color: #444; font-size: 5.5pt; margin-top: 1px; padding-left: 2px;">
+                                        STATUS: {{ $inspection->{"psv{$i}_status"} ?? '-' }} | SN: {{ $inspection->{"psv{$i}_serial_number"} ?? '-' }}<br>
+                                        Cal. Date: {{ $inspection->{"psv{$i}_calibration_date"} ? \Carbon\Carbon::parse($inspection->{"psv{$i}_calibration_date"})->format('Y-m-d') : '-' }} 
+                                        &nbsp; Valid Until: {{ $inspection->{"psv{$i}_valid_until"} ? \Carbon\Carbon::parse($inspection->{"psv{$i}_valid_until"})->format('Y-m-d') : '-' }}
+                                    </div>
+                                </td>
                             </tr>
                             @endif
                         @endfor
