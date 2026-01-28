@@ -130,6 +130,7 @@
                                                 $tankCat = $isotank->tank_category ?? 'T75'; // Default to T75
 
                                                 // Legacy Map for Fallback (Synchronized with Report View)
+                                                // Simplified to match inspection_show.blade.php
                                                 $legacyMap = [
                                                     'Surface Condition' => 'surface', 'Tank Surface & Paint Condition' => 'surface',
                                                     'Frame Condition' => 'frame', 'Frame Structure' => 'frame',
@@ -138,29 +139,33 @@
                                                     'Explosion Proof Cover' => 'explosion_proof_cover',
                                                     'Safety Label' => 'safety_label', 'DG 1972 GHS MSA_Safety_label' => 'safety_label',
                                                     'Document Container' => 'document_container',
-                                                    'Grounding System' => 'grounding_system',
                                                     'Valve Box Door' => 'valve_box_door',
-                                                    'Valve Box Door Handle' => 'valve_box_door_handle', 'Handle lock Valve Box Door' => 'valve_box_door_handle',
+                                                    'Grounding System' => 'grounding_system',
                                                     'Valve Condition' => 'valve_condition',
                                                     'Valve Position' => 'valve_position',
-                                                    'Pipe Joint' => 'pipe_joint', 'Pipe and Joint condition' => 'pipe_joint',
+                                                    'Pipe Joint' => 'pipe_joint',
                                                     'Air Source Connection' => 'air_source_connection',
-                                                    'ESDV (Emergency Shut Down Valve)' => 'esdv', 'ESDV' => 'esdv',
-                                                    'Pressure regulator ESDV' => 'pressure_regulator_esdv',
-                                                    'Blind Flange' => 'blind_flange', 'Blind Flange, nuts and bolts' => 'blind_flange',
-                                                    'PRV (Pressure Relief Valve)' => 'prv', 'PRV' => 'prv',
-                                                    'GPS/4G/LP LAN Antenna' => 'gps_antenna', 'Antena,GPS,4G' => 'gps_antenna', 'TOP: Antena,GPS,4G' => 'gps_antenna',
+                                                    'ESDV' => 'esdv',
+                                                    'Blind Flange' => 'blind_flange',
+                                                    'PRV' => 'prv'
                                                 ];
                                                 
-                                                // Unmapped Item Logic (Same as Report)
-                                                // ... (Using simplified logic for brevity as per instructions) ...
+                                                // Unmapped Item Logic (ROBUST & NORMALIZED)
                                                 $standardCodes = $inspectionItems->pluck('code')->toArray();
+                                                $normalizedStandardCodes = array_map(function($c) { 
+                                                    return strtolower(str_replace([' ', '-', '.'], '_', $c)); 
+                                                }, $standardCodes);
+
                                                 $unmapped = [];
                                                 foreach($logData as $k => $v) {
-                                                    if(!in_array($k, $standardCodes) && 
+                                                    $normK = strtolower(str_replace([' ', '-', '.'], '_', $k));
+                                                    
+                                                    if(!in_array($normK, $normalizedStandardCodes) && 
+                                                       !in_array($k, $standardCodes) && 
                                                        !in_array($k, ['inspection_date', 'inspector_name', 'filling_status', 'remarks', 'signature', 'longitude', 'latitude', 'location_name']) &&
                                                        is_string($v) && strlen($v) < 50) {
-                                                         if(!str_contains($k, 'ibox') && !str_contains($k, 'vacuum') && !str_contains($k, 'pressure_gauge') && !str_contains($k, 'psv')) {
+                                                         // Also exclude hardcoded legacy fields if they appear in JSON
+                                                         if(!str_contains($normK, 'ibox') && !str_contains($normK, 'vacuum') && !str_contains($normK, 'pressure_gauge') && !str_contains($normK, 'psv')) {
                                                              $unmapped[$k] = $v;
                                                          }
                                                     }
@@ -170,16 +175,19 @@
                                             <!-- DYNAMIC CATEGORIES LOOP -->
                                             @php
                                                 // 1. Filter items STRICTLY by Tank Category
-                                                $catSpecificItems = $inspectionItems->filter(fn($i) => 
-                                                     in_array($tankCat, $i->applicable_categories ?? [])
-                                                );
+                                                $catSpecificItems = $inspectionItems->filter(function($i) use ($tankCat) {
+                                                      $cats = $i->applicable_categories;
+                                                      if (is_string($cats)) $cats = json_decode($cats, true);
+                                                      if (!is_array($cats)) $cats = [];
+                                                      return in_array($tankCat, $cats);
+                                                });
                                                 
                                                 // 2. Group by Category
                                                 $grouped = $catSpecificItems->groupBy('category');
                                             @endphp
 
                                             @php
-                                                $tCat = $tank->tank_category ?? 'T75';
+                                                $tCat = $tankCat;
                                                 if ($tCat === 'T11') {
                                                     $categoryMap = [
                                                         'a' => 'A. FRONT',
@@ -218,7 +226,7 @@
                                                             $code = $item->code; 
                                                             $label = $item->label;
                                                             
-                                                            // PRO ROBUST LOOKUP STRATEGY
+                                                            // PRO ROBUST LOOKUP STRATEGY (Same as Inspection Detail View)
                                                             // 1. Direct Code match in JSON
                                                             $val = $logData[$code] ?? null;
                                                             
@@ -241,6 +249,11 @@
                                                             if (!$val) {
                                                                 $uLabel = str_replace([' ', '.', '/'], '_', strtolower($label));
                                                                 $val = $logData[$uLabel] ?? null;
+                                                            }
+
+                                                            // 6. Direct Label Match (Spaces preserved)
+                                                            if (!$val) {
+                                                                $val = $logData[$label] ?? null;
                                                             }
                                                         @endphp
                                                         @php $displayLabel = str_replace(['FRONT: ', 'REAR: ', 'RIGHT: ', 'LEFT: ', 'TOP: '], '', $item->label); @endphp
