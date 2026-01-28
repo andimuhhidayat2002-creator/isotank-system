@@ -9,6 +9,32 @@
     <a href="{{ route('admin.isotanks.index') }}" class="btn btn-secondary">Back to List</a>
 </div>
 
+@php
+    $activeMaintenance = $maintenance->whereNotIn('status', ['completed', 'closed', 'deferred']);
+@endphp
+
+@if($activeMaintenance->isNotEmpty())
+    <div class="alert alert-danger d-flex align-items-center mb-4 shadow-sm border-danger" role="alert">
+        <div class="flex-shrink-0 me-3">
+            <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size: 2rem;"></i>
+        </div>
+        <div class="flex-grow-1">
+            <h5 class="alert-heading fw-bold mb-1">⚠️ MAINTENANCE REQUIRED</h5>
+            <p class="mb-2">This isotank has active maintenance orders that require attention:</p>
+            <ul class="mb-0 list-group list-group-flush bg-transparent">
+                @foreach($activeMaintenance as $job)
+                    <li class="list-group-item bg-transparent py-1 px-0 border-0 text-danger">
+                        <i class="bi bi-gear-fill me-2"></i>
+                        <strong>{{ $job->source_item ?? 'General' }}:</strong> 
+                        {{ Str::limit($job->description, 80) }} 
+                        <span class="badge bg-danger ms-1">{{ strtoupper(str_replace('_', ' ', $job->status)) }}</span>
+                    </li>
+                @endforeach
+            </ul>
+        </div>
+    </div>
+@endif
+
 <div class="row">
     <!-- LEFT: Overview Card -->
     <div class="col-md-4">

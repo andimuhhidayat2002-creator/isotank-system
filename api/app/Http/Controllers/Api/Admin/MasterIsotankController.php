@@ -89,39 +89,79 @@ class MasterIsotankController extends Controller
             'maintenanceJobs' => function($q) {
                 $q->latest()->take(10);
             },
+            // Load ACTIVE maintenance jobs specifically
+            'maintenanceJobs' => function($q) {
+                $q->whereIn('status', ['open', 'on_progress', 'not_complete', 'pending'])->latest();
+            }
         ])->findOrFail($id);
 
-        // SYNC LOGIC: If itemStatuses is empty but we have an inspection log, 
-        // provide a virtual list to Flutter so it's not empty.
-        $latestConditions = $isotank->itemStatuses;
-        
-        if ($latestConditions->isEmpty() && $isotank->lastInspectionLog) {
-            $log = $isotank->lastInspectionLog;
-            $logData = $log->inspection_data ?? [];
-            if (is_string($logData)) $logData = json_decode($logData, true) ?? [];
+        // ROBUST VIEW GENERATION: Ensure 1:1 match with Category Rules
+        // Always rebuild item list based on Tank Category to ensure we show exactly what is required.
+        $category = $isotank->tank_category ?? 'T75';
+        $desiredItems = \App\Models\InspectionItem::where('is_active', true)
+            ->whereJsonContains('applicable_categories', $category)
+            ->orderBy('order') // Ensure correct display order
+            ->get();
             
-            // Fetch items based on tank category to rebuild list
-            $category = $isotank->tank_category ?? 'T75';
-            $items = \App\Models\InspectionItem::where('is_active', true)
-                ->whereJsonContains('applicable_categories', $category)
-                ->get();
-                
-            $virtualConditions = [];
-            foreach ($items as $item) {
-                $val = $logData[$item->code] ?? ($log->{$item->code} ?? 'na');
-                $virtualConditions[] = [
-                    'item_name' => $item->code,
-                    'description' => $item->label,
-                    'condition' => $val,
-                    'last_inspection_date' => $log->inspection_date,
-                ];
-            }
-            $isotank->setRelation('itemStatuses', collect($virtualConditions));
+        $log = $isotank->lastInspectionLog;
+        $logData = null;
+        if ($log) {
+            $logData = is_array($log->inspection_data) ? $log->inspection_data : json_decode($log->inspection_data, true);
         }
+        
+        $masterStatuses = $isotank->itemStatuses->keyBy('item_name');
+        
+        $finalConditions = [];
+        foreach ($desiredItems as $item) {
+             // Priority 1: Data from latest inspection log (Most accurate representation of "Latest")
+             // Priority 2: Data from Master Status table
+             // Priority 3: 'na'
+             
+             $val = null;
+             
+             // Check Log first (if available) for immediate consistency
+             if ($logData) {
+                 $code = $item->code;
+                 $uCode = str_replace([' ', '.', '/'], '_', $code);
+                 
+                 $val = $logData[$code] ?? $logData[$uCode] ?? ($log->{$code} ?? null);
+             }
+             
+             // Check Master Status as fallback
+             if ($val === null) {
+                 $val = $masterStatuses[$item->code]->condition ?? null;
+             }
+             
+             $finalConditions[] = [
+                 'item_name' => $item->code,
+                 'description' => $item->label,
+                 'condition' => $val ?? 'na',
+                 'last_inspection_date' => $log->inspection_date ?? $isotank->updated_at,
+             ];
+        }
+        
+        // If we found valid items, use them. Otherwise (e.g. legacy T75 with no items defined?), fall back to existing.
+        if (count($finalConditions) > 0) {
+            $isotank->setRelation('itemStatuses', collect($finalConditions));
+        }
+
+        // Get Active Maintenance jobs separately to ensure we have them clearly
+        $activeMaintenance = \App\Models\MaintenanceJob::where('isotank_id', $id)
+            ->whereIn('status', ['open', 'on_progress', 'pending'])
+            ->get();
+            
+        // Flatten Class Survey (Calibration)
+        $latestSurvey = $isotank->classSurveys->sortByDesc('survey_date')->first();
+
+        // Prepare Response Data
+        $responseData = $isotank->toArray();
+        $responseData['active_maintenance_jobs'] = $activeMaintenance;
+        $responseData['latest_class_survey'] = $latestSurvey;
+        $responseData['has_active_maintenance'] = $activeMaintenance->isNotEmpty();
 
         return response()->json([
             'success' => true,
-            'data' => $isotank,
+            'data' => $responseData,
         ]);
     }
 
