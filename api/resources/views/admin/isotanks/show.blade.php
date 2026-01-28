@@ -104,7 +104,11 @@
                         <div class="card-body">
                             <h5>Last Inspection: {{ $isotank->latestInspection->updated_at->format('d M Y') }}</h5>
                             <p>Inspector: {{ $isotank->latestInspection->inspector->name ?? '-' }}</p>
-                            @php $log = $isotank->latestInspection; @endphp
+                            @php 
+                                // Load the ACTUAL InspectionLog (not MasterLatestInspection)
+                                // MasterLatestInspection only has hardcoded columns, no inspection_data JSON
+                                $log = $isotank->latestInspection->lastInspectionLog ?? $isotank->latestInspection; 
+                            @endphp
                             <div class="row">
                                 <div class="col-6">
                                     <ul class="list-group">

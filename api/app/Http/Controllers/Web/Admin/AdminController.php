@@ -548,7 +548,8 @@ class AdminController extends Controller
             'calibrationStatuses', 
             'classSurveys',
             'components', 
-            'latestInspection.inspector'
+            'latestInspection.inspector',
+            'latestInspection.lastInspectionLog' // Load actual InspectionLog with inspection_data JSON
         ])->findOrFail($id);
 
         $inspections = \App\Models\InspectionLog::with('inspector')
