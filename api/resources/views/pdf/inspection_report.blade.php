@@ -422,7 +422,7 @@
                 "I, <strong>{{ $inspection->receiver_name ?? ($job->receiver_name ?? 'N/A') }}</strong>, hereby confirm that I have reviewed the inspector's findings listed in the sections above and accept the current condition of the isotank as documented."
             </div>
         @endif
-    @endif
+
 
     {{-- SIGNATURES --}}
     <div class="signature-section clearfix">
