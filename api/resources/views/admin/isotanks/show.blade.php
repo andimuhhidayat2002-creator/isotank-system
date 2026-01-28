@@ -226,7 +226,7 @@
                                                             $code = $item->code; 
                                                             $label = $item->label;
                                                             
-                                                            // PRO ROBUST LOOKUP STRATEGY (Same as Inspection Detail View)
+                                                            // PRO ROBUST LOOKUP STRATEGY (Synchronized with Inspection Detail View)
                                                             // 1. Direct Code match in JSON
                                                             $val = $logData[$code] ?? null;
                                                             
@@ -244,16 +244,21 @@
                                                                 $lKey = $legacyMap[$label];
                                                                 $val = $logData[$lKey] ?? ($log->$lKey ?? null);
                                                             }
-                                                            
-                                                            // 5. Underscore-version of Label in JSON
+
+                                                            // 5. Check for Legacy Label as Key (e.g. "GPS_4G_LP_LAN_Antenna")
                                                             if (!$val) {
-                                                                $uLabel = str_replace([' ', '.', '/'], '_', strtolower($label));
+                                                                $uLabel = str_replace([' ', '.', '/'], '_', $label); // Try literal label with underscores
                                                                 $val = $logData[$uLabel] ?? null;
                                                             }
-
-                                                            // 6. Direct Label Match (Spaces preserved)
+                                                            // 6. Try exact label too (sometimes keys have spaces if direct from Flutter map)
                                                             if (!$val) {
-                                                                $val = $logData[$label] ?? null;
+                                                                 $val = $logData[$label] ?? null;
+                                                            }
+                                                            
+                                                            // 7. Underscore-version of Lowercase Label in JSON
+                                                            if (!$val) {
+                                                                $uLabelLower = str_replace([' ', '.', '/'], '_', strtolower($label));
+                                                                $val = $logData[$uLabelLower] ?? null;
                                                             }
                                                         @endphp
                                                         @php $displayLabel = str_replace(['FRONT: ', 'REAR: ', 'RIGHT: ', 'LEFT: ', 'TOP: '], '', $item->label); @endphp
