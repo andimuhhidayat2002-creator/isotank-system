@@ -130,6 +130,9 @@ class TemplateController extends Controller
             'Description', 
             'Priority', 
             'Planned Date',
+            'Status',
+            'Completion Date',
+            'Work Description',
             'Part Damage',
             'Damage Type',
             'Location'
@@ -144,6 +147,9 @@ class TemplateController extends Controller
             'Leak repair',
             'high', // low, normal, high, urgent
             date('Y-m-d'),
+            'open', // open, closed
+            '',
+            '',
             'Crack',
             'Major',
             'Left Side'
@@ -151,8 +157,8 @@ class TemplateController extends Controller
         $sheet->fromArray([$example], NULL, 'A2');
 
         // Styles
-        $sheet->getStyle('A1:H1')->getFont()->setBold(true);
-        foreach(range('A','H') as $col) {
+        $sheet->getStyle('A1:K1')->getFont()->setBold(true);
+        foreach(range('A','K') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
 

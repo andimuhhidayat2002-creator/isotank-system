@@ -66,14 +66,14 @@ class MaintenanceImport
 
                     if (!empty($rowData['status'])) {
                         $rawStatus = strtolower(trim($rowData['status']));
-                        if (in_array($rawStatus, ['completed', 'close', 'closed', 'done', 'finish', 'finished'])) {
-                            $status = 'completed';
-                        } elseif (in_array($rawStatus, ['open', 'pending'])) {
+                        if (in_array($rawStatus, ['closed', 'close', 'completed', 'done', 'finish', 'finished'])) {
+                            $status = 'closed';
+                        } elseif (in_array($rawStatus, ['open', 'pending', 'on progress'])) {
                             $status = 'open';
                         }
                     }
 
-                    if ($status === 'completed') {
+                    if ($status === 'closed') {
                         if (!empty($rowData['completion_date'])) {
                              if (is_numeric($rowData['completion_date'])) {
                                 $completedAt = Date::excelToDateTimeObject($rowData['completion_date']);
