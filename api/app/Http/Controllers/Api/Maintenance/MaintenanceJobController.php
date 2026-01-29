@@ -20,17 +20,29 @@ class MaintenanceJobController extends Controller
     {
         $query = MaintenanceJob::with(['isotank']);
 
-        // Filter by status
-        if ($request->has('status')) {
+        // Default to active jobs if no status specified
+        if (!$request->has('status')) {
+            $query->where('status', '!=', 'closed');
+        } else {
             $query->where('status', $request->status);
         }
 
-        // Filter by isotank
+        // Filter by isotank ID
         if ($request->has('isotank_id')) {
             $query->where('isotank_id', $request->isotank_id);
         }
 
-        $jobs = $query->orderBy('created_at', 'desc')->paginate(50);
+        // Search by ISO Number (Server Side)
+        if ($request->has('search')) {
+            $search = $request->search;
+            $query->whereHas('isotank', function($q) use ($search) {
+                $q->where('iso_number', 'LIKE', "%{$search}%");
+            });
+        }
+
+        $jobs = $query->orderBy('status', 'asc') // prioritizing open/progress
+            ->orderBy('created_at', 'desc')
+            ->paginate(100);
 
         return response()->json([
             'success' => true,
