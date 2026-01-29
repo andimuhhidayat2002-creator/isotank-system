@@ -68,6 +68,9 @@ class BulkMaintenanceUploadController extends Controller
                 $damageType = isset($row[6]) ? trim((string)$row[6]) : null;
                 $location = isset($row[7]) ? trim((string)$row[7]) : null;
                 
+                // DEBUG: Log what we're reading
+                \Log::info("Excel Upload Row {$rowNumber}: ISO={$isoNumber}, Item={$itemName}, Priority={$priority}, PartDamage={$partDamage}, DamageType={$damageType}, Location={$location}");
+                
                 // 1. Validate Mandatory Fields
                 if (empty($isoNumber) || empty($itemName) || empty($description)) {
                     $failedCount++;
