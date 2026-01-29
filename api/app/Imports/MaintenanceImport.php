@@ -29,7 +29,14 @@ class MaintenanceImport
 
             foreach ($rows as $index => $row) {
                 if (empty(array_filter($row))) continue;
+                
+                // DEBUG: Log raw row data
+                \Log::info("Maintenance Excel Row " . ($index + 2) . " RAW: " . json_encode($row));
+                
                 $rowData = array_combine($header, $row);
+                
+                // DEBUG: Log combined row data
+                \Log::info("Maintenance Excel Row " . ($index + 2) . " PROCESSED: " . json_encode($rowData));
 
                 try {
                     $iso = $rowData['iso_number'] ?? null;

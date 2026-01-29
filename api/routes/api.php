@@ -3,7 +3,6 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\Admin\MasterIsotankController;
 use App\Http\Controllers\Api\Admin\BulkInspectionUploadController;
-use App\Http\Controllers\Api\Admin\BulkMaintenanceUploadController;
 use App\Http\Controllers\Api\Admin\BulkCalibrationUploadController;
 use App\Http\Controllers\Api\Admin\AdminDashboardController;
 use App\Http\Controllers\Api\Inspector\InspectionJobController;
@@ -42,9 +41,6 @@ Route::middleware('auth:sanctum')->group(function () {
         // Bulk Upload Routes
         Route::post('/bulk/inspection', [BulkInspectionUploadController::class, 'upload']);
         Route::get('/bulk/inspection/history', [BulkInspectionUploadController::class, 'history']);
-        
-        Route::post('/bulk/maintenance', [BulkMaintenanceUploadController::class, 'upload']);
-        Route::get('/bulk/maintenance/history', [BulkMaintenanceUploadController::class, 'history']);
         
         Route::post('/bulk/calibration', [BulkCalibrationUploadController::class, 'upload']);
         Route::get('/bulk/calibration/history', [BulkCalibrationUploadController::class, 'history']);
