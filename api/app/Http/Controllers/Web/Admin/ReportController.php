@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Cache;
 use App\Models\InspectionJob;
+use App\Models\CalibrationLog;
+use Illuminate\Support\Str;
 
 class ReportController extends Controller
 {
