@@ -123,15 +123,22 @@ class ReportController extends Controller
         $startOfWeek = now()->startOfWeek();
         $endOfWeek   = now()->endOfWeek();
         
-        // 2. ACTIVITY STATS (Throughput: Incoming Jobs + Confirmed Outgoing)
+        // 2. ACTIVITY STATS (Throughput)
         $incomingStats = \App\Models\InspectionJob::whereBetween('inspection_jobs.created_at', [$startOfWeek, $endOfWeek])
             ->where('activity_type', 'incoming_inspection')
-            ->join('master_isotanks', 'inspection_jobs.isotank_id', '=', 'master_isotanks.id') // Join to get category
+            ->join('master_isotanks', 'inspection_jobs.isotank_id', '=', 'master_isotanks.id')
             ->selectRaw('master_isotanks.tank_category, count(*) as count')
             ->groupBy('master_isotanks.tank_category')
             ->pluck('count', 'tank_category');
 
-        $outgoingStats = \App\Models\InspectionLog::whereBetween('inspection_logs.receiver_confirmed_at', [$startOfWeek, $endOfWeek])
+        $outgoingStartedStats = \App\Models\InspectionJob::whereBetween('inspection_jobs.created_at', [$startOfWeek, $endOfWeek])
+            ->where('activity_type', 'outgoing_inspection')
+            ->join('master_isotanks', 'inspection_jobs.isotank_id', '=', 'master_isotanks.id')
+            ->selectRaw('master_isotanks.tank_category, count(*) as count')
+            ->groupBy('master_isotanks.tank_category')
+            ->pluck('count', 'tank_category');
+
+        $outgoingOfficialStats = \App\Models\InspectionLog::whereBetween('inspection_logs.receiver_confirmed_at', [$startOfWeek, $endOfWeek])
             ->where('inspection_type', 'outgoing_inspection')
             ->join('master_isotanks', 'inspection_logs.isotank_id', '=', 'master_isotanks.id')
             ->selectRaw('master_isotanks.tank_category, count(*) as count')
@@ -142,18 +149,17 @@ class ReportController extends Controller
         $formatBreakdown = function($stats) {
             $parts = [];
             foreach($stats as $cat => $count) {
-                // Handle null/empty as T75 (Legacy)
                 $label = ($cat && $cat !== '') ? $cat : 'T75';
                 if (isset($parts[$label])) $parts[$label] += $count;
                 else $parts[$label] = $count;
             }
             $str = [];
             foreach($parts as $l => $c) $str[] = "$l: $c";
-            return empty($str) ? '' : '(' . implode(', ', $str) . ')';
+            return empty($str) ? '0' : implode(', ', $str);
         };
 
         $incomingWeek = $incomingStats->sum();
-        $outgoingWeek = $outgoingStats->sum();
+        $outgoingOfficialWeek = $outgoingOfficialStats->sum();
 
         // Total YTD (Approximation)
         $incomingTotal = \App\Models\InspectionJob::where('activity_type', 'incoming_inspection')->count();
@@ -161,10 +167,10 @@ class ReportController extends Controller
         
         $stats = [
             'date_range' => $startOfWeek->format('d M') . ' - ' . $endOfWeek->format('d M Y'),
-            'inspections_week' => $incomingWeek + $outgoingWeek,
-            'inspections_week_details' => $formatBreakdown($incomingStats->mergeRecursive($outgoingStats)), // Merge logic simplified for now
-            'incoming_desc' => $formatBreakdown($incomingStats),
-            'outgoing_desc' => $formatBreakdown($outgoingStats),
+            'inspections_week' => $incomingWeek + $outgoingOfficialWeek,
+            'incoming_desc' => $incomingWeek . ' ' . ($incomingWeek > 0 ? '(' . $formatBreakdown($incomingStats) . ')' : ''),
+            'outgoing_desc' => $outgoingOfficialWeek . ' (Official Out) ' . ($outgoingOfficialWeek > 0 ? '(' . $formatBreakdown($outgoingOfficialStats) . ')' : ''),
+            'outgoing_started_desc' => $outgoingStartedStats->sum() . ' (Process Started)',
             'inspections_total' => $incomingTotal + $outgoingTotal,
             'maintenance_week' => \App\Models\MaintenanceJob::whereBetween('completed_at', [$startOfWeek, $endOfWeek])->count(),
             'maintenance_active' => \App\Models\MaintenanceJob::whereNull('completed_at')->count(),

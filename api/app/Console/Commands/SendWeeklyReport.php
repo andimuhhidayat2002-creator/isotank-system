@@ -16,17 +16,21 @@ class SendWeeklyReport extends Command
         // 1. DATE RANGE
         $startOfWeek = now()->startOfWeek();
         $endOfWeek   = now()->endOfWeek();
-        
-        // 2. ACTIVITY STATS (Throughput: Incoming Jobs + Confirmed Outgoing)
+
+        // 2. ACTIVITY STATS (Throughput)
         $incomingWeek = \App\Models\InspectionJob::whereBetween('created_at', [$startOfWeek, $endOfWeek])
             ->where('activity_type', 'incoming_inspection')
             ->count();
             
-        $outgoingWeek = \App\Models\InspectionLog::whereBetween('receiver_confirmed_at', [$startOfWeek, $endOfWeek])
+        $outgoingStartedWeek = \App\Models\InspectionJob::whereBetween('created_at', [$startOfWeek, $endOfWeek])
+            ->where('activity_type', 'outgoing_inspection')
+            ->count();
+
+        $outgoingOfficialWeek = \App\Models\InspectionLog::whereBetween('receiver_confirmed_at', [$startOfWeek, $endOfWeek])
             ->where('inspection_type', 'outgoing_inspection')
             ->count();
 
-        $inspectionsWeek = $incomingWeek + $outgoingWeek;
+        $inspectionsWeek = $incomingWeek + $outgoingOfficialWeek;
 
         // Total YTD (Approximation consistent with logic)
         $incomingTotal = \App\Models\InspectionJob::where('activity_type', 'incoming_inspection')->count();

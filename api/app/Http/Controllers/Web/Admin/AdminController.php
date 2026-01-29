@@ -1000,11 +1000,11 @@ class AdminController extends Controller
     private function getDailyReportData($date) {
         $dateFormatted = $date->format('l, d F Y');
 
+        // 1. Movement Summary
         // Helper to format breakdown
         $formatBreakdown = function($stats) {
             $parts = [];
             foreach($stats as $cat => $count) {
-                // Handle null/empty as T75 (Legacy)
                 $label = ($cat && $cat !== '') ? $cat : 'T75';
                 if (isset($parts[$label])) $parts[$label] += $count;
                 else $parts[$label] = $count;
@@ -1022,8 +1022,16 @@ class AdminController extends Controller
             ->groupBy('master_isotanks.tank_category')
             ->pluck('count', 'tank_category');
         
-        // OUTGOING: Count Logs confirmed by Receiver (Gate Out action)
-        $outgoingStats = InspectionLog::whereDate('inspection_logs.receiver_confirmed_at', $date)
+        // OUTGOING STARTED: Admin created outgoing job process
+        $outgoingStartedStats = InspectionJob::whereDate('inspection_jobs.created_at', $date)
+            ->where('activity_type', 'outgoing_inspection')
+            ->join('master_isotanks', 'inspection_jobs.isotank_id', '=', 'master_isotanks.id')
+            ->selectRaw('master_isotanks.tank_category, count(*) as count')
+            ->groupBy('master_isotanks.tank_category')
+            ->pluck('count', 'tank_category');
+
+        // OFFICIAL OUTGOING: Receiver confirmation today
+        $outgoingOfficialStats = InspectionLog::whereDate('inspection_logs.receiver_confirmed_at', $date)
             ->where('inspection_type', 'outgoing_inspection')
             ->join('master_isotanks', 'inspection_logs.isotank_id', '=', 'master_isotanks.id')
             ->selectRaw('master_isotanks.tank_category, count(*) as count')
@@ -1045,26 +1053,48 @@ class AdminController extends Controller
             ->groupBy('tank_category')
             ->pluck('count', 'tank_category');
 
+        // NEW REQUESTED STATS:
+        $openMaintenanceCount = MaintenanceJob::whereIn('status', ['open', 'on_progress', 'not_complete', 'deferred'])->count();
+        $inspectionsTodayCount = InspectionLog::whereDate('created_at', $date)->count();
+        
+        // Calibration Progress for current activities
+        $todaysCalJobs = CalibrationLog::whereDate('created_at', $date)
+            ->orWhereDate('updated_at', $date)
+            ->whereIn('status', ['planned', 'completed', 'rejected'])
+            ->get();
+        
+        $totalCalJobs = $todaysCalJobs->count();
+        $completedCalJobs = $todaysCalJobs->where('status', 'completed')->count();
+        $calProgress = $totalCalJobs > 0 ? round(($completedCalJobs / $totalCalJobs) * 100, 2) : 0;
+
         $summary = [
             'incoming' => $incomingStats->sum(),
             'incoming_details' => $formatBreakdown($incomingStats),
-            'outgoing' => $outgoingStats->sum(),
-            'outgoing_details' => $formatBreakdown($outgoingStats),
+            
+            'outgoing_started' => $outgoingStartedStats->sum(),
+            'outgoing_started_details' => $formatBreakdown($outgoingStartedStats),
+            
+            'outgoing_official' => $outgoingOfficialStats->sum(),
+            'outgoing_official_details' => $formatBreakdown($outgoingOfficialStats),
+
             'stock_site' => $stockSiteStats->sum(),
             'stock_site_details' => $formatBreakdown($stockSiteStats),
             'stock_other' => $stockOtherStats->sum(),
             'stock_other_details' => $formatBreakdown($stockOtherStats),
+            
+            // New items for report body
+            'open_maintenance' => $openMaintenanceCount,
+            'inspections_today' => $inspectionsTodayCount,
+            'calibration_progress' => $calProgress,
         ];
 
         // 2. Issues (Exception Report)
-        // Logic: Check logs created "on that date" that have any "not_good" or "need_attention" status
         $todaysLogs = InspectionLog::with('isotank')
             ->whereDate('created_at', $date)
             ->get();
         
         $issues = [];
         foreach ($todaysLogs as $log) {
-            // Check general conditions
             $faults = [];
             $checklist = [
                 'surface', 'frame', 'tank_plate', 'venting_pipe', 'explosion_proof_cover',
@@ -1098,10 +1128,8 @@ class AdminController extends Controller
             ->where('status', 'closed')
             ->get();
         
-        // Outstanding is "current state", not really historical. 
-        // We track 'Action Required' (open, on_progress) separately from 'Deferred'
         $outstandingMaintenance = MaintenanceJob::with('isotank')
-            ->whereIn('status', ['open', 'on_progress'])
+            ->whereIn('status', ['open', 'on_progress', 'not_complete', 'deferred'])
             ->get();
 
         $deferredMaintenance = MaintenanceJob::with('isotank')
@@ -1113,8 +1141,18 @@ class AdminController extends Controller
             'outstanding' => $outstandingMaintenance,
             'deferred' => $deferredMaintenance,
         ];
+
+        // 5. Calibration Activities 
+        $calibrationItems = CalibrationLog::with('isotank')
+            ->whereDate('created_at', $date)
+            ->orWhere(function($q) use ($date) {
+                $q->whereDate('updated_at', $date)
+                  ->where('status', 'completed');
+            })
+            ->orderBy('id', 'desc')
+            ->get();
         
-        return compact('dateFormatted', 'summary', 'issues', 'inspectionLogs', 'maintenance');
+        return compact('dateFormatted', 'summary', 'issues', 'inspectionLogs', 'maintenance', 'calibrationItems');
     }
 
     public function previewDailyReport(Request $request) {
