@@ -9,6 +9,7 @@ use App\Models\MasterIsotankItemStatus;
 use App\Models\MasterIsotankMeasurementStatus;
 use App\Models\MasterIsotankCalibrationStatus;
 use App\Models\MasterIsotankComponent;
+use App\Models\MaintenanceJob;
 use App\Models\VacuumLog;
 use Illuminate\Http\Request;
 
@@ -283,9 +284,29 @@ class InspectionJobController extends Controller
             $defaultValues->receiver = $job->receiver_name; // frontend compatibility alias
         }
 
+        // --- DEFECT DOMINANCE RULE (LOCKED) ---
+        // Force override default values if there are unresolved maintenance jobs
+        // This ensures the inspector sees current defects even if history is empty or says 'good'
+        $activeDefects = MaintenanceJob::where('isotank_id', $job->isotank_id)
+            ->whereIn('status', ['open', 'on_progress', 'not_complete', 'deferred'])
+            ->get();
+
+        foreach ($activeDefects as $defect) {
+            $item = $defect->source_item;
+            if (empty($item)) continue;
+
+            // Mapping: Active repair/defect -> NOT GOOD, Deferred/Partial -> NEED ATTENTION
+            if ($defect->status === 'deferred') {
+                $defaultValues->$item = 'need_attention';
+            } else {
+                $defaultValues->$item = 'not_good';
+            }
+        }
+        // --------------------------------------
+
         // Get open maintenance jobs for this isotank (READ ONLY)
         $openMaintenance = $job->isotank->maintenanceJobs()
-            ->whereIn('status', ['open', 'on_progress', 'not_complete'])
+            ->whereIn('status', ['open', 'on_progress', 'not_complete', 'deferred'])
             ->get();
 
         return response()->json([
