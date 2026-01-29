@@ -64,9 +64,9 @@ class BulkMaintenanceUploadController extends Controller
                 $description = trim($row[2] ?? '');
                 $priority = trim($row[3] ?? '');
                 $plannedDate = $row[4] ?? null;
-                $partDamage = trim($row[5] ?? '');
-                $damageType = trim($row[6] ?? '');
-                $location = trim($row[7] ?? '');
+                $partDamage = isset($row[5]) ? trim((string)$row[5]) : null;
+                $damageType = isset($row[6]) ? trim((string)$row[6]) : null;
+                $location = isset($row[7]) ? trim((string)$row[7]) : null;
                 
                 // 1. Validate Mandatory Fields
                 if (empty($isoNumber) || empty($itemName) || empty($description)) {
