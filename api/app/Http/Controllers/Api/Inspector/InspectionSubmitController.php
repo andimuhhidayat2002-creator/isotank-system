@@ -639,17 +639,7 @@ class InspectionSubmitController extends Controller
 
             if ($shouldTrigger) {
                 // Create maintenance job
-                $remark = $allInput["remark_{$item}"] ?? "Condition changed from {$oldCondition} to {$newCondition}";
-                
-                // Append detailed damage info if available
-                $details = [];
-                if (!empty($allInput["part_damage_{$item}"])) $details[] = "Part: " . $allInput["part_damage_{$item}"];
-                if (!empty($allInput["damage_type_{$item}"])) $details[] = "Type: " . $allInput["damage_type_{$item}"];
-                if (!empty($allInput["location_{$item}"])) $details[] = "Loc: " . $allInput["location_{$item}"];
-
-                if (!empty($details)) {
-                    $remark .= " | " . implode(', ', $details);
-                }
+                $remark = $allInput["remark_{$item}"] ?? null;
                 
                 // Determine photo path - Check specific item photo first
                 $photoPath = null;
