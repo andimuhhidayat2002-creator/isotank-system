@@ -48,7 +48,7 @@ class AdminController extends Controller
             }
         };
 
-        // 1) Global summary (all locations combined)
+        // 1) Global summary (COUNT ONLY - No Data Loading)
         $globalStats = [
              'total_active' => MasterIsotank::where('status', 'active')->tap($isotankFilter)->count(),
              'open_maintenance' => MaintenanceJob::whereIn('status', ['open', 'on_progress'])->tap($relationFilter)->count(),
@@ -62,31 +62,30 @@ class AdminController extends Controller
                   ->count()
         ];
 
-        // 2) Location distribution (Breakdown)
+        // 2) Location distribution (SQL Group By)
+        // Completely removed bulky collection processing
         $locations = MasterIsotank::select('location')
             ->selectRaw('count(*) as active_count')
             ->selectRaw('count(distinct owner) as owner_count')
             ->selectRaw('count(distinct manufacturer) as manufacturer_count')
-            // Fix: Use filling_status_code directly. Filled only for 'filled'. Everything else (that is not null) is 'empty'.
             ->selectRaw("sum(case when filling_status_code != 'filled' and filling_status_code is not null and filling_status_code != '' then 1 else 0 end) as empty_count")
             ->selectRaw("sum(case when filling_status_code = 'filled' then 1 else 0 end) as filled_count")
             ->whereNotNull('location')
             ->where('location', '!=', '')
             ->where('status', 'active')
-            ->tap($isotankFilter) // Apply category filter
+            ->tap($isotankFilter)
             ->groupBy('location')
             ->orderBy('location')
             ->get();
 
-        // Location Breakdowns (Owner & Manufacturer)
-        // Group by Location for easy access in View: $ownerBreakdown['SMGRS'] -> Collection of rows
+        // Location Breakdowns (Owner & Manufacturer) - SQL OPTIMIZED
         $ownerBreakdown = MasterIsotank::where('status', 'active')
             ->whereNotNull('location')->where('location', '!=', '')
             ->tap($isotankFilter)
             ->select('location', 'owner', DB::raw('count(*) as count'))
             ->groupBy('location', 'owner')
             ->get()
-            ->groupBy('location');
+            ->groupBy('location'); // Lightweight grouping of small result set
 
         $manufacturerBreakdown = MasterIsotank::where('status', 'active')
             ->whereNotNull('location')->where('location', '!=', '')
@@ -96,8 +95,7 @@ class AdminController extends Controller
             ->get()
             ->groupBy('location');
 
-        // 3) Alerts across all isotanks
-        // Limit query to prevent memory overflow
+        // 3) Alerts (Limit 5)
         $vacuumAlerts = MasterIsotankMeasurementStatus::where(function($q){
                  $q->where('vacuum_mtorr', '>', 8)
                    ->orWhere('last_measurement_at', '<', now()->subMonths(11));
@@ -116,27 +114,31 @@ class AdminController extends Controller
              ->limit(5)
              ->get();
 
-        // Filling Status Statistics
+        // Filling Status Statistics (SQL Group By - No Loops)
+        $fillingRaw = MasterIsotank::where('status', 'active')
+            ->tap($isotankFilter)
+            ->select('filling_status_code', DB::raw('count(*) as count'))
+            ->groupBy('filling_status_code')
+            ->pluck('count', 'filling_status_code');
+
         $fillingStatusStats = [];
-        foreach (MasterIsotank::getValidFillingStatuses() as $code => $description) {
-            $count = MasterIsotank::where('status', 'active')
-                ->where('filling_status_code', $code)
-                ->tap($isotankFilter)
-                ->count();
-            if ($count > 0) {
+        $validStatuses = MasterIsotank::getValidFillingStatuses();
+        
+        // Map raw DB results to formatted stats
+        foreach ($validStatuses as $code => $description) {
+            if (isset($fillingRaw[$code])) {
                 $fillingStatusStats[] = [
                     'code' => $code,
                     'description' => $description,
-                    'count' => $count
+                    'count' => $fillingRaw[$code]
                 ];
+                unset($fillingRaw[$code]); // Remove processed
             }
         }
         
-        // No status count
-        $noStatusCount = MasterIsotank::where('status', 'active')
-            ->whereNull('filling_status_code')
-            ->tap($isotankFilter)
-            ->count();
+        // Check for 'no status' (null or empty string key in result)
+        $noStatusCount = ($fillingRaw[''] ?? 0) + ($fillingRaw[null] ?? 0);
+        
         if ($noStatusCount > 0) {
             $fillingStatusStats[] = [
                 'code' => 'no_status',
@@ -144,7 +146,7 @@ class AdminController extends Controller
                 'count' => $noStatusCount
             ];
         }
-        
+
         // Saved Recipient Emails
         $savedEmails = \Illuminate\Support\Facades\Cache::get('daily_report_recipients', 'manager@ptkayan.com');
 
@@ -248,7 +250,7 @@ class AdminController extends Controller
         ];
 
         // F. Detailed Lists
-        $isotankList = MasterIsotank::whereIn('id', $isotanks)->orderBy('iso_number')->get();
+        $isotankList = MasterIsotank::whereIn('id', $isotanks)->orderBy('iso_number')->paginate(50);
         $recentActivities = InspectionJob::whereIn('isotank_id', $isotanks)->with('isotank')->latest()->limit(10)->get();
 
         return view('admin.dashboard.location_detail', compact(
@@ -338,21 +340,26 @@ class AdminController extends Controller
             ->get();
 
         // 2. Comparison (Current vs Last Year)
-        // Get active tanks
-        $activeTanks = MasterIsotank::with('measurementStatus')->where('status', 'active')->limit(50)->get();
+        // Get active tanks with their vacuum logs eagerly loaded to avoid N+1
+        $activeTanks = MasterIsotank::with(['measurementStatus', 'vacuumLogs' => function($q) {
+                $q->orderBy('check_datetime', 'desc')->limit(20); // Get recent logs
+            }])
+            ->where('status', 'active')
+            ->limit(50)
+            ->get();
+
         $comparisonData = [];
 
         foreach ($activeTanks as $tank) {
-            // Latest reading
-            $latest = VacuumLog::where('isotank_id', $tank->id)->orderByDesc('check_datetime')->first();
+            // Latest reading from relation (already loaded in memory)
+            $latest = $tank->vacuumLogs->first();
             
-            // Self-Healing: If master status is stale (differs from latest log), update it.
+            // Self-Healing Logic
             try {
                 if ($latest && $tank->measurementStatus) {
                     $masterVal = (float)$tank->measurementStatus->vacuum_mtorr;
                     $logVal = (float)$latest->vacuum_value_mtorr;
                     
-                    // If diff > 0.01 or master is null/old
                     if (abs($masterVal - $logVal) > 0.01) {
                         $tank->measurementStatus->update([
                             'vacuum_mtorr' => $logVal,
@@ -361,25 +368,19 @@ class AdminController extends Controller
                         ]);
                     }
                 }
-            } catch (\Exception $e) {
-                // Ignore self-healing errors to prevent page crash
-                \Illuminate\Support\Facades\Log::error('Vacuum Self-Healing Error: ' . $e->getMessage());
-            }
+            } catch (\Exception $e) { /* Ignore */ }
             
             if ($latest) {
-                // Historical reading (~1 year ago +/- 1 month)
+                // Approximate history from relation (in memory filter)
+                // This is much faster than running a new SQL query for each tank
                 $oneYearAgo = now()->subYear();
-                $historical = VacuumLog::where('isotank_id', $tank->id)
-                    ->whereBetween('check_datetime', [$oneYearAgo->copy()->subMonth(), $oneYearAgo->copy()->addMonth()])
-                    ->orderByDesc('check_datetime')
-                    ->first();
+                $historical = $tank->vacuumLogs->filter(function($log) use ($oneYearAgo) {
+                    return $log->check_datetime <= $oneYearAgo;
+                })->first();
 
-                // If no exact 1 year, try any oldest log > 6 months
+                // Fallback if not found in top 20, assume oldest available in the eager loaded set
                 if (!$historical) {
-                    $historical = VacuumLog::where('isotank_id', $tank->id)
-                        ->where('check_datetime', '<', now()->subMonths(6))
-                        ->orderBy('check_datetime', 'asc')
-                        ->first();
+                     $historical = $tank->vacuumLogs->last();
                 }
 
                 $comparisonData[] = [
@@ -537,7 +538,7 @@ class AdminController extends Controller
             $query->where('iso_number', 'LIKE', "%{$search}%");
         }
 
-        $isotanks = $query->orderBy('iso_number')->get();
+        $isotanks = $query->orderBy('iso_number')->paginate(50);
         return view('admin.isotanks', compact('isotanks'));
     }
 
