@@ -83,11 +83,14 @@ class MaintenanceImport
                         'isotank_id' => $isotank->id,
                         'source_item' => $rowData['item_name'] ?? 'General',
                         'description' => $rowData['description'] ?? 'Bulk uploaded maintenance job',
-                        'work_description' => $rowData['work_description'] ?? null, // Add work_description
+                        'work_description' => $rowData['work_description'] ?? null,
                         'priority' => $rowData['priority'] ?? 'normal',
                         'status' => $status,
                         'planned_date' => $plannedDate,
                         'completed_at' => $completedAt,
+                        'part_damage' => $rowData['part_damage'] ?? null,
+                        'damage_type' => $rowData['damage_type'] ?? null,
+                        'location' => $rowData['location'] ?? null,
                     ]);
 
                     $this->successCount++;
