@@ -36,15 +36,9 @@
             <div class="card-body">
                 <table class="table table-sm mb-0">
                     <tr><th>Source Item</th><td class="fw-bold text-uppercase">{{ str_replace('_', ' ', $job->source_item) }}</td></tr>
-                    @if($job->part_damage)
-                        <tr><th>Part Damage</th><td class="text-danger">{{ $job->part_damage }}</td></tr>
-                    @endif
-                    @if($job->damage_type)
-                        <tr><th>Damage Type</th><td class="text-danger">{{ $job->damage_type }}</td></tr>
-                    @endif
-                    @if($job->location)
-                        <tr><th>Location</th><td>{{ $job->location }}</td></tr>
-                    @endif
+                    <tr><th>Part Damage</th><td class="text-danger">{{ $job->part_damage ?? '-' }}</td></tr>
+                    <tr><th>Damage Type</th><td class="text-danger">{{ $job->damage_type ?? '-' }}</td></tr>
+                    <tr><th>Location</th><td>{{ $job->location ?? '-' }}</td></tr>
                     <tr><th>Triggered By</th><td>
                         @if($job->triggeredByInspection)
                             <a href="{{ route('admin.reports.inspection.show', $job->triggered_by_inspection_log_id) }}">
