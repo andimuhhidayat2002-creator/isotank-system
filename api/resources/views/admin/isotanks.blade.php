@@ -382,7 +382,18 @@
 
 @push('scripts')
 <script>
-$(document).ready(function() {
+document.addEventListener('DOMContentLoaded', function() {
+    // Wait for jQuery and DataTables to be available
+    var waitForDT = setInterval(function() {
+        if (window.$ && $.fn.DataTable) {
+            clearInterval(waitForDT);
+            initTable();
+        }
+    }, 100);
+
+    function initTable() {
+        var $ = window.jQuery; // Ensure we use the global jQuery instance with Buttons attached
+
     // Setup - add a text input to each footer cell
     $('#isotankTable tfoot th').each(function() {
         var title = $(this).text();
@@ -470,6 +481,7 @@ $(document).ready(function() {
         });
         $('#bulkCountDisplay').text(count);
     });
+    } // End initTable
 });
 </script>
 @endpush

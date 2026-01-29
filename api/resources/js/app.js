@@ -2,23 +2,26 @@ import 'bootstrap';
 import jQuery from 'jquery';
 import DataTable from 'datatables.net-bs5';
 
-// Import Core Buttons
-import 'datatables.net-buttons';
-import 'datatables.net-buttons-bs5';
+// Make jQuery global immediately
+window.$ = window.jQuery = jQuery;
+window.DataTable = DataTable;
 
-// Import Button Features
+// Import Buttons Core and Styles
+import 'datatables.net-buttons-bs5';
+import 'datatables.net-buttons';
+
+// Import Button Modules
 import 'datatables.net-buttons/js/buttons.html5.mjs';
 import 'datatables.net-buttons/js/buttons.print.mjs';
 import 'datatables.net-buttons/js/buttons.colVis.mjs';
 
-// Import Export Dependencies
+// Import Export Libs
 import JSZip from 'jszip';
 import pdfMake from 'pdfmake/build/pdfmake';
 import pdfFonts from 'pdfmake/build/vfs_fonts';
 
-// Global Assignments for Legacy/Blade Compatibility
-window.$ = window.jQuery = jQuery;
+// Assign Export Libs to Window so DataTables can find them
 window.JSZip = JSZip;
 pdfMake.vfs = pdfFonts.pdfMake.vfs;
 window.pdfMake = pdfMake;
-window.DataTable = DataTable;
+
