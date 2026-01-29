@@ -651,18 +651,6 @@ class InspectionSubmitController extends Controller
                     $remark .= " | " . implode(', ', $details);
                 }
                 
-                // Create maintenance job
-                MaintenanceJob::create([
-                    'isotank_id' => $isotankId,
-                    'source_item' => $item,
-                    'description' => $remark,
-                    'part_damage' => $allInput["part_damage_{$item}"] ?? null,
-                    'damage_type' => $allInput["damage_type_{$item}"] ?? null,
-                    'location' => $allInput["location_{$item}"] ?? null,
-                    'status' => 'open',
-                    'triggered_by_inspection_log_id' => $inspectionLog->id,
-                    'before_photo' => $photoPath,
-                ]);
                 // Determine photo path - Check specific item photo first
                 $photoPath = null;
                 if (isset($allInput["photo_{$item}"])) {
@@ -681,10 +669,14 @@ class InspectionSubmitController extends Controller
                      $photoPath = $this->getPhotoForItem($item, $validated);
                 }
 
+                // Create maintenance job
                 MaintenanceJob::create([
                     'isotank_id' => $isotankId,
                     'source_item' => $item,
                     'description' => $remark,
+                    'part_damage' => $allInput["part_damage_{$item}"] ?? null,
+                    'damage_type' => $allInput["damage_type_{$item}"] ?? null,
+                    'location' => $allInput["location_{$item}"] ?? null,
                     'status' => 'open',
                     'triggered_by_inspection_log_id' => $inspectionLog->id,
                     'before_photo' => $photoPath,
