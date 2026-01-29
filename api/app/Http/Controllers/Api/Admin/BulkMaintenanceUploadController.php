@@ -38,12 +38,18 @@ class BulkMaintenanceUploadController extends Controller
             // Read header row
             $headers = array_shift($rows);
             
+            // DEBUG: Log headers
+            \Log::info("Excel Headers: " . json_encode($headers));
+            
             // Map header names to column indexes (case-insensitive, trim spaces)
             $columnMap = [];
             foreach ($headers as $index => $header) {
                 $cleanHeader = strtolower(trim($header));
                 $columnMap[$cleanHeader] = $index;
             }
+            
+            // DEBUG: Log column mapping
+            \Log::info("Column Map: " . json_encode($columnMap));
             
             $successCount = 0;
             $failedCount = 0;
@@ -65,6 +71,9 @@ class BulkMaintenanceUploadController extends Controller
                 $rowNumber = $index + 2; // +2 because we removed header and Excel is 1-indexed
                 
                 if (empty(array_filter($row))) continue;
+                
+                // DEBUG: Log raw row data
+                \Log::info("Excel Row {$rowNumber} RAW: " . json_encode($row));
                 
                 // Read by header name instead of fixed index
                 $isoNumber = trim($row[$columnMap['iso number'] ?? 0] ?? '');
