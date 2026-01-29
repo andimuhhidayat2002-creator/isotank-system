@@ -84,16 +84,29 @@
 
 @push('scripts')
 <script>
-$(document).ready(function() {
-    // Initialize DataTables for all tables
-    ['#tableActive', '#tableDeferred', '#tableHistory'].forEach(function(id) {
-        $(id).DataTable({
-            dom: 'Bfrtip',
-            buttons: [ 'excelHtml5', 'pdfHtml5' ],
-            pageLength: 25,
-            order: [[0, 'asc']]
+document.addEventListener('DOMContentLoaded', function() {
+    var waitForDT = setInterval(function() {
+        if (window.$ && $.fn.DataTable) {
+            clearInterval(waitForDT);
+            initMaintenanceTables();
+        }
+    }, 100);
+
+    function initMaintenanceTables() {
+        var $ = window.jQuery;
+        ['#tableActive', '#tableDeferred', '#tableHistory'].forEach(function(id) {
+            $(id).DataTable({
+                dom: 'Bfrtip',
+                buttons: [
+                    { extend: 'excelHtml5', className: 'btn btn-success btn-sm me-1', text: '<i class="bi bi-file-earmark-excel"></i> Excel' },
+                    { extend: 'pdfHtml5', className: 'btn btn-danger btn-sm me-1', text: '<i class="bi bi-file-earmark-pdf"></i> PDF' },
+                    { extend: 'print', className: 'btn btn-info btn-sm', text: '<i class="bi bi-printer"></i> Print' }
+                ],
+                pageLength: 25,
+                order: [[0, 'asc']]
+            });
         });
-    });
+    }
 });
 </script>
 @endpush

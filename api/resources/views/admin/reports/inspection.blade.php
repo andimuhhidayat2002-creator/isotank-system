@@ -74,43 +74,53 @@
 
 @push('scripts')
 <script>
-$(document).ready(function() {
-    $('#inspectionLogTable tfoot th').each(function() {
-        var title = $(this).text();
-        if (title !== '-') {
-            $(this).html('<input type="text" class="form-control form-control-sm" placeholder="Filter ' + title + '" />');
+document.addEventListener('DOMContentLoaded', function() {
+    var waitForDT = setInterval(function() {
+        if (window.$ && $.fn.DataTable) {
+            clearInterval(waitForDT);
+            initInspectionLogTable();
         }
-    });
+    }, 100);
 
-    var table = $('#inspectionLogTable').DataTable({
-        dom: 'Bfrtip',
-        buttons: [
-            {
-                extend: 'excelHtml5',
-                text: '<i class="bi bi-file-earmark-excel"></i> Export Excel',
-                className: 'btn btn-success btn-sm mb-3',
-                exportOptions: { columns: [0, 1, 2, 3, 4] }
-            },
-            {
-                extend: 'pdfHtml5',
-                text: '<i class="bi bi-file-earmark-pdf"></i> Export PDF',
-                className: 'btn btn-danger btn-sm mb-3',
-                exportOptions: { columns: [0, 1, 2, 3, 4] }
+    function initInspectionLogTable() {
+        var $ = window.jQuery;
+        $('#inspectionLogTable tfoot th').each(function() {
+            var title = $(this).text();
+            if (title !== '-') {
+                $(this).html('<input type="text" class="form-control form-control-sm" placeholder="Filter ' + title + '" />');
             }
-        ],
-        pageLength: 25,
-        order: [[0, 'desc']],
-        initComplete: function() {
-            this.api().columns().every(function() {
-                var that = this;
-                $('input', this.footer()).on('keyup change clear', function() {
-                    if (that.search() !== this.value) {
-                        that.search(this.value).draw();
-                    }
+        });
+
+        var table = $('#inspectionLogTable').DataTable({
+            dom: 'Bfrtip',
+            buttons: [
+                {
+                    extend: 'excelHtml5',
+                    text: '<i class="bi bi-file-earmark-excel"></i> Export Excel',
+                    className: 'btn btn-success btn-sm mb-3 me-1',
+                    exportOptions: { columns: [0, 1, 2, 3, 4] }
+                },
+                {
+                    extend: 'pdfHtml5',
+                    text: '<i class="bi bi-file-earmark-pdf"></i> Export PDF',
+                    className: 'btn btn-danger btn-sm mb-3 me-1',
+                    exportOptions: { columns: [0, 1, 2, 3, 4] }
+                }
+            ],
+            pageLength: 25,
+            order: [[0, 'desc']],
+            initComplete: function() {
+                this.api().columns().every(function() {
+                    var that = this;
+                    $('input', this.footer()).on('keyup change clear', function() {
+                        if (that.search() !== this.value) {
+                            that.search(this.value).draw();
+                        }
+                    });
                 });
-            });
-        }
-    });
+            }
+        });
+    }
 });
 </script>
 @endpush

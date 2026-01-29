@@ -207,145 +207,156 @@
 
 @push('scripts')
 <script>
-$(document).ready(function() {
-    // ---- VACUUM MONITORING TABLE CONFIG ----
-    $('#vacuumTable tfoot th').each(function() {
-        var title = $(this).text();
-        if (title == 'ISO Number' || title == 'Status') {
-            $(this).html('<input type="text" class="form-control form-control-sm" placeholder="Filter ' + title + '" />');
-        } else {
-            $(this).html('');
+document.addEventListener('DOMContentLoaded', function() {
+    var waitForDT = setInterval(function() {
+        if (window.$ && $.fn.DataTable) {
+            clearInterval(waitForDT);
+            initVacuumTables();
         }
-    });
+    }, 100);
 
-    $('#vacuumTable').DataTable({
-        dom: 'Bfrtip',
-        buttons: [
-            {
-                extend: 'excelHtml5',
-                text: '<i class="bi bi-file-earmark-excel"></i> Export Monitoring',
-                className: 'btn btn-success btn-sm mb-3',
-                title: 'Vacuum_Monitoring_Process',
-                customize: function(xlsx) {
-                    var sheet = xlsx.xl.worksheets['sheet1.xml'];
-                    $('row c', sheet).attr('s', '55'); // Center align and wrap text
-                },
-                exportOptions: {
-                    format: {
-                        body: function ( data, row, column, node ) {
-                            // Helper to clean text
-                            const clean = (text) => text ? text.replace(/\s+/g, ' ').trim() : '';
+    function initVacuumTables() {
+        var $ = window.jQuery;
+        
+        // ---- VACUUM MONITORING TABLE CONFIG ----
+        $('#vacuumTable tfoot th').each(function() {
+            var title = $(this).text();
+            if (title == 'ISO Number' || title == 'Status') {
+                $(this).html('<input type="text" class="form-control form-control-sm" placeholder="Filter ' + title + '" />');
+            } else {
+                $(this).html('');
+            }
+        });
 
-                            // 1. ISO Number Column
-                            if (column === 0) {
-                                let iso = $(node).contents().filter(function() { return this.nodeType == 3; }).text().trim();
-                                let date = $(node).find('.text-muted').text().trim();
-                                return iso + "\n" + date;
-                            }
+        $('#vacuumTable').DataTable({
+            dom: 'Bfrtip',
+            buttons: [
+                {
+                    extend: 'excelHtml5',
+                    text: '<i class="bi bi-file-earmark-excel"></i> Export Monitoring',
+                    className: 'btn btn-success btn-sm mb-3 me-1',
+                    title: 'Vacuum_Monitoring_Process',
+                    customize: function(xlsx) {
+                        var sheet = xlsx.xl.worksheets['sheet1.xml'];
+                        $('row c', sheet).attr('s', '55'); // Center align and wrap text
+                    },
+                    exportOptions: {
+                        format: {
+                            body: function ( data, row, column, node ) {
+                                // Helper to clean text
+                                const clean = (text) => text ? text.replace(/\s+/g, ' ').trim() : '';
 
-                            // 2. Status Column (Last one)
-                            if (column === 6) {
-                                return $(node).text().trim();
-                            }
-
-                            // 3. Data Columns (Days 1-5)
-                            let text = "";
-                            
-                            // Get Date Header
-                            let dateLabel = $(node).find('.badge').text().trim();
-                            if(dateLabel) text += dateLabel + "\n";
-
-                            // Day 1 Specifics
-                            if (column === 1) {
-                                $(node).find('.row .col-7').each(function(index) {
-                                    let label = $(this).text().replace(':', '').trim();
-                                    let value = $(this).next('.col-5').text().trim();
-                                    if(label) text += label + ": " + value + "\n";
-                                });
-                            } 
-                            // Days 2-5 Specifics
-                            else {
-                                // AM Block
-                                let amBlock = $(node).find('.border-bottom');
-                                if (amBlock.length) {
-                                    let vacVal = amBlock.find('.fw-bold').text().trim() || '-';
-                                    text += "AM Vac: " + vacVal + "\n";
-                                    
-                                    amBlock.find('.d-flex.x-small').each(function() {
-                                        let parts = $(this).find('span');
-                                        if(parts.length >= 2) {
-                                            text += $(parts[0]).text().replace(':', '') + ": " + $(parts[1]).text() + "\n";
-                                        }
-                                    });
+                                // 1. ISO Number Column
+                                if (column === 0) {
+                                    let iso = $(node).contents().filter(function() { return this.nodeType == 3; }).text().trim();
+                                    let date = $(node).find('.text-muted').text().trim();
+                                    return iso + "\n" + date;
                                 }
 
-                                // PM Block (The div after AM block)
-                                let pmBlock = $(node).find('.text-start > div:last-child');
-                                if (pmBlock.length && !pmBlock.hasClass('border-bottom')) {
-                                    let vacVal = pmBlock.find('.fw-bold').text().trim() || '-';
-                                    // ensure we don't duplicate if there is only AM or something weird
-                                    if(vacVal) {
-                                        text += "\nPM Vac: " + vacVal + "\n";
-                                        pmBlock.find('.d-flex.x-small').each(function() {
+                                // 2. Status Column (Last one)
+                                if (column === 6) {
+                                    return $(node).text().trim();
+                                }
+
+                                // 3. Data Columns (Days 1-5)
+                                let text = "";
+                                
+                                // Get Date Header
+                                let dateLabel = $(node).find('.badge').text().trim();
+                                if(dateLabel) text += dateLabel + "\n";
+
+                                // Day 1 Specifics
+                                if (column === 1) {
+                                    $(node).find('.row .col-7').each(function(index) {
+                                        let label = $(this).text().replace(':', '').trim();
+                                        let value = $(this).next('.col-5').text().trim();
+                                        if(label) text += label + ": " + value + "\n";
+                                    });
+                                } 
+                                // Days 2-5 Specifics
+                                else {
+                                    // AM Block
+                                    let amBlock = $(node).find('.border-bottom');
+                                    if (amBlock.length) {
+                                        let vacVal = amBlock.find('.fw-bold').text().trim() || '-';
+                                        text += "AM Vac: " + vacVal + "\n";
+                                        
+                                        amBlock.find('.d-flex.x-small').each(function() {
                                             let parts = $(this).find('span');
                                             if(parts.length >= 2) {
                                                 text += $(parts[0]).text().replace(':', '') + ": " + $(parts[1]).text() + "\n";
                                             }
                                         });
                                     }
-                                }
-                            }
 
-                            // If empty (e.g. empty cell), return cleaned data
-                            return text.trim() || clean($(node).text());
+                                    // PM Block (The div after AM block)
+                                    let pmBlock = $(node).find('.text-start > div:last-child');
+                                    if (pmBlock.length && !pmBlock.hasClass('border-bottom')) {
+                                        let vacVal = pmBlock.find('.fw-bold').text().trim() || '-';
+                                        // ensure we don't duplicate if there is only AM or something weird
+                                        if(vacVal) {
+                                            text += "\nPM Vac: " + vacVal + "\n";
+                                            pmBlock.find('.d-flex.x-small').each(function() {
+                                                let parts = $(this).find('span');
+                                                if(parts.length >= 2) {
+                                                    text += $(parts[0]).text().replace(':', '') + ": " + $(parts[1]).text() + "\n";
+                                                }
+                                            });
+                                        }
+                                    }
+                                }
+
+                                // If empty (e.g. empty cell), return cleaned data
+                                return text.trim() || clean($(node).text());
+                            }
                         }
                     }
                 }
-            }
-        ],
-        pageLength: 25,
-        order: [[0, 'asc']],
-        initComplete: function() {
-            this.api().columns().every(function() {
-                var that = this;
-                $('input', this.footer()).on('keyup change clear', function() {
-                    if (that.search() !== this.value) {
-                        that.search(this.value).draw();
-                    }
+            ],
+            pageLength: 25,
+            order: [[0, 'asc']],
+            initComplete: function() {
+                this.api().columns().every(function() {
+                    var that = this;
+                    $('input', this.footer()).on('keyup change clear', function() {
+                        if (that.search() !== this.value) {
+                            that.search(this.value).draw();
+                        }
+                    });
                 });
-            });
-        }
-    });
-
-    // ---- VACUUM HISTORY TABLE CONFIG ----
-    $('#historyTable tfoot th').each(function() {
-        var title = $(this).text();
-        $(this).html('<input type="text" class="form-control form-control-sm" placeholder="Filter" />');
-    });
-
-    $('#historyTable').DataTable({
-        dom: 'Bfrtip',
-        buttons: [
-            {
-                extend: 'excelHtml5',
-                text: '<i class="bi bi-file-earmark-excel"></i> Export History',
-                className: 'btn btn-outline-success btn-sm mb-3',
-                title: 'Vacuum_Logs_History'
             }
-        ],
-        pageLength: 25,
-        order: [[0, 'desc']], // Sort by Date Descending
-        initComplete: function() {
-            this.api().columns().every(function() {
-                var that = this;
-                $('input', this.footer()).on('keyup change clear', function() {
-                    if (that.search() !== this.value) {
-                        that.search(this.value).draw();
-                    }
+        });
+
+        // ---- VACUUM HISTORY TABLE CONFIG ----
+        $('#historyTable tfoot th').each(function() {
+            var title = $(this).text();
+            $(this).html('<input type="text" class="form-control form-control-sm" placeholder="Filter" />');
+        });
+
+        $('#historyTable').DataTable({
+            dom: 'Bfrtip',
+            buttons: [
+                {
+                    extend: 'excelHtml5',
+                    text: '<i class="bi bi-file-earmark-excel"></i> Export History',
+                    className: 'btn btn-outline-success btn-sm mb-3',
+                    title: 'Vacuum_Logs_History'
+                }
+            ],
+            pageLength: 25,
+            order: [[0, 'desc']], // Sort by Date Descending
+            initComplete: function() {
+                this.api().columns().every(function() {
+                    var that = this;
+                    $('input', this.footer()).on('keyup change clear', function() {
+                        if (that.search() !== this.value) {
+                            that.search(this.value).draw();
+                        }
+                    });
                 });
-            });
-        }
-    });
+            }
+        });
+    }
 });
 </script>
 @endpush

@@ -6,31 +6,36 @@
 
 /* Local Font Fallback - Replace Google Fonts */
 @font-face {
-  font-family: 'Inter';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: local('Inter Regular'), local('Inter-Regular'), url(https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hjp-Ek-_EeA.woff2) format('woff2');
-  /* Note: In a real "offline" scenario, we would download woff2 files to public/fonts/ */
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: local('Inter Regular'), local('Inter-Regular'), url(https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hjp-Ek-_EeA.woff2) format('woff2');
+    /* Note: In a real "offline" scenario, we would download woff2 files to public/fonts/ */
 }
+
 @font-face {
-  font-family: 'Inter';
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-  src: local('Inter SemiBold'), local('Inter-SemiBold'), url(https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuGKYAZ9hjp-Ek-_EeA.woff2) format('woff2');
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src: local('Inter SemiBold'), local('Inter-SemiBold'), url(https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuGKYAZ9hjp-Ek-_EeA.woff2) format('woff2');
 }
 
 /* Base Styles */
 :root {
-    --primary-color: #1F4FD8; /* Industrial Blue */
+    --primary-color: #1F4FD8;
+    /* Industrial Blue */
     --primary-hover: #163BA8;
-    --secondary-color: #0F2A44; /* Dark Navy */
-    --accent-color: #F97316; /* Warning Orange */
+    --secondary-color: #0F2A44;
+    /* Dark Navy */
+    --accent-color: #F97316;
+    /* Warning Orange */
     --success-color: #16A34A;
     --danger-color: #DC2626;
     --sidebar-bg: #0F2A44;
-    --body-bg: #F5F7FA; /* Neutral Industrial Gray */
+    --body-bg: #F5F7FA;
+    /* Neutral Industrial Gray */
     --card-bg: #FFFFFF;
     --card-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
     --card-radius: 8px;
@@ -46,11 +51,13 @@ body {
 /* Continue with existing styles... */
 /* Sidebar Styling */
 .sidebar {
-    background-color: var(--sidebar-bg); /* Solid Industrial Navy */
+    background-color: var(--sidebar-bg);
+    /* Solid Industrial Navy */
     color: white;
-    box-shadow: 1px 0 0 rgba(255,255,255,0.05); /* Subtle separator */
+    box-shadow: 1px 0 0 rgba(255, 255, 255, 0.05);
+    /* Subtle separator */
     border: none;
-    
+
     /* FIXED SIDEBAR IMPLEMENTATION */
     position: fixed;
     top: 0;
@@ -60,40 +67,63 @@ body {
     height: 100vh;
     display: flex;
     flex-direction: column;
-    overflow: hidden; /* Container fixed, inner scrolls */
+    overflow: hidden;
+    /* Container fixed, inner scrolls */
     z-index: 1000;
 }
 
 /* Inner scrollable area - hide scrollbar */
 .sidebar-content {
-    flex: 1 1 auto; /* Grow and shrink */
+    flex: 1 1 auto;
+    /* Grow and shrink */
     overflow-y: auto;
-    min-height: 0; /* Crucial for scrolling */
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE */
-    padding-bottom: 2rem; /* Ensure last item is reachable */
+    min-height: 0;
+    /* Crucial for scrolling */
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE */
+    padding-bottom: 5rem;
+    /* Ensure last item is reachable above logout */
 }
-.sidebar-content::-webkit-scrollbar { display: none; }
+
+.sidebar-content::-webkit-scrollbar {
+    display: none;
+}
 
 .sidebar a {
-    color: rgba(255,255,255,0.7);
+    color: rgba(255, 255, 255, 0.7);
     text-decoration: none;
-    padding: 8px 16px; /* Compact padding */
+    padding: 8px 16px;
+    /* Compact padding */
     display: flex;
     align-items: center;
     border-radius: 8px;
-    margin-bottom: 2px; /* Compact margin */
+    margin-bottom: 2px;
+    /* Compact margin */
     font-weight: 500;
     transition: all 0.2s ease;
-    font-size: 0.9rem; /* Slightly smaller font */
+    font-size: 0.9rem;
+    /* Slightly smaller font */
 }
-.sidebar a:hover, .sidebar a.active {
-    background-color: rgba(255,255,255,0.1);
+
+.sidebar a:hover,
+.sidebar a.active {
+    background-color: rgba(255, 255, 255, 0.1);
     color: white;
     font-weight: 600;
 }
-.sidebar a i { margin-right: 12px; font-size: 1rem; }
-.sidebar h4 { letter-spacing: 0.05em; margin-bottom: 1.5rem !important; margin-top: 1rem; }
+
+.sidebar a i {
+    margin-right: 12px;
+    font-size: 1rem;
+}
+
+.sidebar h4 {
+    letter-spacing: 0.05em;
+    margin-bottom: 1.5rem !important;
+    margin-top: 1rem;
+}
 
 /* Card Styling - Industrial Clean */
 .card {
@@ -103,6 +133,7 @@ body {
     background-color: white;
     margin-bottom: 1.5rem;
 }
+
 .card-header {
     background-color: white;
     border-bottom: 1px solid #F3F4F6;
@@ -112,7 +143,10 @@ body {
     border-top-left-radius: var(--card-radius) !important;
     border-top-right-radius: var(--card-radius) !important;
 }
-.card-body { padding: 1.5rem; }
+
+.card-body {
+    padding: 1.5rem;
+}
 
 /* Buttons -- Flat */
 .btn {
@@ -122,21 +156,26 @@ body {
     transition: all 0.2s;
     box-shadow: none !important;
 }
+
 .btn-primary {
     background-color: var(--primary-color);
     border-color: var(--primary-color);
     color: white;
 }
+
 .btn-primary:hover {
     background-color: var(--primary-hover);
     border-color: var(--primary-hover);
 }
+
 .btn-outline-primary {
     color: var(--primary-color);
     border-color: var(--primary-color);
 }
+
 .btn-outline-primary:hover {
-    background-color: var(--sidebar-bg); /* Use dark blue for better contrast */
+    background-color: var(--sidebar-bg);
+    /* Use dark blue for better contrast */
     color: white;
 }
 
@@ -151,6 +190,7 @@ body {
     border-bottom: 1px solid #E5E7EB;
     padding: 0.75rem 1rem;
 }
+
 .table tbody td {
     vertical-align: middle;
     padding: 0.75rem 1rem;
@@ -171,18 +211,26 @@ body {
     border: 1px solid #D1D5DB;
     padding: 6px 12px;
 }
-.dt-buttons .btn { margin-right: 5px; border-radius: 6px; }
+
+.dt-buttons .btn {
+    margin-right: 5px;
+    border-radius: 6px;
+}
 
 /* Form Controls */
-.form-control, .form-select {
+.form-control,
+.form-select {
     border-radius: 8px;
     border: 1px solid #D1D5DB;
     padding: 0.6rem 0.8rem;
     font-size: 0.95rem;
 }
-.form-control:focus, .form-select:focus {
+
+.form-control:focus,
+.form-select:focus {
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 2px rgba(43, 76, 126, 0.2); /* Primary diluted */
+    box-shadow: 0 0 0 2px rgba(43, 76, 126, 0.2);
+    /* Primary diluted */
 }
 
 /* Modals */
@@ -191,10 +239,12 @@ body {
     border-radius: var(--card-radius);
     box-shadow: var(--card-shadow);
 }
+
 .modal-header {
     border-bottom: 1px solid #F3F4F6;
     padding: 1.5rem;
 }
+
 .modal-footer {
     border-top: 1px solid #F3F4F6;
     padding: 1.25rem 1.5rem;
