@@ -35,8 +35,15 @@ class BulkMaintenanceUploadController extends Controller
             $worksheet = $spreadsheet->getActiveSheet();
             $rows = $worksheet->toArray();
             
-            // Remove header
-            array_shift($rows);
+            // Read header row
+            $headers = array_shift($rows);
+            
+            // Map header names to column indexes (case-insensitive, trim spaces)
+            $columnMap = [];
+            foreach ($headers as $index => $header) {
+                $cleanHeader = strtolower(trim($header));
+                $columnMap[$cleanHeader] = $index;
+            }
             
             $successCount = 0;
             $failedCount = 0;
@@ -55,18 +62,25 @@ class BulkMaintenanceUploadController extends Controller
             DB::beginTransaction();
             
             foreach ($rows as $index => $row) {
-                $rowNumber = $index + 2;
+                $rowNumber = $index + 2; // +2 because we removed header and Excel is 1-indexed
                 
                 if (empty(array_filter($row))) continue;
                 
-                $isoNumber = trim($row[0] ?? '');
-                $itemName = trim($row[1] ?? '');
-                $description = trim($row[2] ?? '');
-                $priority = trim($row[3] ?? '');
-                $plannedDate = $row[4] ?? null;
-                $partDamage = isset($row[5]) ? trim((string)$row[5]) : null;
-                $damageType = isset($row[6]) ? trim((string)$row[6]) : null;
-                $location = isset($row[7]) ? trim((string)$row[7]) : null;
+                // Read by header name instead of fixed index
+                $isoNumber = trim($row[$columnMap['iso number'] ?? 0] ?? '');
+                $itemName = trim($row[$columnMap['item name'] ?? 1] ?? '');
+                $description = trim($row[$columnMap['description'] ?? 2] ?? '');
+                $priority = trim($row[$columnMap['priority'] ?? 3] ?? '');
+                $plannedDate = $row[$columnMap['planned date'] ?? 4] ?? null;
+                $partDamage = isset($columnMap['part damage']) && isset($row[$columnMap['part damage']]) 
+                    ? trim((string)$row[$columnMap['part damage']]) 
+                    : null;
+                $damageType = isset($columnMap['damage type']) && isset($row[$columnMap['damage type']]) 
+                    ? trim((string)$row[$columnMap['damage type']]) 
+                    : null;
+                $location = isset($columnMap['location']) && isset($row[$columnMap['location']]) 
+                    ? trim((string)$row[$columnMap['location']]) 
+                    : null;
                 
                 // DEBUG: Log what we're reading
                 \Log::info("Excel Upload Row {$rowNumber}: ISO={$isoNumber}, Item={$itemName}, Priority={$priority}, PartDamage={$partDamage}, DamageType={$damageType}, Location={$location}");
