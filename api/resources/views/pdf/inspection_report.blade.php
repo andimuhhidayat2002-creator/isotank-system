@@ -434,8 +434,14 @@
                     $inspSigPath = $inspector->signature_path ?? ($inspection->inspectionJob->inspector->signature_path ?? null);
                     $inspFullPath = null;
                     if ($inspSigPath) {
-                        if (file_exists(public_path('storage/' . $inspSigPath))) $inspFullPath = public_path('storage/' . $inspSigPath);
-                        elseif (file_exists(storage_path('app/public/' . $inspSigPath))) $inspFullPath = storage_path('app/public/' . $inspSigPath);
+                        // TRY PRIVATE FIRST
+                        if (file_exists(storage_path('app/' . $inspSigPath))) {
+                             $inspFullPath = storage_path('app/' . $inspSigPath);
+                        }
+                        // Fallback Public
+                        elseif (file_exists(storage_path('app/public/' . $inspSigPath))) {
+                             $inspFullPath = storage_path('app/public/' . $inspSigPath);
+                        }
                     }
                 @endphp
                 
@@ -461,8 +467,14 @@
                     $recvSigPath = $inspection->receiver_signature_path ?? null;
                     $recvFullPath = null;
                     if ($recvSigPath) {
-                        if (file_exists(public_path('storage/' . $recvSigPath))) $recvFullPath = public_path('storage/' . $recvSigPath);
-                        elseif (file_exists(storage_path('app/public/' . $recvSigPath))) $recvFullPath = storage_path('app/public/' . $recvSigPath);
+                        // TRY PRIVATE FIRST
+                        if (file_exists(storage_path('app/' . $recvSigPath))) {
+                             $recvFullPath = storage_path('app/' . $recvSigPath);
+                        }
+                        // Fallback Public
+                        elseif (file_exists(storage_path('app/public/' . $recvSigPath))) {
+                             $recvFullPath = storage_path('app/public/' . $recvSigPath);
+                        }
                     }
                 @endphp
                 
@@ -506,9 +518,12 @@
             @if($path)
                 @php
                     $fullPath = null;
-                    if (file_exists(public_path('storage/' . $path))) {
-                        $fullPath = public_path('storage/' . $path);
-                    } elseif (file_exists(storage_path('app/public/' . $path))) {
+                    // TRY PRIVATE FIRST
+                    if (file_exists(storage_path('app/' . $path))) {
+                        $fullPath = storage_path('app/' . $path);
+                    }
+                    // Fallback Public
+                    elseif (file_exists(storage_path('app/public/' . $path))) {
                          $fullPath = storage_path('app/public/' . $path);
                     }
                 @endphp
@@ -528,9 +543,12 @@
                 @if($conf->receiver_photo_path)
                     @php
                         $fullPath = null;
-                         if (file_exists(public_path('storage/' . $conf->receiver_photo_path))) {
-                            $fullPath = public_path('storage/' . $conf->receiver_photo_path);
-                        } elseif (file_exists(storage_path('app/public/' . $conf->receiver_photo_path))) {
+                        // TRY PRIVATE FIRST
+                        if (file_exists(storage_path('app/' . $conf->receiver_photo_path))) {
+                            $fullPath = storage_path('app/' . $conf->receiver_photo_path);
+                        }
+                        // Fallback Public
+                        elseif (file_exists(storage_path('app/public/' . $conf->receiver_photo_path))) {
                              $fullPath = storage_path('app/public/' . $conf->receiver_photo_path);
                         }
                     @endphp

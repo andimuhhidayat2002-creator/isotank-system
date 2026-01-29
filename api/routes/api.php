@@ -22,6 +22,11 @@ Route::post('/login', [AuthController::class, 'login']);
 
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {
+    // SECURE MEDIA ACCESS
+    Route::get('/media/{path}', [\App\Http\Controllers\Api\MediaController::class, 'show'])
+        ->where('path', '.*')
+        ->name('media.show');
+
     // Auth routes
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);

@@ -12,6 +12,8 @@ use App\Models\MasterIsotankComponent;
 use App\Models\MaintenanceJob;
 use App\Models\VacuumLog;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Storage;
 
 class InspectionJobController extends Controller
 {
@@ -96,6 +98,20 @@ class InspectionJobController extends Controller
 
         if ($draftLog) {
             $defaultValues = (object)$draftLog->toArray();
+            
+            // TRANSFORM PHOTOS TO SIGNED URLS FOR DRAFT
+            foreach ($defaultValues as $key => $value) {
+                if (str_starts_with($key, 'photo_') && is_string($value) && !empty($value)) {
+                    // Check if file is private
+                     if (Storage::disk('local')->exists($value)) {
+                        $defaultValues->$key = URL::signedRoute('media.show', ['path' => $value], now()->addHours(4));
+                     } elseif (Storage::disk('public')->exists($value)) {
+                        // Keep public for backward compatibility or if using old logic
+                        $defaultValues->$key = asset('storage/' . $value);
+                     }
+                }
+            }
+
             // Handle timestamps for UI
             foreach (['pressure_1_timestamp', 'pressure_2_timestamp', 'level_1_timestamp', 'level_2_timestamp', 'ibox_temperature_1_timestamp', 'ibox_temperature_2_timestamp'] as $ts) {
                 if (!empty($draftLog->$ts)) {
@@ -130,7 +146,6 @@ class InspectionJobController extends Controller
 
             if ($lastIncomingInspection) {
                 // Map fields from the last incoming inspection
-                // Map fields from the last incoming inspection
                 // UPDATED: Use toArray() to ensure ALL columns (including dynamic ones) are copied
                 $logArray = $lastIncomingInspection->toArray();
                 
@@ -145,8 +160,21 @@ class InspectionJobController extends Controller
                 
                 // Merge into data
                 $data = $logArray;
-                // Ensure specific complex mappings are preserved if needed (usually handled by keys matching)
-
+                
+                // TRANSFORM PHOTOS TO SIGNED URLS FOR RETRIEVED DATA (so form pre-filling works with image preview)
+                foreach ($data as $key => $value) {
+                     if (str_starts_with($key, 'photo_') && is_string($value) && !empty($value)) {
+                         // Check if file is private
+                         if (Storage::disk('local')->exists($value)) {
+                             // Use URL Facade properly with named route
+                             // Route must be named 'media.show' in api.php
+                             // We are using hardcoded route name here based on my previous step plan
+                             $data[$key] = URL::signedRoute('media.show', ['path' => $value], now()->addHours(4));
+                         } elseif (Storage::disk('public')->exists($value)) {
+                             $data[$key] = asset('storage/' . $value);
+                         }
+                     }
+                }
 
                 foreach($data as $k => $v) { $defaultValues->$k = $v; }
                 $defaultValues->vacuum_unit = 'mtorr';

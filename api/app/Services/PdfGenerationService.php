@@ -54,7 +54,7 @@ class PdfGenerationService
         $filename = 'inspection_' . $inspectionLog->id . '_' . time() . '.pdf';
         $path = 'inspection_pdfs/' . $filename;
         
-        Storage::disk('public')->put($path, $pdf->output());
+        Storage::disk('local')->put($path, $pdf->output());
         
         // Update inspection log with PDF path
         $inspectionLog->update(['pdf_path' => $path]);
@@ -112,7 +112,7 @@ class PdfGenerationService
         $filename = 'inspection_outgoing_' . $inspectionLog->id . '_' . time() . '.pdf';
         $path = 'inspection_pdfs/' . $filename;
         
-        Storage::disk('public')->put($path, $pdf->output());
+        Storage::disk('local')->put($path, $pdf->output());
         
         // Update inspection log with PDF path
         $inspectionLog->update(['pdf_path' => $path]);
