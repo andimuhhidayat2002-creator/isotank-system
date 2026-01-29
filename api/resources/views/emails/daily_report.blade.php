@@ -37,27 +37,48 @@
         <p style="margin:5px 0 0; font-size: 14px; opacity: 0.8;">{{ $date }}</p>
     </div>
 
+    <!-- NEW OPERATIONAL KPIs -->
+    <div style="margin: 20px 0; padding: 15px; background-color: #e3f2fd; border-radius: 8px; border: 1px solid #bbdefb; display: flex; justify-content: space-around; text-align: center;">
+        <div style="width: 33%;">
+            <span style="display: block; font-size: 24px; font-weight: bold; color: #1565c0;">{{ $summary['inspections_today'] }}</span>
+            <span style="font-size: 12px; color: #546e7a; text-transform: uppercase;">Inspections Submitted Today</span>
+        </div>
+        <div style="width: 33%; border-left: 1px solid #bbdefb; border-right: 1px solid #bbdefb;">
+            <span style="display: block; font-size: 24px; font-weight: bold; color: #1565c0;">{{ $summary['open_maintenance'] }}</span>
+            <span style="font-size: 12px; color: #546e7a; text-transform: uppercase;">Total Open Maintenance</span>
+        </div>
+        <div style="width: 33%;">
+            <span style="display: block; font-size: 24px; font-weight: bold; color: #1565c0;">{{ $summary['calibration_progress'] }}%</span>
+            <span style="font-size: 12px; color: #546e7a; text-transform: uppercase;">Calibration Progress</span>
+        </div>
+    </div>
+
     <!-- 1. MOVEMENT SUMMARY -->
     <div class="summary-container">
-        <div class="summary-box">
+        <div class="summary-box" style="width: 20%;">
             <span class="sum-number">{{ $summary['incoming'] }}</span>
             <div style="font-size: 10px; color: #666; margin-bottom: 3px;">{{ $summary['incoming_details'] ?? '' }}</div>
-            <span class="sum-label">Incoming Today</span>
+            <span class="sum-label">Incoming<br>(Gate-In)</span>
         </div>
-        <div class="summary-box">
-            <span class="sum-number">{{ $summary['outgoing'] }}</span>
-            <div style="font-size: 10px; color: #666; margin-bottom: 3px;">{{ $summary['outgoing_details'] ?? '' }}</div>
-            <span class="sum-label">Outgoing Today</span>
+        <div class="summary-box" style="width: 20%;">
+            <span class="sum-number">{{ $summary['outgoing_started'] }}</span>
+            <div style="font-size: 10px; color: #666; margin-bottom: 3px;">{{ $summary['outgoing_started_details'] ?? '' }}</div>
+            <span class="sum-label" title="Process started by Admin">Outgoing<br>(Started)</span>
         </div>
-        <div class="summary-box">
+        <div class="summary-box" style="width: 20%;">
+            <span class="sum-number">{{ $summary['outgoing_official'] }}</span>
+            <div style="font-size: 10px; color: #666; margin-bottom: 3px;">{{ $summary['outgoing_official_details'] ?? '' }}</div>
+            <span class="sum-label" title="Receiver Confirmed">Official Out<br>(Completed)</span>
+        </div>
+        <div class="summary-box" style="width: 20%;">
             <span class="sum-number">{{ $summary['stock_site'] }}</span>
             <div style="font-size: 10px; color: #666; margin-bottom: 3px;">{{ $summary['stock_site_details'] ?? '' }}</div>
-            <span class="sum-label">Stock at Site</span>
+            <span class="sum-label">Stock<br>at Site</span>
         </div>
-        <div class="summary-box">
+        <div class="summary-box" style="width: 20%;">
             <span class="sum-number">{{ $summary['stock_other'] }}</span>
             <div style="font-size: 10px; color: #666; margin-bottom: 3px;">{{ $summary['stock_other_details'] ?? '' }}</div>
-            <span class="sum-label">Other Locations</span>
+            <span class="sum-label">Other<br>Locations</span>
         </div>
     </div>
 

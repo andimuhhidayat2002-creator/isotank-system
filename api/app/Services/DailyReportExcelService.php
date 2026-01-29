@@ -26,6 +26,9 @@ class DailyReportExcelService
         // 3. Maintenance Sheet
         $this->createMaintenanceSheet($spreadsheet, $data['maintenance']);
 
+        // 4. Calibration Sheet
+        $this->createCalibrationSheet($spreadsheet, $data['calibrationItems']);
+
         // Create file in memory
         $writer = new Xlsx($spreadsheet);
         
@@ -44,17 +47,25 @@ class DailyReportExcelService
         $sheet->setCellValue('A2', 'Date: ' . $date);
         $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
         
-        // Movement Summary
-        $sheet->setCellValue('A4', 'MOVEMENT SUMMARY');
+        // KPIs
+        $sheet->setCellValue('A4', 'OPERATIONAL KPIs');
         $sheet->getStyle('A4')->getFont()->setBold(true);
+        $sheet->setCellValue('A5', 'Inspections Submitted Today')->setCellValue('B5', $summary['inspections_today']);
+        $sheet->setCellValue('A6', 'Active Maintenance Jobs (Total)')->setCellValue('B6', $summary['open_maintenance']);
+        $sheet->setCellValue('A7', 'Calibration Compliance Progress')->setCellValue('B7', $summary['calibration_progress'] . '%');
+
+        // Movement Summary
+        $sheet->setCellValue('A9', 'MOVEMENT SUMMARY');
+        $sheet->getStyle('A9')->getFont()->setBold(true);
         
-        $sheet->setCellValue('A5', 'Incoming Today')->setCellValue('B5', $summary['incoming']);
-        $sheet->setCellValue('A6', 'Outgoing Today')->setCellValue('B6', $summary['outgoing']);
-        $sheet->setCellValue('A7', 'Stock at Site')->setCellValue('B7', $summary['stock_site']);
-        $sheet->setCellValue('A8', 'Stock Other Locations')->setCellValue('B8', $summary['stock_other']);
+        $sheet->setCellValue('A10', 'Incoming Today (Gate In)')->setCellValue('B10', $summary['incoming']);
+        $sheet->setCellValue('A11', 'Outgoing Process Started (Gate Out Start)')->setCellValue('B11', $summary['outgoing_started']);
+        $sheet->setCellValue('A12', 'Official Outgoing (Gate Out Completed)')->setCellValue('B12', $summary['outgoing_official']);
+        $sheet->setCellValue('A13', 'Stock at Site')->setCellValue('B13', $summary['stock_site']);
+        $sheet->setCellValue('A14', 'Stock Other Locations')->setCellValue('B14', $summary['stock_other']);
 
         // Exceptions
-        $row = 11;
+        $row = 16;
         $sheet->setCellValue('A'.$row, 'EXCEPTION REPORT (ISSUES)');
         $sheet->getStyle('A'.$row)->getFont()->setBold(true);
         $row++;
@@ -85,22 +96,21 @@ class DailyReportExcelService
         $sheet = new Worksheet($spreadsheet, 'Inspections');
         $spreadsheet->addSheet($sheet);
 
-        $headers = ['Time', 'ISO Number', 'Type', 'Status', 'Inspector', 'Certificate/Doc'];
+        $headers = ['Time', 'ISO Number', 'Type', 'Inspector', 'Certificate/Doc'];
         $sheet->fromArray($headers, NULL, 'A1');
-        $sheet->getStyle('A1:F1')->getFont()->setBold(true);
+        $sheet->getStyle('A1:E1')->getFont()->setBold(true);
 
         $row = 2;
         foreach ($logs as $log) {
             $sheet->setCellValue('A' . $row, $log->created_at->format('H:i'));
             $sheet->setCellValue('B' . $row, $log->isotank->iso_number);
             $sheet->setCellValue('C' . $row, $log->inspection_type);
-            $sheet->setCellValue('D' . $row, $log->filling_status_code ?? '-');
-            $sheet->setCellValue('E' . $row, $log->inspector->name ?? '-');
-            $sheet->setCellValue('F' . $row, $log->doc_number ?? '-');
+            $sheet->setCellValue('D' . $row, $log->inspector->name ?? '-');
+            $sheet->setCellValue('E' . $row, $log->doc_number ?? '-');
             $row++;
         }
 
-        foreach(range('A','F') as $col) {
+        foreach(range('A','E') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
     }
@@ -114,7 +124,7 @@ class DailyReportExcelService
         $sheet->setCellValue('A1', 'COMPLETED TODAY');
         $sheet->getStyle('A1')->getFont()->setBold(true);
 
-        $headers = ['ISO Number', 'Item', 'Description', 'Technician'];
+        $headers = ['ISO Number', 'Item', 'Description', 'Technician', 'Completed At'];
         $sheet->fromArray($headers, NULL, 'A2');
         $row = 3;
 
@@ -123,16 +133,17 @@ class DailyReportExcelService
             $sheet->setCellValue('B' . $row, $job->source_item);
             $sheet->setCellValue('C' . $row, $job->description);
             $sheet->setCellValue('D' . $row, $job->completedBy->name ?? '-');
+            $sheet->setCellValue('E' . $row, $job->updated_at->format('Y-m-d H:i'));
             $row++;
         }
 
         // Outstanding
         $row += 3;
-        $sheet->setCellValue('A'.$row, 'OUTSTANDING JOBS (>3 Days)');
+        $sheet->setCellValue('A'.$row, 'ALL OUTSTANDING JOBS');
         $sheet->getStyle('A'.$row)->getFont()->setBold(true);
         $row++;
 
-        $headers = ['ISO Number', 'Pending Since', 'Days Open', 'Status'];
+        $headers = ['ISO Number', 'Created At', 'Days Open', 'Status', 'Item'];
         $sheet->fromArray($headers, NULL, 'A'.$row);
         $row++;
 
@@ -141,10 +152,43 @@ class DailyReportExcelService
             $sheet->setCellValue('B' . $row, $job->created_at->format('Y-m-d'));
             $sheet->setCellValue('C' . $row, $job->created_at->diffInDays(now()));
             $sheet->setCellValue('D' . $row, $job->status);
+            $sheet->setCellValue('E' . $row, $job->source_item);
             $row++;
         }
 
-        foreach(range('A','D') as $col) {
+        foreach(range('A','E') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+    }
+
+    private function createCalibrationSheet($spreadsheet, $calItems)
+    {
+        $sheet = new Worksheet($spreadsheet, 'Calibration Activities');
+        $spreadsheet->addSheet($sheet);
+
+        $headers = ['ISO Number', 'Item Name', 'Serial Number', 'Planned Date', 'Vendor', 'Actual Cal. Date', 'Valid Until', 'Status'];
+        $sheet->fromArray($headers, NULL, 'A1');
+        $sheet->getStyle('A1:H1')->getFont()->setBold(true);
+
+        $row = 2;
+        foreach ($calItems as $item) {
+            $sheet->setCellValue('A' . $row, $item->isotank->iso_number ?? '-');
+            $sheet->setCellValue('B' . $row, $item->item_name);
+            $sheet->setCellValue('C' . $row, $item->serial_number);
+            $sheet->setCellValue('D' . $row, $item->planned_date ? $item->planned_date->format('Y-m-d') : '-');
+            $sheet->setCellValue('E' . $row, $item->vendor ?? '-');
+            $sheet->setCellValue('F' . $row, $item->calibration_date ? $item->calibration_date->format('Y-m-d') : '-');
+            $sheet->setCellValue('G' . $row, $item->valid_until ? $item->valid_until->format('Y-m-d') : '-');
+            $sheet->setCellValue('H' . $row, strtoupper($item->status));
+            
+            // Highlight completed
+            if ($item->status === 'completed') {
+                $sheet->getStyle("A$row:H$row")->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FFE8F5E9');
+            }
+            $row++;
+        }
+
+        foreach(range('A','H') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
     }
