@@ -11,7 +11,7 @@ class SendWeeklyReport extends Command
 
     public function handle()
     {
-        $this->info('Generating Weekly Report...');
+        $this->info('Generating Weekly Operations Report...');
 
         // 1. DATE RANGE
         $startOfWeek = now()->startOfWeek();
