@@ -19,7 +19,7 @@ class SendWeeklyReport extends Command
 
         // 2. ACTIVITY STATS (Throughput with Breakdown)
         // Incoming Breakdown
-        $incomingStats = \App\Models\InspectionJob::whereBetween('created_at', [$startOfWeek, $endOfWeek])
+        $incomingStats = \App\Models\InspectionJob::whereBetween('inspection_jobs.created_at', [$startOfWeek, $endOfWeek])
             ->where('activity_type', 'incoming_inspection')
             ->join('master_isotanks', 'inspection_jobs.isotank_id', '=', 'master_isotanks.id')
             ->selectRaw('master_isotanks.tank_category, count(*) as count')
@@ -27,7 +27,7 @@ class SendWeeklyReport extends Command
             ->pluck('count', 'tank_category');
 
         // Outgoing Started Breakdown
-        $outgoingStartedStats = \App\Models\InspectionJob::whereBetween('created_at', [$startOfWeek, $endOfWeek])
+        $outgoingStartedStats = \App\Models\InspectionJob::whereBetween('inspection_jobs.created_at', [$startOfWeek, $endOfWeek])
             ->where('activity_type', 'outgoing_inspection')
             ->join('master_isotanks', 'inspection_jobs.isotank_id', '=', 'master_isotanks.id')
             ->selectRaw('master_isotanks.tank_category, count(*) as count')
@@ -35,7 +35,7 @@ class SendWeeklyReport extends Command
             ->pluck('count', 'tank_category');
 
         // Outgoing Official Breakdown
-        $outgoingOfficialStats = \App\Models\InspectionLog::whereBetween('receiver_confirmed_at', [$startOfWeek, $endOfWeek])
+        $outgoingOfficialStats = \App\Models\InspectionLog::whereBetween('inspection_logs.receiver_confirmed_at', [$startOfWeek, $endOfWeek])
             ->where('inspection_type', 'outgoing_inspection')
             ->join('master_isotanks', 'inspection_logs.isotank_id', '=', 'master_isotanks.id')
             ->selectRaw('master_isotanks.tank_category, count(*) as count')
