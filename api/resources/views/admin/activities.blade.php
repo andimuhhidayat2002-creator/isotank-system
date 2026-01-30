@@ -569,7 +569,7 @@
                                 <td>{{ $job->destination ?? '-' }}</td>
                                 <td>{{ $job->receiver_name ?? '-' }}</td>
                                 <td class="text-end">
-                                    <form action="{{ route('admin.activities.inspection.delete', $job->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Cancel this job?')">
+                                    <form action="{{ route('admin.activities.inspection.delete', $job->id) }}" method="POST" class="d-inline delete-alert-form">
                                         @csrf @method('DELETE')
                                         <button type="submit" class="btn btn-sm btn-outline-danger p-1 px-2"><i class="bi bi-trash"></i> Cancel</button>
                                     </form>
@@ -614,7 +614,7 @@
                                 <td class="fw-bold"><a href="{{ route('admin.isotanks.show', $m->isotank_id) }}" class="text-decoration-none text-primary">{{ optional($m->isotank)->iso_number ?? 'UNKNOWN' }}</a></td>
                                 <td class="text-truncate" style="max-width: 150px;">{{ $m->source_item }}</td>
                                 <td class="text-end">
-                                    <form action="{{ route('admin.activities.maintenance.delete', $m->id) }}" method="POST" class="d-inline">
+                                    <form action="{{ route('admin.activities.maintenance.delete', $m->id) }}" method="POST" class="d-inline delete-alert-form">
                                         @csrf @method('DELETE')
                                         <button type="submit" class="btn btn-sm btn-outline-danger p-1 px-2"><i class="bi bi-trash"></i></button>
                                     </form>
@@ -655,7 +655,7 @@
                                     @endif
                                 </td>
                                 <td class="text-end">
-                                    <form action="{{ route('admin.activities.calibration.delete', $c->id) }}" method="POST" class="d-inline">
+                                    <form action="{{ route('admin.activities.calibration.delete', $c->id) }}" method="POST" class="d-inline delete-alert-form">
                                         @csrf @method('DELETE')
                                         <button type="submit" class="btn btn-sm btn-outline-danger p-1 px-2"><i class="bi bi-trash"></i></button>
                                     </form>
@@ -800,6 +800,24 @@ $(document).ready(function() {
                 });
             });
         }
+    });
+    // SweetAlert2 Delete Handler
+    $(document).on('submit', '.delete-alert-form', function(e) {
+        e.preventDefault();
+        var form = this;
+        Swal.fire({
+            title: 'Confirm Deletion',
+            text: "Are you sure you want to remove this activity? This cannot be undone.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                form.submit();
+            }
+        });
     });
 });
 </script>
