@@ -168,7 +168,7 @@ class DailyReportExcelService
         foreach ($maintenance['outstanding'] as $job) {
             $sheet->setCellValue('A' . $row, $job->isotank->iso_number);
             $sheet->setCellValue('B' . $row, $job->created_at->format('Y-m-d'));
-            $sheet->setCellValue('C' . $row, $job->created_at->diffInDays(now()));
+            $sheet->setCellValue('C' . $row, round($job->created_at->diffInDays(now()), 1));
             $sheet->setCellValue('D' . $row, $job->status);
             $sheet->setCellValue('E' . $row, $job->source_item);
             $row++;

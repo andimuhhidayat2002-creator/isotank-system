@@ -70,11 +70,11 @@
             <div style="font-size: 10px; color: #666; margin-bottom: 3px;">{{ $summary['outgoing_official_details'] ?? '' }}</div>
             <span class="sum-label" title="Receiver Confirmed">Official Out<br>(Completed)</span>
         </div>
-        <div class="summary-box" style="width: 20%;">
-            <span class="sum-number">{{ $summary['stock_site'] }}</span>
-            <div style="font-size: 10px; color: #666; margin-bottom: 3px;">{{ $summary['stock_site_details'] ?? '' }}</div>
-            <span class="sum-label">Stock<br>at Site</span>
-        </div>
+        <div class="summary-box" style="width: 20%; background-color: #e8f5e9; border: 2px solid #43a047;">
+        <span class="sum-number" style="color: #2e7d32; font-size: 32px;">{{ $summary['stock_site'] }}</span>
+        <div style="font-size: 10px; color: #2e7d32; margin-bottom: 3px; font-weight: bold;">{{ $summary['stock_site_details'] ?? '' }}</div>
+        <span class="sum-label" style="color: #1b5e20; font-weight: bold;">Stock at Site<br>(SMGRS)</span>
+    </div>
         <div class="summary-box" style="width: 20%;">
             <span class="sum-number">{{ $summary['stock_other'] }}</span>
             <div style="font-size: 10px; color: #666; margin-bottom: 3px;">{{ $summary['stock_other_details'] ?? '' }}</div>
@@ -82,149 +82,62 @@
         </div>
     </div>
 
-    <!-- 2. HIGHLIGHT MASALAH (EXCEPTION REPORT) -->
+    <!-- 2. FILLING STATUS BREAKDOWN (SYSTEM OCCUPANCY) -->
+    <h3 style="margin-top: 30px; border-bottom: 2px solid #0d47a1; color: #0d47a1;">📊 System Occupancy Status</h3>
+    @if(!empty($summary['filling_status_breakdown']))
+    <div style="background-color: #fff; border: 1px solid #e9ecef; border-radius: 8px; overflow: hidden;">
+        <table style="width: 100%; margin: 0;">
+            <tr style="background-color: #f8f9fa;">
+                <th style="width: 70%; text-align: left; padding: 12px 20px; color: #495057;">Status Code</th>
+                <th style="width: 30%; text-align: right; padding: 12px 20px; color: #495057;">Count</th>
+            </tr>
+            @foreach($summary['filling_status_breakdown'] as $status => $count)
+            <tr style="border-bottom: 1px solid #f1f1f1;">
+                <td style="padding: 10px 20px;">
+                    <span style="font-weight: 600; color: #333;">{{ $status }}</span>
+                </td>
+                <td style="text-align: right; padding: 10px 20px;">
+                    <span style="background-color: #e3f2fd; color: #0d47a1; padding: 4px 12px; border-radius: 12px; font-weight: bold; font-size: 13px;">{{ $count }}</span>
+                </td>
+            </tr>
+            @endforeach
+        </table>
+    </div>
+    @else
+    <p style="color: #666; font-style: italic;">No status data available.</p>
+    @endif
+
+    <!-- 3. HIGHLIGHT MASALAH (EXCEPTION REPORT) -->
     @if(count($issues) > 0)
     <h3 style="color: #c62828; border-bottom-color: #c62828;">⚠️ Exception Report (Needs Attention)</h3>
-    <p>Isotank berikut ditemukan memiliki masalah/kerusakan pada inspeksi hari ini:</p>
-    <table>
+    <table style="border: 1px solid #ffebee;">
         <thead>
-            <tr>
-                <th>ISO Number</th>
-                <th>Inspection Type</th>
-                <th>Issue Found</th>
-                <th>Action</th>
+            <tr style="background-color: #ffebee;">
+                <th style="color: #c62828;">ISO Number</th>
+                <th style="color: #c62828;">Issue Found</th>
             </tr>
         </thead>
         <tbody>
             @foreach($issues as $issue)
             <tr>
-                <td><strong>{{ $issue['iso_number'] }}</strong></td>
-                <td>{{ ucfirst(str_replace('_', ' ', $issue['type'])) }}</td>
-                <td style="color: #c62828;">{{ $issue['notes'] ?? 'Multiple conditions flagged as Not Good' }}</td>
-                <td>
-                    <span class="badge bg-warning">CHECK MAINTENANCE</span>
-                </td>
+                <td style="font-weight: bold;">{{ $issue['iso_number'] }}</td>
+                <td style="color: #d32f2f;">{{ $issue['notes'] }}</td>
             </tr>
             @endforeach
         </tbody>
     </table>
-    @else
-    <h3>✅ Exception Report</h3>
-    <p style="color: #2e7d32; font-style: italic;">No critical issues reported in today's inspections.</p>
     @endif
 
-    <!-- 3. INSPECTION REPORTS WITH PDF LINKS -->
-    <h3>📄 Inspection Activity & Reports</h3>
-    @if(count($inspectionLogs) > 0)
-    <table>
-        <thead>
-            <tr>
-                <th>Time</th>
-                <th>ISO Number</th>
-                <th>Type</th>
-                <th>Inspector</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($inspectionLogs as $log)
-            <tr>
-                <td>{{ $log->created_at->format('H:i') }}</td>
-                <td><strong>{{ $log->isotank->iso_number }}</strong></td>
-                <td>
-                    @if($log->inspection_type == 'incoming_inspection')
-                        <span class="badge bg-success">INCOMING</span>
-                    @else
-                        <span class="badge bg-warning">OUTGOING</span>
-                    @endif
-                </td>
-                <td>{{ $log->inspector->name ?? '-' }}</td>
-            </tr>
-            @endforeach
-        </tbody>
-    </table>
-    @else
-    <p style="color: #888; font-style: italic;">No inspection activities recorded today.</p>
-    @endif
-
-    <!-- 4. MAINTENANCE UPDATE (New Structure) -->
-    <h3>🔧 Maintenance Updates</h3>
-    
-    <!-- Completed Today -->
-    <h4 style="margin-bottom: 5px; font-size: 15px;">Completed Today</h4>
-    @if(count($maintenance['completed']) > 0)
-    <table>
-        <thead>
-            <tr>
-                <th>ISO Number</th>
-                <th>Item / Description</th>
-                <th>Technician</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($maintenance['completed'] as $job)
-            <tr>
-                <td>{{ $job->isotank->iso_number }}</td>
-                <td>{{ $job->source_item }} - {{ Str::limit($job->description, 30) }}</td>
-                <td>{{ $job->completedBy->name ?? 'Unknown' }}</td>
-            </tr>
-            @endforeach
-        </tbody>
-    </table>
-    @else
-    <p style="font-size: 13px; color: #888;">No maintenance jobs completed today.</p>
-    @endif
-
-    <!-- Outstanding (Action Required) -->
-    <h4 style="margin-bottom: 5px; font-size: 15px; margin-top: 20px; color: #e65100;">Action Required (Outstanding)</h4>
-    @if(count($maintenance['outstanding']) > 0)
-    <table>
-        <thead>
-            <tr>
-                <th>ISO Number</th>
-                <th>Pending Since</th>
-                <th>Days Open</th>
-                <th>Status</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($maintenance['outstanding'] as $job)
-            <tr>
-                <td><strong>{{ $job->isotank->iso_number }}</strong></td>
-                <td>{{ $job->created_at->format('d M Y') }}</td>
-                <td style="color: #c62828; font-weight: bold;">{{ $job->created_at->diffInDays(now()) }} Days</td>
-                <td><span class="badge bg-warning">{{ strtoupper($job->status) }}</span></td>
-            </tr>
-            @endforeach
-        </tbody>
-    </table>
-    @else
-    <p style="font-size: 13px; color: #2e7d32;">No outstanding action items.</p>
-    @endif
-
-    <!-- Deferred (New Section) -->
-    <h4 style="margin-bottom: 5px; font-size: 15px; margin-top: 20px; color: #607d8b;">Deferred Maintenance (Approved)</h4>
-    @if(isset($maintenance['deferred']) && count($maintenance['deferred']) > 0)
-    <table>
-        <thead>
-            <tr>
-                <th>ISO Number</th>
-                <th>Item</th>
-                <th>Last Update</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($maintenance['deferred'] as $job)
-            <tr>
-                <td><strong>{{ $job->isotank->iso_number }}</strong></td>
-                <td>{{ $job->source_item }}</td>
-                <td>{{ $job->updated_at->format('d M Y') }}</td>
-            </tr>
-            @endforeach
-        </tbody>
-    </table>
-    @else
-    <p style="font-size: 13px; color: #888;">No deferred items.</p>
-    @endif
+    <!-- 4. ATTACHMENT NOTICE -->
+    <div style="margin-top: 40px; padding: 20px; background-color: #f1f8e9; border: 1px solid #c8e6c9; border-radius: 8px; text-align: center;">
+        <h4 style="margin: 0 0 10px; color: #2e7d32;">📥 Detailed Data Attached</h4>
+        <p style="margin: 0; font-size: 14px; color: #558b2f;">
+            Please refer to the attached Excel file for the complete list of:
+            <br>• Daily Inspection Activities (Log)
+            <br>• Detailed Maintenance Jobs (Open & Completed)
+            <br>• Calibration Records
+        </p>
+    </div>
 
     <div class="footer">
         <p>This is an automated system message. Please do not reply directly to this email.</p>
