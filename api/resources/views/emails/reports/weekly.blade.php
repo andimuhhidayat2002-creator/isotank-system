@@ -47,7 +47,7 @@
         </div>
 
         <div class="section">
-            <h3 class="section-title">2. ISOTANK STATUS ({{ $total_fleet }} Units Total)</h3>
+            <h3 class="section-title">2. ISOTANK STATUS ({{ $total_fleet }} Isotanks Total)</h3>
             <p style="margin-top:0;">Berikut adalah sebaran status tanki saat ini:</p>
             <table>
                 <thead>

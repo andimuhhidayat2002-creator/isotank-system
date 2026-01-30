@@ -99,7 +99,9 @@ class SendWeeklyReport extends Command
         $expiryLimit = now()->addDays(30);
         
         $alertTanks = \App\Models\MasterIsotank::with(['components' => function($q) use ($expiryLimit) {
-            $q->where('expiry_date', '<=', $expiryLimit);
+            $q->where('expiry_date', '<=', $expiryLimit)
+              ->where('component_type', '!=', 'PRV') // Exclude PRV as per user request
+              ->whereNotNull('expiry_date');
         }])->get()->filter(function($tank) {
              return $tank->components->isNotEmpty();
         });
@@ -137,7 +139,7 @@ class SendWeeklyReport extends Command
         $summarySheet->setCellValue('A'.$row, 'Total Inspections (Incoming + Outgoing)')->setCellValue('B'.$row, $inspectionsWeek); $row++;
         $summarySheet->setCellValue('A'.$row, 'Maintenance Jobs Completed')->setCellValue('B'.$row, $maintenanceWeek); $row++;
         $summarySheet->setCellValue('A'.$row, 'Active Maintenance Jobs')->setCellValue('B'.$row, $maintenanceActive); $row++;
-        $summarySheet->setCellValue('A'.$row, 'Total Fleet Size')->setCellValue('B'.$row, $totalFleet); $row++;
+        $summarySheet->setCellValue('A'.$row, 'Total Isotanks')->setCellValue('B'.$row, $totalFleet); $row++;
         $row++;
 
         // Filling Status Section
@@ -175,9 +177,9 @@ class SendWeeklyReport extends Command
         $summarySheet->getColumnDimension('B')->setAutoSize(true);
 
 
-        // --- SHEET 2: FLEET LIST ---
+        // --- SHEET 2: ISOTANK LIST ---
         $sheet = $spreadsheet->createSheet();
-        $sheet->setTitle('Fleet Status List');
+        $sheet->setTitle('Isotank Status List');
         
         // Header
         $headers = ['ISO Number', 'Owner', 'Location', 'Status', 'Filling Status', 'Next Expiry Component', 'Expiry Date'];
@@ -195,7 +197,9 @@ class SendWeeklyReport extends Command
         $row = 2;
         // Optimization: Use chunking if dataset is large, but for now filtering all() is acceptable for <1000 units
         $tanks = \App\Models\MasterIsotank::with(['components' => function($q) {
-             $q->orderBy('expiry_date', 'asc');
+             $q->where('component_type', '!=', 'PRV') // Exclude PRV
+               ->whereNotNull('expiry_date')
+               ->orderBy('expiry_date', 'asc');
         }])->get();
 
         foreach($tanks as $tank) {
