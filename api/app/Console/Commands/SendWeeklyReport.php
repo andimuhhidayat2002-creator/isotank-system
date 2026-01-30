@@ -85,10 +85,76 @@ class SendWeeklyReport extends Command
         $excelPath = storage_path('app/' . $filename);
 
         $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
-        $sheet = $spreadsheet->getActiveSheet();
+        
+        // --- SHEET 1: SUMMARY ---
+        $summarySheet = $spreadsheet->getActiveSheet();
+        $summarySheet->setTitle('Weekly Summary');
+        
+        // Title
+        $summarySheet->setCellValue('A1', 'WEEKLY OPERATIONS SUMMARY');
+        $summarySheet->mergeCells('A1:C1');
+        $summarySheet->setCellValue('A2', 'Period: ' . $startOfWeek->format('d M Y') . ' - ' . $endOfWeek->format('d M Y'));
+        $summarySheet->mergeCells('A2:C2');
+        
+        $headerStyleLocal = [
+            'font' => ['bold' => true, 'size' => 14],
+            'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT],
+        ];
+        $summarySheet->getStyle('A1')->applyFromArray($headerStyleLocal);
+        
+        // KPIs Section
+        $row = 4;
+        $summarySheet->setCellValue('A'.$row, 'KEY PERFORMANCE INDICATORS');
+        $summarySheet->getStyle('A'.$row)->getFont()->setBold(true);
+        $row++;
+        
+        $summarySheet->setCellValue('A'.$row, 'Total Inspections (Incoming + Outgoing)')->setCellValue('B'.$row, $inspectionsWeek); $row++;
+        $summarySheet->setCellValue('A'.$row, 'Maintenance Jobs Completed')->setCellValue('B'.$row, $maintenanceWeek); $row++;
+        $summarySheet->setCellValue('A'.$row, 'Active Maintenance Jobs')->setCellValue('B'.$row, $maintenanceActive); $row++;
+        $summarySheet->setCellValue('A'.$row, 'Total Fleet Size')->setCellValue('B'.$row, $totalFleet); $row++;
+        $row++;
+
+        // Filling Status Section
+        $summarySheet->setCellValue('A'.$row, 'FILLING STATUS BREAKDOWN');
+        $summarySheet->getStyle('A'.$row)->getFont()->setBold(true);
+        $row++;
+
+        if ($breakdownStatus->isNotEmpty()) {
+            foreach ($breakdownStatus as $stat) {
+                // Ensure label is readable
+                $label = $stat['code'] ? ucfirst(str_replace('_', ' ', $stat['code'])) : 'No Status';
+                $summarySheet->setCellValue('A'.$row, $label);
+                $summarySheet->setCellValue('B'.$row, $stat['count']);
+                $row++;
+            }
+        } else {
+             $summarySheet->setCellValue('A'.$row, 'No data available.'); $row++;
+        }
+        $row++;
+
+        // Location Section
+        $summarySheet->setCellValue('A'.$row, 'LOCATION DISTRIBUTION');
+        $summarySheet->getStyle('A'.$row)->getFont()->setBold(true);
+        $row++;
+
+        if ($breakdownLocation->isNotEmpty()) {
+            foreach ($breakdownLocation as $loc) {
+                $summarySheet->setCellValue('A'.$row, $loc['name']);
+                $summarySheet->setCellValue('B'.$row, $loc['count']);
+                $row++;
+            }
+        }
+        
+        $summarySheet->getColumnDimension('A')->setAutoSize(true);
+        $summarySheet->getColumnDimension('B')->setAutoSize(true);
+
+
+        // --- SHEET 2: FLEET LIST ---
+        $sheet = $spreadsheet->createSheet();
+        $sheet->setTitle('Fleet Status List');
         
         // Header
-        $headers = ['ISO Number', 'Owner', 'Location', 'Status', 'Next Expiry Component', 'Expiry Date'];
+        $headers = ['ISO Number', 'Owner', 'Location', 'Status', 'Filling Status', 'Next Expiry Component', 'Expiry Date'];
         $sheet->fromArray($headers, NULL, 'A1');
         
         // Style Header (Bold + Color)
@@ -97,12 +163,17 @@ class SendWeeklyReport extends Command
             'fill' => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => '0d47a1']],
             'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER],
         ];
-        $sheet->getStyle('A1:F1')->applyFromArray($headerStyle);
+        $sheet->getStyle('A1:G1')->applyFromArray($headerStyle); // Adjusted range A1:G1
         
         // Data
         $row = 2;
-        foreach(\App\Models\MasterIsotank::all() as $tank) {
-            $earliest = $tank->components()->orderBy('expiry_date', 'asc')->first();
+        // Optimization: Use chunking if dataset is large, but for now filtering all() is acceptable for <1000 units
+        $tanks = \App\Models\MasterIsotank::with(['components' => function($q) {
+             $q->orderBy('expiry_date', 'asc');
+        }])->get();
+
+        foreach($tanks as $tank) {
+            $earliest = $tank->components->first(); // Since we ordered in eager load
             
             // Format Component Name
             $compName = '-';
@@ -110,15 +181,20 @@ class SendWeeklyReport extends Command
                 if ($earliest->component_type === 'PG') {
                     $compName = 'Pressure Gauge';
                 } else {
-                    $compName = $earliest->component_type . ' ' . $earliest->position_code;
+                    $compName = $earliest->component_type . ($earliest->position_code ? ' ' . $earliest->position_code : '');
                 }
             }
+
+            // Readable Filling Status
+            $fillRaw = $tank->filling_status_code;
+            $fillReadable = $fillRaw ? ucfirst(str_replace('_', ' ', $fillRaw)) : '-';
             
             $dataset = [
                 $tank->iso_number,
                 $tank->owner,
                 $tank->location,
-                $tank->filling_status_code,
+                $tank->status,
+                $fillReadable, // New Column
                 $compName,
                 ($earliest && $earliest->expiry_date) ? $earliest->expiry_date->format('Y-m-d') : '-'
             ];
@@ -128,10 +204,11 @@ class SendWeeklyReport extends Command
         }
 
         // Auto-Size Columns
-        foreach(range('A','F') as $col) {
+        foreach(range('A','G') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
 
+        $spreadsheet->setActiveSheetIndex(0); // Set Summary as first view
         $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
         $writer->save($excelPath);
 

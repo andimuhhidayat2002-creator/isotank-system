@@ -54,18 +54,36 @@ class DailyReportExcelService
         $sheet->setCellValue('A6', 'Active Maintenance Jobs (Total)')->setCellValue('B6', $summary['open_maintenance']);
         $sheet->setCellValue('A7', 'Calibration Compliance Progress')->setCellValue('B7', $summary['calibration_progress'] . '%');
 
-        // Movement Summary
-        $sheet->setCellValue('A9', 'MOVEMENT SUMMARY');
+        // Filling Status Summary (New)
+        $sheet->setCellValue('A9', 'FILLING STATUS SUMMARY');
         $sheet->getStyle('A9')->getFont()->setBold(true);
         
-        $sheet->setCellValue('A10', 'Incoming Today (Gate In)')->setCellValue('B10', $summary['incoming']);
-        $sheet->setCellValue('A11', 'Outgoing Process Started (Gate Out Start)')->setCellValue('B11', $summary['outgoing_started']);
-        $sheet->setCellValue('A12', 'Official Outgoing (Gate Out Completed)')->setCellValue('B12', $summary['outgoing_official']);
-        $sheet->setCellValue('A13', 'Stock at Site')->setCellValue('B13', $summary['stock_site']);
-        $sheet->setCellValue('A14', 'Stock Other Locations')->setCellValue('B14', $summary['stock_other']);
+        $row = 10;
+        if (!empty($summary['filling_status_breakdown'])) {
+            foreach ($summary['filling_status_breakdown'] as $status => $count) {
+                $sheet->setCellValue('A' . $row, $status);
+                $sheet->setCellValue('B' . $row, $count);
+                $row++;
+            }
+        } else {
+            $sheet->setCellValue('A' . $row, 'No active status data available.');
+            $row++;
+        }
+        $row++; // Spacer
+
+        // Movement Summary
+        $sheet->setCellValue('A'.$row, 'MOVEMENT SUMMARY');
+        $sheet->getStyle('A'.$row)->getFont()->setBold(true);
+        $row++;
+        
+        $sheet->setCellValue('A'.$row, 'Incoming Today (Gate In)')->setCellValue('B'.$row, $summary['incoming']); $row++;
+        $sheet->setCellValue('A'.$row, 'Outgoing Process Started (Gate Out Start)')->setCellValue('B'.$row, $summary['outgoing_started']); $row++;
+        $sheet->setCellValue('A'.$row, 'Official Outgoing (Gate Out Completed)')->setCellValue('B'.$row, $summary['outgoing_official']); $row++;
+        $sheet->setCellValue('A'.$row, 'Stock at Site')->setCellValue('B'.$row, $summary['stock_site']); $row++;
+        $sheet->setCellValue('A'.$row, 'Stock Other Locations')->setCellValue('B'.$row, $summary['stock_other']); $row++;
+        $row++; // Spacer
 
         // Exceptions
-        $row = 16;
         $sheet->setCellValue('A'.$row, 'EXCEPTION REPORT (ISSUES)');
         $sheet->getStyle('A'.$row)->getFont()->setBold(true);
         $row++;

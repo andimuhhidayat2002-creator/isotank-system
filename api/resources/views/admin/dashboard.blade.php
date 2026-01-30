@@ -32,6 +32,71 @@
         </div>
     </div>
 
+{{-- 1.5 SYSTEM OCCUPANCY (FILLING STATUS) --}}
+    @if(!empty($fillingStatusStats))
+    <div class="mb-5">
+        <div class="card border-0 shadow-sm overflow-hidden">
+            <div class="card-header bg-white border-0 pt-4 px-4 pb-0">
+                 <h5 class="fw-bold text-dark mb-0">System Occupancy Status</h5>
+            </div>
+            <div class="card-body p-4">
+                {{-- Big Progress Bar --}}
+                <div class="progress mb-4" style="height: 25px;">
+                    @php
+                        $totalTanks = array_sum(array_column($fillingStatusStats, 'count'));
+                        // Custom hex colors matching the cards below
+                        $hexColors = [
+                            'filled' => '#0d6efd',         // Primary Blue
+                            'ready_to_fill' => '#198754',  // Success Green
+                            'ongoing_inspection' => '#0dcaf0', // Info Cyan
+                            'under_maintenance' => '#ffc107',  // Warning Yellow
+                            'waiting_team_calibration' => '#dc3545', // Danger Red
+                            'cleaning' => '#6c757d',       // Secondary Gray
+                            'class_survey' => '#6f42c1',   // Purple
+                            'no_status' => '#e9ecef'       // Light Gray for unknowns
+                        ];
+                    @endphp
+                    
+                    @foreach($fillingStatusStats as $stat)
+                         @php 
+                            $width = $totalTanks > 0 ? ($stat['count'] / $totalTanks) * 100 : 0;
+                            $bg = $hexColors[$stat['code']] ?? '#adb5bd';
+                            $textColor = ($stat['code'] == 'no_status' || $stat['code'] == 'under_maintenance' || $stat['code'] == 'ongoing_inspection') ? 'text-dark' : 'text-white';
+                         @endphp
+                         @if($width > 0)
+                            <div class="progress-bar {{ $textColor }}" role="progressbar" style="width: {{ $width }}%; background-color: {{ $bg }};" 
+                                 data-bs-toggle="tooltip" title="{{ $stat['description'] }}: {{ $stat['count'] }}">
+                                @if($width > 5) {{ $stat['count'] }} @endif
+                            </div>
+                         @endif
+                    @endforeach
+                </div>
+
+                {{-- Breakdown Cards --}}
+                <div class="row row-cols-2 row-cols-md-4 row-cols-xl-6 g-3">
+                     @foreach($fillingStatusStats as $stat)
+                        @php $c = $hexColors[$stat['code']] ?? '#adb5bd'; @endphp
+                        <div class="col">
+                            <div class="p-3 rounded border h-100 position-relative overflow-hidden bg-white hover-card">
+                                <div class="position-absolute top-0 start-0 w-100" style="height: 4px; background-color: {{ $c }};"></div>
+                                <div class="d-flex flex-column h-100 justify-content-between">
+                                    <div class="text-uppercase text-muted fw-bold mb-2 text-truncate" style="font-size: 0.65rem; letter-spacing: 0.5px;" title="{{ $stat['description'] }}">
+                                        {{ $stat['description'] }}
+                                    </div>
+                                    <div class="d-flex align-items-end justify-content-between">
+                                        <span class="display-6 fw-bold text-dark" style="font-size: 1.5rem;">{{ $stat['count'] }}</span>
+                                        <span class="text-xs text-muted">{{ $totalTanks > 0 ? round(($stat['count'] / $totalTanks)*100, 1) : 0 }}%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                     @endforeach
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
     {{-- 2. PRIMARY KPI CARDS --}}
     <div class="row g-4 mb-5">
         {{-- Total Active --}}
@@ -210,28 +275,7 @@
         </div>
     </div>
     
-    {{-- 5. FILLING STATUS SUMMARY (Compact) --}}
-    @if(!empty($fillingStatusStats))
-    <div class="mb-5">
-        <h5 class="fw-bold text-dark mb-3">Status Breakdown</h5>
-        <div class="card border-0 shadow-sm">
-            <div class="card-body p-4">
-                <div class="row text-center">
-                     @foreach($fillingStatusStats as $stat)
-                        @php
-                            $colors = ['ongoing_inspection'=>'#6B7280', 'ready_to_fill'=>'#10B981', 'filled'=>'#1F4FD8', 'under_maintenance'=>'#F97316', 'waiting_team_calibration'=>'#F59E0B', 'class_survey'=>'#8B5CF6'];
-                            $c = $colors[$stat['code']] ?? '#9CA3AF';
-                        @endphp
-                        <div class="col border-end last-no-border">
-                            <h4 class="fw-bold mb-0" style="color: {{ $c }}">{{ $stat['count'] }}</h4>
-                            <div class="text-muted text-uppercase fw-bold" style="font-size: 0.65rem; letter-spacing: 0.5px;">{{ $stat['description'] }}</div>
-                        </div>
-                     @endforeach
-                </div>
-            </div>
-        </div>
-    </div>
-    @endif
+
 
 </div>
 

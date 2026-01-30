@@ -283,6 +283,18 @@ class ReportController extends Controller
         $completedCalJobs = $todaysCalJobs->where('status', 'completed')->count();
         $calProgress = $totalCalJobs > 0 ? round(($completedCalJobs / $totalCalJobs) * 100, 2) : 0;
 
+        // FILLING STATUS BREAKDOWN
+        $fillingStatusRaw = MasterIsotank::select('filling_status_code', \Illuminate\Support\Facades\DB::raw('count(*) as count'))
+            ->where('status', 'active')
+            ->groupBy('filling_status_code')
+            ->orderBy('count', 'desc')
+            ->get();
+        
+        $fillingStatusFormatted = $fillingStatusRaw->mapWithKeys(function($item) {
+            $label = $item->filling_status_code ? ucfirst(str_replace('_', ' ', $item->filling_status_code)) : 'No Status';
+            return [$label => $item->count];
+        })->toArray();
+
         $summary = [
             'incoming' => $incomingStats->sum(),
             'incoming_details' => $formatBreakdown($incomingStats),
@@ -302,6 +314,8 @@ class ReportController extends Controller
             'open_maintenance' => $openMaintenanceCount,
             'inspections_today' => $inspectionsTodayCount,
             'calibration_progress' => $calProgress,
+
+            'filling_status_breakdown' => $fillingStatusFormatted,
         ];
 
         // 2. Issues (Exception Report)
