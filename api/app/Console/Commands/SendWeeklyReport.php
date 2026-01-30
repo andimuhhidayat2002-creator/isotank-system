@@ -17,25 +17,51 @@ class SendWeeklyReport extends Command
         $startOfWeek = now()->startOfWeek();
         $endOfWeek   = now()->endOfWeek();
 
-        // 2. ACTIVITY STATS (Throughput)
-        $incomingWeek = \App\Models\InspectionJob::whereBetween('created_at', [$startOfWeek, $endOfWeek])
+        // 2. ACTIVITY STATS (Throughput with Breakdown)
+        // Incoming Breakdown
+        $incomingStats = \App\Models\InspectionJob::whereBetween('created_at', [$startOfWeek, $endOfWeek])
             ->where('activity_type', 'incoming_inspection')
-            ->count();
-            
-        $outgoingStartedWeek = \App\Models\InspectionJob::whereBetween('created_at', [$startOfWeek, $endOfWeek])
+            ->join('master_isotanks', 'inspection_jobs.isotank_id', '=', 'master_isotanks.id')
+            ->selectRaw('master_isotanks.tank_category, count(*) as count')
+            ->groupBy('master_isotanks.tank_category')
+            ->pluck('count', 'tank_category');
+
+        // Outgoing Started Breakdown
+        $outgoingStartedStats = \App\Models\InspectionJob::whereBetween('created_at', [$startOfWeek, $endOfWeek])
             ->where('activity_type', 'outgoing_inspection')
-            ->count();
+            ->join('master_isotanks', 'inspection_jobs.isotank_id', '=', 'master_isotanks.id')
+            ->selectRaw('master_isotanks.tank_category, count(*) as count')
+            ->groupBy('master_isotanks.tank_category')
+            ->pluck('count', 'tank_category');
 
-        $outgoingOfficialWeek = \App\Models\InspectionLog::whereBetween('receiver_confirmed_at', [$startOfWeek, $endOfWeek])
+        // Outgoing Official Breakdown
+        $outgoingOfficialStats = \App\Models\InspectionLog::whereBetween('receiver_confirmed_at', [$startOfWeek, $endOfWeek])
             ->where('inspection_type', 'outgoing_inspection')
-            ->count();
+            ->join('master_isotanks', 'inspection_logs.isotank_id', '=', 'master_isotanks.id')
+            ->selectRaw('master_isotanks.tank_category, count(*) as count')
+            ->groupBy('master_isotanks.tank_category')
+            ->pluck('count', 'tank_category');
 
+        // Helper Closure
+        $formatBreakdown = function($stats) {
+            $parts = [];
+            foreach($stats as $cat => $count) {
+                $label = ($cat && $cat !== '') ? $cat : 'T75';
+                if (isset($parts[$label])) $parts[$label] += $count;
+                else $parts[$label] = $count;
+            }
+            $str = [];
+            foreach($parts as $l => $c) $str[] = "$l: $c";
+            return empty($str) ? '0' : implode(', ', $str);
+        };
+
+        $incomingWeek = $incomingStats->sum();
+        $outgoingOfficialWeek = $outgoingOfficialStats->sum();
+        $outgoingStartedWeek = $outgoingStartedStats->sum();
         $inspectionsWeek = $incomingWeek + $outgoingOfficialWeek;
 
-        // Total YTD (Approximation consistent with logic)
-        $incomingTotal = \App\Models\InspectionJob::where('activity_type', 'incoming_inspection')->count();
-        $outgoingTotal = \App\Models\InspectionLog::whereNotNull('receiver_confirmed_at')->count();
-        $inspectionsTotal = $incomingTotal + $outgoingTotal;
+        $incomingDesc = $incomingWeek . ' ' . ($incomingWeek > 0 ? '(' . $formatBreakdown($incomingStats) . ')' : '');
+        $outgoingDesc = $outgoingOfficialWeek . ' (Official Out) ' . ($outgoingOfficialWeek > 0 ? '(' . $formatBreakdown($outgoingOfficialStats) . ')' : '');
 
         $maintenanceWeek = \App\Models\MaintenanceJob::whereBetween('completed_at', [$startOfWeek, $endOfWeek])->count();
         $maintenanceActive = \App\Models\MaintenanceJob::whereNull('completed_at')->count();
@@ -212,11 +238,18 @@ class SendWeeklyReport extends Command
         $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
         $writer->save($excelPath);
 
-        // 7. PREPARE EMAIL DATA
+        // 7. PREPARE EMAIL DATA // Re-calculate Total YTD
+        $incomingTotal = \App\Models\InspectionJob::where('activity_type', 'incoming_inspection')->count();
+        $outgoingTotal = \App\Models\InspectionLog::whereNotNull('receiver_confirmed_at')->count();
+        $inspectionsTotal = $incomingTotal + $outgoingTotal;
+
         $data = [
             'date_range' => $startOfWeek->format('d M') . ' - ' . $endOfWeek->format('d M Y'),
             'inspections_week' => $inspectionsWeek,
             'inspections_total' => $inspectionsTotal,
+            'incoming_desc' => $incomingDesc,
+            'outgoing_desc' => $outgoingDesc,
+            'outgoing_started_desc' => $outgoingStartedWeek . ' (Process Started)',
             'maintenance_week' => $maintenanceWeek,
             'maintenance_active' => $maintenanceActive,
             'total_fleet' => $totalFleet,
