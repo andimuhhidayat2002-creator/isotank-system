@@ -353,7 +353,7 @@
                             <td>{{ $ins->inspector->name ?? '-' }}</td>
                             <td>{{ $ins->filling_status_desc }}</td>
                             <td>
-                                @if($ins->pdf_path) <a href="{{ asset('storage/'.$ins->pdf_path) }}" target="_blank" class="btn btn-xs btn-danger"><i class="bi bi-pdf"></i> PDF</a> @endif
+                                @if($ins->pdf_path) <a href="{{ route('admin.reports.inspection.pdf', $ins->id) }}" target="_blank" class="btn btn-xs btn-danger"><i class="bi bi-pdf"></i> PDF</a> @endif
                                 <a href="{{ route('admin.reports.inspection.show', $ins->id) }}" class="btn btn-xs btn-info"><i class="bi bi-eye"></i></a>
                             </td>
                         </tr>

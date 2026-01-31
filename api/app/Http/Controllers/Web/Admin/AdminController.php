@@ -1213,9 +1213,16 @@ class AdminController extends Controller
     public function downloadInspectionPdf($id)
     {
         $inspection = InspectionLog::with(['isotank', 'inspector', 'inspectionJob'])->findOrFail($id);
+        
+        // 1. Try to serve existing PDF from storage (Private/Local)
+        if ($inspection->pdf_path && \Illuminate\Support\Facades\Storage::disk('local')->exists($inspection->pdf_path)) {
+            return \Illuminate\Support\Facades\Storage::disk('local')->download($inspection->pdf_path);
+        }
+
+        // 2. Fallback: Generate if not exists
         $isotank = $inspection->isotank;
         $inspector = $inspection->inspector;
-        $job = $inspection->inspectionJob; // Ensure $job variable is available
+        $job = $inspection->inspectionJob; 
         $type = ($inspection->inspection_type == 'incoming_inspection') ? 'incoming' : 'outgoing';
 
         // Safety check for missing isotank to prevent 500 Error
