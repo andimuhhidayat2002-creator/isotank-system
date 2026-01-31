@@ -6,7 +6,7 @@
     <div>
         <div class="btn-group me-2">
             @if($log->pdf_path)
-                <a href="{{ asset('storage/' . $log->pdf_path) }}" target="_blank" class="btn btn-outline-danger" title="View previously saved PDF">
+                <a href="{{ route('admin.reports.inspection.pdf', $log->id) }}" target="_blank" class="btn btn-outline-danger" title="View PDF">
                     <i class="bi bi-eye"></i> View Saved
                 </a>
             @endif

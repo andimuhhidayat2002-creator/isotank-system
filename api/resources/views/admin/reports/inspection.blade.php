@@ -44,7 +44,7 @@
                         <td class="text-end">
                             <div class="btn-group btn-group-sm">
                                 @if($log->pdf_path)
-                                    <a href="{{ asset('storage/' . $log->pdf_path) }}" target="_blank" class="btn btn-outline-danger" title="View PDF">
+                                    <a href="{{ route('admin.reports.inspection.pdf', $log->id) }}" target="_blank" class="btn btn-outline-danger" title="View PDF">
                                         <i class="bi bi-file-earmark-pdf"></i>
                                     </a>
                                 @else
