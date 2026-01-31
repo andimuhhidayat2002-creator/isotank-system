@@ -98,7 +98,7 @@ class MaintenanceJobController extends Controller
             }
 
             if ($request->hasFile('after_photo')) {
-                $path = $request->file('after_photo')->store('maintenance', 'public');
+                $path = $request->file('after_photo')->store('maintenance', 'local');
                 $updateData['after_photo'] = $path;
             }
             

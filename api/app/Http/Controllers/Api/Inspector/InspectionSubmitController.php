@@ -240,7 +240,7 @@ class InspectionSubmitController extends Controller
             if (str_starts_with($key, 'photo_')) {
                 if ($request->hasFile($key)) {
                     // It's a new upload - store it
-                    $path = $request->file($key)->store('inspections', 'public');
+                    $path = $request->file($key)->store('inspections', 'local');
                     $validated[$key] = $path;
                     $allInput[$key] = $path; // Important: Update allInput so triggerMaintenance receives the string path
                 } else {
@@ -650,7 +650,7 @@ class InspectionSubmitController extends Controller
                          $photoPath = $val;
                      } elseif ($val instanceof \Illuminate\Http\UploadedFile) {
                          // Safety fallback: It's still a file, upload it now
-                         $photoPath = $val->store('inspections', 'public');
+                         $photoPath = $val->store('inspections', 'local');
                      }
                 }
 

@@ -65,7 +65,7 @@
                     <div class="card-header bg-secondary text-white">Before Photo</div>
                     <div class="card-body p-2 text-center">
                         @if($job->before_photo)
-                            <img src="{{ asset('storage/' . $job->before_photo) }}" class="img-fluid rounded border shadow-sm" style="max-height: 300px;">
+                            <img src="{{ route('admin.media', ['path' => $job->before_photo]) }}" class="img-fluid rounded border shadow-sm" style="max-height: 300px;">
                         @else
                             <div class="py-5 text-muted small">No before photo available</div>
                         @endif
@@ -77,7 +77,7 @@
                     <div class="card-header bg-success text-white">After Photo</div>
                     <div class="card-body p-2 text-center">
                         @if($job->after_photo)
-                            <img src="{{ asset('storage/' . $job->after_photo) }}" class="img-fluid rounded border shadow-sm" style="max-height: 300px;">
+                            <img src="{{ route('admin.media', ['path' => $job->after_photo]) }}" class="img-fluid rounded border shadow-sm" style="max-height: 300px;">
                         @else
                             <div class="py-5 text-muted small">No after photo available (In Progress)</div>
                         @endif

@@ -140,6 +140,16 @@ Route::middleware(['auth:web', 'role:yard_operator'])->prefix('yard')->name('yar
      Route::post('/move', [YardController::class, 'moveIsotank'])->name('move');
      
 
+     Route::post('/move', [YardController::class, 'moveIsotank'])->name('move');
+     
+
+});
+
+// Private Media Access for Authenticated Users
+Route::middleware(['auth:web'])->group(function() {
+    Route::get('/media/{path}', [\App\Http\Controllers\Api\MediaController::class, 'show'])
+         ->where('path', '.*')
+         ->name('admin.media');
 });
 
 // PDF Generation Route

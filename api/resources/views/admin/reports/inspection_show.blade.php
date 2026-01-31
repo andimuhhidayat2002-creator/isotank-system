@@ -50,8 +50,8 @@
                         @if($log->$p)
                             @php $hasPhotos = true; @endphp
                             <div class="col-6">
-                                <a href="#" onclick="showImageModal('{{ asset('storage/' . $log->$p) }}', '{{ ucfirst(str_replace(['photo_', '_'], ' ', $p)) }}'); return false;">
-                                    <img src="{{ asset('storage/' . $log->$p) }}" class="img-fluid rounded border hover-shadow" alt="{{ $p }}" style="cursor: pointer; height: 120px; object-fit: cover; width: 100%;">
+                                <a href="#" onclick="showImageModal('{{ route('admin.media', ['path' => $log->$p]) }}', '{{ ucfirst(str_replace(['photo_', '_'], ' ', $p)) }}'); return false;">
+                                    <img src="{{ route('admin.media', ['path' => $log->$p]) }}" class="img-fluid rounded border hover-shadow" alt="{{ $p }}" style="cursor: pointer; height: 120px; object-fit: cover; width: 100%;">
                                 </a>
                                 <small class="text-muted d-block text-center">{{ ucfirst(str_replace(['photo_', '_'], ' ', $p)) }}</small>
                             </div>
