@@ -174,7 +174,7 @@ class PdfGenerationService
         $data['vacuum'] = [
             'gauge_condition' => $get('vacuum_gauge_condition'),
             'port_condition' => $get('port_suction_condition'), // FIXED: Corrected item code
-            'value' => $get('vacuum_value') ? $get('vacuum_value') . ' ' . ($get('vacuum_unit') ?? 'mTorr') : '-',
+            'value' => $get('vacuum_value') ? (float)$get('vacuum_value') . ' ' . ($get('vacuum_unit') ?? 'mTorr') : '-',
             'temp' => $get('vacuum_temperature') ? $get('vacuum_temperature').' °C' : '-',
             'check_date' => $get('vacuum_check_datetime') ? substr($get('vacuum_check_datetime'),0,16) : '-',
         ];
