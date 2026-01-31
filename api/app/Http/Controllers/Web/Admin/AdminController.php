@@ -1301,58 +1301,80 @@ class AdminController extends Controller
         return response()->stream($callback, 200, $headers);
     }
 
-    private function getT75Data($log) {
-        $fmtFloat = fn($v) => $v ? (float)$v : null;
-        $fmtDate = fn($v, $f='Y-m-d') => $v ? \Carbon\Carbon::parse($v)->format($f) : '-';
-        $fmtTime = fn($v) => $v ? \Carbon\Carbon::parse($v)->format('H:i') : '';
-        $fmtDateTime = fn($v) => $v ? \Carbon\Carbon::parse($v)->format('Y-m-d H:i') : '-';
+    private function getT75Data($i) {
+        $data = [];
+        // Parsing data helper (json vs column)
+        $json = is_string($i->inspection_data) ? json_decode($i->inspection_data, true) : $i->inspection_data;
+        if(!is_array($json)) $json = [];
+        
+        $get = function($k) use ($i, $json) {
+            return $i->$k ?? $json[$k] ?? null;
+        };
 
-        return [
-            'ibox' => [
-                'condition' => $log->ibox_condition,
-                'battery' => $log->ibox_battery_percent ? $log->ibox_battery_percent.'%' : '-',
-                'pressure' => $log->ibox_pressure ?? '-',
-                'temp1' => $log->ibox_temperature_1 ?? $log->ibox_temperature ?? '-',
-                'temp1_time' => $log->ibox_temperature_1_timestamp ? '('.$fmtTime($log->ibox_temperature_1_timestamp).')' : '',
-                'temp2' => $log->ibox_temperature_2 ?? '-',
-                'temp2_time' => $log->ibox_temperature_2_timestamp ? '('.$fmtTime($log->ibox_temperature_2_timestamp).')' : '',
-                'level' => $log->ibox_level ?? '-',
-            ],
-            'instruments' => [
-                'pressure_gauge' => [
-                    'condition' => $log->pressure_gauge_condition,
-                    'sn' => $log->pressure_gauge_serial_number ?? '-',
-                    'cal_date' => $fmtDate($log->pressure_gauge_calibration_date),
-                    'p1' => $fmtFloat($log->pressure_1) ? $fmtFloat($log->pressure_1).' MPa' : '-',
-                    'p1_time' => $log->pressure_1_timestamp ? '('.$fmtTime($log->pressure_1_timestamp).')' : '',
-                    'p2' => $fmtFloat($log->pressure_2) ? $fmtFloat($log->pressure_2).' MPa' : '-',
-                    'p2_time' => $log->pressure_2_timestamp ? '('.$fmtTime($log->pressure_2_timestamp).')' : '',
-                ],
-                'level_gauge' => [
-                    'condition' => $log->level_gauge_condition,
-                    'l1' => $fmtFloat($log->level_1) ? $fmtFloat($log->level_1).' %' : '-',
-                    'l1_time' => $log->level_1_timestamp ? '('.$fmtTime($log->level_1_timestamp).')' : '',
-                    'l2' => $fmtFloat($log->level_2) ? $fmtFloat($log->level_2).' %' : '-',
-                    'l2_time' => $log->level_2_timestamp ? '('.$fmtTime($log->level_2_timestamp).')' : '',
-                ]
-            ],
-            'vacuum' => [
-                'gauge_condition' => $log->vacuum_gauge_condition,
-                'port_condition' => $log->vacuum_port_suction_condition,
-                'value' => $fmtFloat($log->vacuum_value) ? $fmtFloat($log->vacuum_value).' '.($log->vacuum_unit ?? 'mtorr') : '-',
-                'temp' => $fmtFloat($log->vacuum_temperature) ? $fmtFloat($log->vacuum_temperature).' C' : '-',
-                'check_date' => $fmtDateTime($log->vacuum_check_datetime),
-            ],
-            'psv' => collect(['psv1','psv2','psv3','psv4'])->map(function($p) use ($log, $fmtDate) {
-                 return [
-                    'label' => strtoupper($p),
-                    'condition' => $log->{$p.'_condition'},
-                    'status' => strtoupper($log->{$p.'_status'} ?? '-'),
-                    'sn' => $log->{$p.'_serial_number'} ?? '-',
-                    'cal_date' => $fmtDate($log->{$p.'_calibration_date'}),
-                    'valid_until' => $fmtDate($log->{$p.'_valid_until'}),
-                 ];
-            })    
+        // Helper timestamp cleaner
+        $time = function($k) use ($get) {
+            $val = $get($k);
+            if (!$val) return '';
+            if(strlen($val) > 10) return '(' . substr($val, 11, 5) . ')';
+            return '';
+        };
+
+        // IBOX SYSTEM
+        $data['ibox'] = [
+            'condition' => $get('ibox_condition'),
+            'battery' => $get('ibox_battery_percent') ? $get('ibox_battery_percent').' %' : '-',
+            'pressure' => $get('ibox_pressure') ? $get('ibox_pressure').' MPa' : '-',
+            'temp1' => $get('ibox_temperature_1') ? $get('ibox_temperature_1').' °C' : '-',
+            'temp1_time' => $time('ibox_temperature_1_timestamp'),
+            'temp2' => $get('ibox_temperature_2') ? $get('ibox_temperature_2').' °C' : '-',
+            'temp2_time' => $time('ibox_temperature_2_timestamp'),
+            'level' => $get('ibox_level') ? $get('ibox_level').' %' : '-',
         ];
+
+        // VACUUM SYSTEM
+        $data['vacuum'] = [
+            'gauge_condition' => $get('vacuum_gauge_condition'),
+            'port_condition' => $get('vacuum_port_suction_condition'), // FIXED: Added missing item
+            'value' => $get('vacuum_value') ? $get('vacuum_value') . ' ' . ($get('vacuum_unit') ?? 'mTorr') : '-',
+            'temp' => $get('vacuum_temperature') ? $get('vacuum_temperature').' °C' : '-',
+            'check_date' => $get('vacuum_check_datetime') ? substr($get('vacuum_check_datetime'),0,16) : '-',
+        ];
+        
+        // INSTRUMENTS
+        $data['instruments'] = [
+            'pressure_gauge' => [
+                'condition' => $get('pressure_gauge_condition'),
+                'sn' => $get('pressure_gauge_serial_number') ?? '-',
+                'cal_date' => $get('pressure_gauge_calibration_date') ?? '-',
+                'valid' => $get('pressure_gauge_valid_until') ?? '-',
+                'p1' => $get('pressure_1') ? $get('pressure_1').' MPa' : '-',
+                'p1_time' => $time('pressure_1_timestamp'),
+                'p2' => $get('pressure_2') ? $get('pressure_2').' MPa' : '-',
+                'p2_time' => $time('pressure_2_timestamp'),
+            ],
+            'level_gauge' => [
+                'condition' => $get('level_gauge_condition'),
+                'l1' => $get('level_1') ? $get('level_1').' mmH2O' : '-',
+                'l1_time' => $time('level_1_timestamp'),
+                'l2' => $get('level_2') ? $get('level_2').' mmH2O' : '-',
+                'l2_time' => $time('level_2_timestamp'),
+            ]
+        ];
+
+        // PSV
+        $psv = [];
+        for($p=1; $p<=4; $p++) {
+            $psv[] = [
+                'label' => "PSV #$p",
+                'condition' => $get("psv{$p}_condition"),
+                'status' => $get("psv{$p}_status") ? strtoupper($get("psv{$p}_status")) : '-',
+                'sn' => $get("psv{$p}_serial_number") ?? '-',
+                'cal_date' => $get("psv{$p}_calibration_date") ?? '-',
+                'valid_until' => $get("psv{$p}_valid_until") ?? '-',
+            ];
+        }
+        $data['psv'] = $psv;
+        
+        return $data;
     }
 }
