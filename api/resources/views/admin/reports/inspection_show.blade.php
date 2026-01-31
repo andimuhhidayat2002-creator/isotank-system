@@ -274,7 +274,7 @@
                         <tr>
                             <td class="ps-3">Temperature #1 (Digital)</td>
                             <td class="text-center">
-                                {{ $log->ibox_temperature_1 ?? $log->ibox_temperature ?? '-' }}
+                                {{ ($log->ibox_temperature_1 ?? $log->ibox_temperature) ? ($log->ibox_temperature_1 ?? $log->ibox_temperature).' °C' : '-' }}
                                 @if($log->ibox_temperature_1_timestamp)
                                 <br><small class="text-muted">({{ $log->ibox_temperature_1_timestamp->format('H:i') }})</small>
                                 @endif
@@ -283,14 +283,14 @@
                         <tr>
                             <td class="ps-3">Temperature #2 (Digital)</td>
                             <td class="text-center">
-                                {{ $log->ibox_temperature_2 ?? '-' }}
+                                {{ $log->ibox_temperature_2 ? $log->ibox_temperature_2.' °C' : '-' }}
                                 @if($log->ibox_temperature_2_timestamp)
                                 <br><small class="text-muted">({{ $log->ibox_temperature_2_timestamp->format('H:i') }})</small>
                                 @endif
                             </td>
                         </tr>
 
-                        <tr><td class="ps-3">Level (Digital)</td><td class="text-center">{{ $log->ibox_level ?? '-' }}</td></tr>
+                        <tr><td class="ps-3">Level (Digital)</td><td class="text-center">{{ $log->ibox_level ? $log->ibox_level.' %' : '-' }}</td></tr>
 
                         <!-- SECTION E: INSTRUMENTS (Hardcoded Legacy) -->
                         <tr class="table-secondary"><th colspan="2">E. INSTRUMENTS</th></tr>
@@ -321,7 +321,7 @@
                         <tr>
                             <td class="ps-3 text-muted ms-3">Reading (Level 1)</td>
                             <td class="text-center">
-                                {{ $log->level_1 ? (float)$log->level_1.' %' : '-' }}
+                                {{ $log->level_1 ? (float)$log->level_1.' mmH2O' : '-' }}
                                 @if($log->level_1_timestamp)
                                 <br><small class="text-muted">({{ $log->level_1_timestamp->format('H:i') }})</small>
                                 @endif
@@ -330,7 +330,7 @@
                         <tr>
                             <td class="ps-3 text-muted ms-3">Reading (Level 2)</td>
                             <td class="text-center">
-                                {{ $log->level_2 ? (float)$log->level_2.' %' : '-' }}
+                                {{ $log->level_2 ? (float)$log->level_2.' mmH2O' : '-' }}
                                 @if($log->level_2_timestamp)
                                 <br><small class="text-muted">({{ $log->level_2_timestamp->format('H:i') }})</small>
                                 @endif
@@ -342,7 +342,7 @@
                         <tr><td class="ps-3">Vacuum Gauge Condition</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->vacuum_gauge_condition])</td></tr>
                         <tr><td class="ps-3">Port Suction Condition</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->vacuum_port_suction_condition])</td></tr>
                         <tr><td class="ps-3">Vacuum Value</td><td class="text-center fw-bold">{{ $log->vacuum_value ? (float)$log->vacuum_value . ' mTorr' : '-' }}</td></tr>
-                        <tr><td class="ps-3">Vacuum Temperature</td><td class="text-center">{{ $log->vacuum_temperature ? $log->vacuum_temperature . ' C' : '-' }}</td></tr>
+                        <tr><td class="ps-3">Vacuum Temperature</td><td class="text-center">{{ $log->vacuum_temperature ? $log->vacuum_temperature . ' °C' : '-' }}</td></tr>
                         <tr><td class="ps-3">Check Datetime</td><td class="text-center">{{ $log->vacuum_check_datetime ? $log->vacuum_check_datetime->format('Y-m-d H:i') : '-' }}</td></tr>
                         @endif
 

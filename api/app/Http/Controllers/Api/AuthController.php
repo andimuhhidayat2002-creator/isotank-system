@@ -100,6 +100,7 @@ class AuthController extends Controller
                 'name' => $request->user()->name,
                 'email' => $request->user()->email,
                 'role' => $request->user()->role,
+                'signature_path' => $request->user()->signature_path,
             ],
         ]);
     }
