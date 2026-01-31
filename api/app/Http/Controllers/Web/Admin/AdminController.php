@@ -860,9 +860,9 @@ class AdminController extends Controller
             ->get();
             
         $closedJobs = MaintenanceJob::with(['isotank', 'assignee'])
-            ->where('status', 'closed')
+            ->whereIn('status', ['closed', 'completed']) // Handle both status variations
             ->tap($filter)
-            ->latest()
+            ->latest('updated_at') // Sort by closure time, not creation time
             ->limit(100) // Limit for performance
             ->get();
             
