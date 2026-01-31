@@ -39,6 +39,9 @@ class PdfGenerationService
             ->with('triggeredByInspection')
             ->get();
         
+        // Prepare T75 Data (Fix for Missing Data & Units)
+        $t75Data = $this->prepareT75Data($inspectionLog);
+            
         // Prepare data
         $data = [
             'type' => 'incoming',
@@ -47,6 +50,7 @@ class PdfGenerationService
             'inspector' => $inspectionLog->inspector,
             'job' => $inspectionLog->inspectionJob,
             'openMaintenance' => $openMaintenance,
+            't75Data' => $t75Data, // INJECTED
             'generatedAt' => now(),
         ];
         
@@ -97,6 +101,9 @@ class PdfGenerationService
         $allAccepted = $receiverConfirmations->every(function ($confirmation) {
             return $confirmation->receiver_decision === 'ACCEPT';
         });
+
+        // Prepare T75 Data (Fix for Missing Data & Units)
+        $t75Data = $this->prepareT75Data($inspectionLog);
         
         // Prepare data
         $data = [
@@ -108,6 +115,7 @@ class PdfGenerationService
             'receiverConfirmations' => $receiverConfirmations,
             'openMaintenance' => $openMaintenance,
             'allAccepted' => $allAccepted,
+            't75Data' => $t75Data, // INJECTED
             'generatedAt' => now(),
         ];
         
@@ -124,6 +132,89 @@ class PdfGenerationService
         $inspectionLog->update(['pdf_path' => $path]);
         
         return $path;
+    }
+
+    /**
+     * Helper to prepare T75 specific data structure for PDF view
+     * Ensures units are correct and all fields exist to prevent blade errors
+     */
+    private function prepareT75Data($inspection) {
+        $data = [];
+        $i = $inspection;
+        // Parsing data helper (json vs column)
+        $json = is_string($i->inspection_data) ? json_decode($i->inspection_data, true) : $i->inspection_data;
+        if(!is_array($json)) $json = [];
+        
+        $get = function($k) use ($i, $json) {
+            return $i->$k ?? $json[$k] ?? null;
+        };
+
+        // Helper timestamp cleaner
+        $time = function($k) use ($get) {
+            $val = $get($k);
+            if (!$val) return '';
+            // Return only time part (11:00) if full datetime
+            if(strlen($val) > 10) return '(' . substr($val, 11, 5) . ')';
+            return '';
+        };
+
+        // IBOX SYSTEM
+        $data['ibox'] = [
+            'condition' => $get('ibox_condition'),
+            'battery' => $get('ibox_battery_percent') ? $get('ibox_battery_percent').' %' : '-',
+            'pressure' => $get('ibox_pressure') ? $get('ibox_pressure').' MPa' : '-',
+            'temp1' => $get('ibox_temperature_1') ? $get('ibox_temperature_1').' °C' : '-',
+            'temp1_time' => $time('ibox_temperature_1_timestamp'),
+            'temp2' => $get('ibox_temperature_2') ? $get('ibox_temperature_2').' °C' : '-',
+            'temp2_time' => $time('ibox_temperature_2_timestamp'),
+            'level' => $get('ibox_level') ? $get('ibox_level').' %' : '-',
+        ];
+
+        // VACUUM SYSTEM
+        $data['vacuum'] = [
+            'gauge_condition' => $get('vacuum_gauge_condition'),
+            'port_condition' => $get('vacuum_port_suction_condition'), // FIXED: Added missing item
+            'value' => $get('vacuum_value') ? $get('vacuum_value') . ' ' . ($get('vacuum_unit') ?? 'mTorr') : '-',
+            'temp' => $get('vacuum_temperature') ? $get('vacuum_temperature').' °C' : '-',
+            'check_date' => $get('vacuum_check_datetime') ? substr($get('vacuum_check_datetime'),0,16) : '-',
+        ];
+        
+        // INSTRUMENTS
+        $data['instruments'] = [
+            'pressure_gauge' => [
+                'condition' => $get('pressure_gauge_condition'),
+                'sn' => $get('pressure_gauge_serial_number') ?? '-',
+                'cal_date' => $get('pressure_gauge_calibration_date') ?? '-',
+                'valid' => $get('pressure_gauge_valid_until') ?? '-',
+                'p1' => $get('pressure_1') ? $get('pressure_1').' MPa' : '-',
+                'p1_time' => $time('pressure_1_timestamp'),
+                'p2' => $get('pressure_2') ? $get('pressure_2').' MPa' : '-',
+                'p2_time' => $time('pressure_2_timestamp'),
+            ],
+            'level_gauge' => [
+                'condition' => $get('level_gauge_condition'),
+                'l1' => $get('level_1') ? $get('level_1').' mmH2O' : '-',
+                'l1_time' => $time('level_1_timestamp'),
+                'l2' => $get('level_2') ? $get('level_2').' mmH2O' : '-',
+                'l2_time' => $time('level_2_timestamp'),
+            ]
+        ];
+
+        // PSV
+        $psv = [];
+        for($p=1; $p<=4; $p++) {
+            $psv[] = [
+                'label' => "PSV #$p",
+                'condition' => $get("psv{$p}_condition"),
+                'status' => $get("psv{$p}_status") ? strtoupper($get("psv{$p}_status")) : '-',
+                'sn' => $get("psv{$p}_serial_number") ?? '-',
+                'cal_date' => $get("psv{$p}_calibration_date") ?? '-',
+                'valid_until' => $get("psv{$p}_valid_until") ?? '-',
+            ];
+        }
+        $data['psv'] = $psv;
+        
+        return $data;
     }
     
     public static function getT11ReceiverCodes(): array 

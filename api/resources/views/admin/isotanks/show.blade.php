@@ -369,7 +369,7 @@
             <div class="tab-pane fade" id="maintenance">
                  <div class="card shadow-sm"><div class="card-body p-0">
                 <table class="table table-hover mb-0">
-                    <thead class="table-light"><tr><th>Date</th><th>Item / Component</th><th>Status</th><th>Technician</th><th>Desc</th></tr></thead>
+                    <thead class="table-light"><tr><th>Date</th><th>Item / Component</th><th>Status</th><th>Technician</th><th>Desc</th><th>Action</th></tr></thead>
                     <tbody>
                         @forelse($maintenance as $job)
                         <tr>
@@ -385,10 +385,15 @@
                                 @endif
                             </td>
                             <td>{{ $job->completedBy->name ?? '-' }}</td>
-                            <td>{{ Str::limit($job->description, 30) }}</td>
+                            <td>{{ Str::limit($job->description, 50) }}</td>
+                            <td>
+                                <a href="{{ route('admin.reports.maintenance.show', $job->id) }}" class="btn btn-xs btn-info" target="_blank" title="View Detail">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                            </td>
                         </tr>
                         @empty
-                        <tr><td colspan="5" class="text-center text-muted">No maintenance history.</td></tr>
+                        <tr><td colspan="6" class="text-center text-muted">No maintenance history.</td></tr>
                         @endforelse
                     </tbody>
                 </table>
