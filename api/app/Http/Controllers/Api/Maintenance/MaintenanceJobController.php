@@ -42,7 +42,7 @@ class MaintenanceJobController extends Controller
 
         $jobs = $query->orderBy('status', 'asc') // prioritizing open/progress
             ->orderBy('created_at', 'desc')
-            ->paginate(100);
+            ->paginate(1000);
 
         return response()->json([
             'success' => true,

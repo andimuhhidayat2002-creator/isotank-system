@@ -61,7 +61,7 @@ class InspectionJobController extends Controller
 
         $jobs = $query->orderBy('planned_date', 'asc')
             ->orderBy('created_at', 'asc')
-            ->paginate(50);
+            ->paginate(1000);
 
         return response()->json([
             'success' => true,
