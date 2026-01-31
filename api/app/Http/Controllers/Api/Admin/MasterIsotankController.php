@@ -88,11 +88,7 @@ class MasterIsotankController extends Controller
                 $q->with('inspector')->latest()->take(10);
             },
             'maintenanceJobs' => function($q) {
-                $q->latest()->take(10);
-            },
-            // Load ACTIVE maintenance jobs specifically
-            'maintenanceJobs' => function($q) {
-                $q->whereIn('status', ['open', 'on_progress', 'not_complete', 'pending'])->latest();
+                $q->latest()->take(20); // Increased to 20 for better history visibility
             }
         ])->findOrFail($id);
 
@@ -274,7 +270,7 @@ class MasterIsotankController extends Controller
 
         // Get Active Maintenance jobs separately to ensure we have them clearly
         $activeMaintenance = \App\Models\MaintenanceJob::where('isotank_id', $id)
-            ->whereIn('status', ['open', 'on_progress', 'pending'])
+            ->whereIn('status', ['open', 'on_progress', 'pending', 'not_complete'])
             ->get();
             
         // Flatten Class Survey (Calibration)
