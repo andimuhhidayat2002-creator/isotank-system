@@ -369,13 +369,21 @@
             <div class="tab-pane fade" id="maintenance">
                  <div class="card shadow-sm"><div class="card-body p-0">
                 <table class="table table-hover mb-0">
-                    <thead class="table-light"><tr><th>Date</th><th>Job Type</th><th>Status</th><th>Technician</th><th>Desc</th></tr></thead>
+                    <thead class="table-light"><tr><th>Date</th><th>Item / Component</th><th>Status</th><th>Technician</th><th>Desc</th></tr></thead>
                     <tbody>
                         @forelse($maintenance as $job)
                         <tr>
                             <td>{{ $job->created_at->format('Y-m-d') }}</td>
-                            <td>{{ $job->job_type }}</td>
-                            <td><span class="badge {{ $job->status=='completed'?'bg-success':'bg-warning' }}">{{ strtoupper($job->status) }}</span></td>
+                            <td>{{ $job->source_item ?? 'General' }}</td>
+                            <td>
+                                @if(in_array($job->status, ['closed', 'completed']))
+                                    <span class="badge bg-success">CLOSED</span>
+                                @elseif($job->status == 'deferred')
+                                    <span class="badge bg-secondary">DEFERRED</span>
+                                @else
+                                    <span class="badge bg-warning text-dark">{{ strtoupper(str_replace('_', ' ', $job->status)) }}</span>
+                                @endif
+                            </td>
                             <td>{{ $job->completedBy->name ?? '-' }}</td>
                             <td>{{ Str::limit($job->description, 30) }}</td>
                         </tr>
