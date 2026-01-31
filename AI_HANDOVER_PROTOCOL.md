@@ -91,3 +91,8 @@ We operate on **TWO SEPARATE** repositories. Always verify which one you are wor
 
 ---
 *Last Updated: Jan 28, 2026 17:50 - Antigravity Agent*
+
+### L. Storage Policy (Jan 31, 2026 15:30)
+*   **PRIVATE STORAGE STRICTLY:** All inspection photos and generated PDF reports MUST be stored in the local disk (private storage).
+*   **DO NOT MOVE TO PUBLIC:** Never change the storage disk to public. This is a strict user requirement for data privacy.
+*   **Access Pattern:** Private files must be accessed via the secure MediaController endpoint (/api/media/{path}) which handles authentication and authorization. Direct linking to storage files is prohibited for private data.

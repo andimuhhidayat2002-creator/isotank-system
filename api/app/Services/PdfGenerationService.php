@@ -27,6 +27,9 @@ class PdfGenerationService
      */
     public function generateIncomingPdf(InspectionLog $inspectionLog): string
     {
+        ini_set('memory_limit', '512M');
+        ini_set('max_execution_time', '300');
+        
         // Load relationships
         $inspectionLog->load(['isotank', 'inspector', 'inspectionJob']);
         
@@ -70,6 +73,9 @@ class PdfGenerationService
      */
     public function generateOutgoingPdf(InspectionLog $inspectionLog): string
     {
+        ini_set('memory_limit', '512M');
+        ini_set('max_execution_time', '300');
+
         // Ensure we have the latest data (including signature path updated in controller)
         $inspectionLog->refresh();
         
