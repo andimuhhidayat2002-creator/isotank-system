@@ -131,7 +131,7 @@ class CalibrationMasterImport
                                 [
                                     'serial_number' => $sn,
                                     'certificate_number' => $cert,
-                                    'set_pressure' => ($type !== 'PG') ? $press : null,
+                                    'set_pressure' => ($type !== 'PG' && $press !== '') ? $press : null,
                                     'last_calibration_date' => $calDate,
                                     'expiry_date' => $expiry,
                                     'description' => $this->getDescription($type, $pos),
