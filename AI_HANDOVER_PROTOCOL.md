@@ -92,7 +92,15 @@ We operate on **TWO SEPARATE** repositories. Always verify which one you are wor
 ---
 *Last Updated: Jan 28, 2026 17:50 - Antigravity Agent*
 
-### L. Storage Policy (Jan 31, 2026 15:30)
-*   **PRIVATE STORAGE STRICTLY:** All inspection photos and generated PDF reports MUST be stored in the local disk (private storage).
-*   **DO NOT MOVE TO PUBLIC:** Never change the storage disk to public. This is a strict user requirement for data privacy.
-*   **Access Pattern:** Private files must be accessed via the secure MediaController endpoint (/api/media/{path}) which handles authentication and authorization. Direct linking to storage files is prohibited for private data.
+### M. Robust Data Lookup Strategy (Feb 1, 2026)
+*   **Problem:** Mobile app and Legacy data often use inconsistent JSON keys (e.g. `vacuum_port_suction_condition` vs `port_suction` vs `Port Suction Condition`).
+*   **Solution:** Logic in `inspection_show.blade.php` (Web) and `inspection_report.blade.php` (PDF) has been updated to use a **Multi-Key Fallback Strategy**.
+*   **Legacy Map:** The T75 item `Port Suction Condition` is now explicitly mapped to the `vacuum_port_suction_condition` database column in the `$legacyMap` array, ensuring it behaves identically to other legacy T75 items.
+*   **Vanilla JS Modal:** The photo modal in Inspection Detail view now uses **Vanilla JS**, removing dependency on `window.bootstrap` which was causing zoom issues.
+
+### N. Data Privacy & Storage (Security Audit Feb 1, 2026)
+*   **Status:** CONFIRMED SECURE.
+*   **Configuration:** `filesystems.php` defines the `local` disk root as `storage_path('app')`. This directory is **ABOVE** the public web root.
+*   **Access Control:** All photos are accessed strictly via the `MediaController` route (`/admin/media/{path}`) which is protected by the `auth:web` middleware in `routes/web.php`.
+*   **No Symlinks:** There are no symbolic links exposing `storage/app/inspections` to `public/storage`.
+*   **Conclusion:** Photos are NOT accessible via direct URL on the internet. They require a valid administrator login session to view.
