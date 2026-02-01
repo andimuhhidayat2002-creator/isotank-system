@@ -311,7 +311,7 @@
                                             <!-- SECTION F: VACUUM -->
                                             <tr class="table-secondary"><th colspan="2">F. VACUUM SYSTEM</th></tr>
                                             <tr><td class="ps-3">Vacuum Gauge</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->vacuum_gauge_condition])</td></tr>
-                                            <tr><td class="ps-3">Port Suction</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->vacuum_port_suction_condition ?? $log->port_suction_condition])</td></tr>
+                                            <tr><td class="ps-3">Port Suction</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->vacuum_port_suction_condition ?? $logData['port_suction_condition'] ?? $logData['Port Suction Condition'] ?? null])</td></tr>
                                             <tr><td class="ps-3">Value</td><td class="text-center fw-bold">{{ $log->vacuum_value ? (float)$log->vacuum_value . ' mTorr' : '-' }}</td></tr>
                                             @endif
 

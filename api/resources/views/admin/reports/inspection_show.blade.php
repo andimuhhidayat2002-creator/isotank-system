@@ -340,7 +340,7 @@
                         <!-- SECTION F: VACUUM SYSTEM (Hardcoded Legacy) -->
                         <tr class="table-secondary"><th colspan="2">F. VACUUM SYSTEM</th></tr>
                         <tr><td class="ps-3">Vacuum Gauge Condition</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->vacuum_gauge_condition])</td></tr>
-                        <tr><td class="ps-3">Port Suction Condition</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->vacuum_port_suction_condition])</td></tr>
+                        <tr><td class="ps-3">Port Suction Condition</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->vacuum_port_suction_condition ?? $logData['port_suction_condition'] ?? $logData['Port Suction Condition'] ?? null])</td></tr>
                         <tr><td class="ps-3">Vacuum Value</td><td class="text-center fw-bold">{{ $log->vacuum_value ? (float)$log->vacuum_value . ' mTorr' : '-' }}</td></tr>
                         <tr><td class="ps-3">Vacuum Temperature</td><td class="text-center">{{ $log->vacuum_temperature ? $log->vacuum_temperature . ' °C' : '-' }}</td></tr>
                         <tr><td class="ps-3">Check Datetime</td><td class="text-center">{{ $log->vacuum_check_datetime ? $log->vacuum_check_datetime->format('Y-m-d H:i') : '-' }}</td></tr>

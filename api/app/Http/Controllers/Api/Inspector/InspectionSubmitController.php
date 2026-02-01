@@ -398,7 +398,7 @@ class InspectionSubmitController extends Controller
                 'vacuum_temperature' => $clean($validated['vacuum_temperature'] ?? null),
                 'vacuum_check_datetime' => $clean($validated['vacuum_check_datetime'] ?? null),
                 'vacuum_gauge_condition' => $clean($validated['vacuum_gauge_condition'] ?? null),
-                'vacuum_port_suction_condition' => $clean($validated['vacuum_port_suction_condition'] ?? null),
+                'vacuum_port_suction_condition' => $clean($validated['vacuum_port_suction_condition'] ?? $request->input('vacuum_port_suction_condition') ?? $request->input('port_suction_condition') ?? $request->input('Port Suction Condition') ?? null),
                 
                 'psv1_condition' => $clean($validated['psv1_condition'] ?? null),
                 'psv1_serial_number' => $clean($validated['psv1_serial'] ?? $validated['psv1_serial_number'] ?? $validated['psv1_sn'] ?? null),
@@ -472,6 +472,11 @@ class InspectionSubmitController extends Controller
                             $data[$code] = $validated[$inputKey];
                         } elseif (isset($validated[$code])) {
                              $data[$code] = $validated[$code];
+                        } elseif ($request->has($inputKey)) {
+                             // Fallback to raw input if validation stripped it
+                             $data[$code] = $request->input($inputKey);
+                        } elseif ($request->has($code)) {
+                             $data[$code] = $request->input($code);
                         }
                     }
                     return !empty($data) ? $data : null;
@@ -716,6 +721,8 @@ class InspectionSubmitController extends Controller
                     $val = $validated['GPS_4G_LP_LAN_Antenna'] ?? $validated['GPS/4G/LP LAN Antenna'] ?? null;
                 } elseif ($item === 'pressure_regulator_esdv') {
                     $val = $validated['Pressure_Regulator_ESDV'] ?? $validated['Pressure Regulator ESDV'] ?? null;
+                } elseif ($item === 'vacuum_port_suction_condition') {
+                    $val = $validated['port_suction_condition'] ?? $validated['Port Suction Condition'] ?? request()->input('port_suction_condition') ?? null;
                 }
             }
 

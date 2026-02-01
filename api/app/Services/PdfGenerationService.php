@@ -146,7 +146,14 @@ class PdfGenerationService
         if(!is_array($json)) $json = [];
         
         $get = function($k) use ($i, $json) {
-            return $i->$k ?? $json[$k] ?? null;
+            $val = $i->$k ?? $json[$k] ?? null;
+            if (strpos($k, 'suction') !== false) {
+                 \Log::info("PDF DEBUG [$k]: " . ($val ?? 'NULL'));
+                 if ($k === 'port_suction_condition' && $val === null) {
+                     \Log::info("PDF DEBUG JSON KEYS: " . implode(', ', array_keys($json)));
+                 }
+            }
+            return $val;
         };
 
         // Helper timestamp cleaner
@@ -173,7 +180,7 @@ class PdfGenerationService
         // VACUUM SYSTEM
         $data['vacuum'] = [
             'gauge_condition' => $get('vacuum_gauge_condition'),
-            'port_condition' => $get('vacuum_port_suction_condition') ?? $get('port_suction_condition'), // FIXED: Try both variations
+            'port_condition' => $get('vacuum_port_suction_condition') ?? $get('port_suction_condition') ?? $get('Port Suction Condition') ?? $get('Port_Suction_Condition'),
             'value' => $get('vacuum_value') ? (float)$get('vacuum_value') . ' ' . ($get('vacuum_unit') ?? 'mTorr') : '-',
             'temp' => $get('vacuum_temperature') ? $get('vacuum_temperature').' °C' : '-',
             'check_date' => $get('vacuum_check_datetime') ? substr($get('vacuum_check_datetime'),0,16) : '-',
