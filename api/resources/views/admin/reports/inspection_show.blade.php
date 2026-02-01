@@ -442,59 +442,64 @@
 
 @push('scripts')
 <script type="module">
-    // Expose generated function to Global Window scope so 'onclick' can see it
+    // Vanilla JS Implementation - No jQuery Dependency
     window.showImageModal = function(src, title) {
-        // Check if jQuery is loaded
-        if (typeof $ === 'undefined') {
-            console.error('jQuery not loaded yet');
-            return;
+        const modalEl = document.getElementById('imageModal');
+        const img = document.getElementById('modalImage');
+        const label = document.getElementById('imageModalLabel');
+        
+        // Reset state
+        img.src = src;
+        img.classList.add('img-fluid');
+        img.style.maxHeight = '85vh';
+        img.style.width = '';
+        img.style.cursor = 'zoom-in';
+        
+        label.textContent = title;
+        
+        // Use Bootstrap 5 API
+        // Assumes 'bootstrap' is globally available or we use the data-attribute trigger if possible.
+        // If bootstrap is imported as module in app.js, we might not have 'bootstrap' global.
+        // Fallback: Use a hidden button trigger if JS API fails, but usually window.bootstrap is available if app.js loads it.
+        // Safest: Check window.bootstrap
+        
+        if (window.bootstrap) {
+            const modal = new window.bootstrap.Modal(modalEl);
+            modal.show();
+        } else {
+             // Fallback for when bootstrap global is missing (module based)
+             // We can try to manually toggle classes if desperate, but better to log error
+             console.error('Bootstrap 5 Global API not found. Ensure `window.bootstrap = bootstrap;` is in your app.js');
+             // Try jQuery fallback just in case
+             if (window.jQuery) {
+                 window.jQuery(modalEl).modal('show');
+             }
         }
-        
-        const img = $('#modalImage');
-        
-        // Reset state before showing
-        img.attr('src', src);
-        img.addClass('img-fluid').css({'max-height': '85vh', 'width': '', 'cursor': 'zoom-in'});
-        
-        $('#imageModalLabel').text(title);
-        $('#imageModal').modal('show');
     };
 
-    // Safe initialization of event listeners
-    const initZoomListener = () => {
-        if (typeof $ !== 'undefined') {
-            $('#modalImage').off('click').on('click', function() {
-                const img = $(this);
-                
-                if (img.hasClass('img-fluid')) {
-                    // ZOOM IN: Show full size
-                    img.removeClass('img-fluid');
-                    img.css({
-                        'max-height': '', 
-                        'width': 'auto', 
-                        'max-width': 'none', 
-                        'cursor': 'zoom-out'
-                    });
+    // Vanilla Event Listener for Zoom
+    document.addEventListener('DOMContentLoaded', () => {
+        const img = document.getElementById('modalImage');
+        if (img) {
+            img.addEventListener('click', function() {
+                if (this.classList.contains('img-fluid')) {
+                    // Zoom In
+                    this.classList.remove('img-fluid');
+                    this.style.maxHeight = '';
+                    this.style.width = 'auto';
+                    this.style.maxWidth = 'none';
+                    this.style.cursor = 'zoom-out';
                 } else {
-                    // ZOOM OUT: Fit screen
-                    img.addClass('img-fluid');
-                    img.css({
-                        'max-height': '85vh', 
-                        'width': '', 
-                        'max-width': '', 
-                        'cursor': 'zoom-in'
-                    });
+                    // Zoom Out
+                    this.classList.add('img-fluid');
+                    this.style.maxHeight = '85vh';
+                    this.style.width = '';
+                    this.style.maxWidth = '';
+                    this.style.cursor = 'zoom-in';
                 }
             });
-            console.log('Zoom listener attached');
-        } else {
-            // Retry if jQuery not ready
-            setTimeout(initZoomListener, 100);
         }
-    };
-    
-    // Start initialization
-    initZoomListener();
+    });
 </script>
 <style>
     .hover-shadow { transition: transform .2s; }
