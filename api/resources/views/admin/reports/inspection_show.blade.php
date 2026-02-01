@@ -442,42 +442,59 @@
 
 @push('scripts')
 <script type="module">
-function showImageModal(src, title) {
-    const img = $('#modalImage');
-    
-    // Reset state before showing
-    img.attr('src', src);
-    img.addClass('img-fluid').css({'max-height': '85vh', 'width': '', 'cursor': 'zoom-in'});
-    
-    $('#imageModalLabel').text(title);
-    $('#imageModal').modal('show');
-}
-
-$(document).ready(function() {
-    $('#modalImage').on('click', function() {
-        const img = $(this);
-        
-        if (img.hasClass('img-fluid')) {
-            // ZOOM IN: Show full size
-            img.removeClass('img-fluid');
-            img.css({
-                'max-height': '', 
-                'width': 'auto', 
-                'max-width': 'none', 
-                'cursor': 'zoom-out'
-            });
-        } else {
-            // ZOOM OUT: Fit screen
-            img.addClass('img-fluid');
-            img.css({
-                'max-height': '85vh', 
-                'width': '', 
-                'max-width': '', 
-                'cursor': 'zoom-in'
-            });
+    // Expose generated function to Global Window scope so 'onclick' can see it
+    window.showImageModal = function(src, title) {
+        // Check if jQuery is loaded
+        if (typeof $ === 'undefined') {
+            console.error('jQuery not loaded yet');
+            return;
         }
-    });
-});
+        
+        const img = $('#modalImage');
+        
+        // Reset state before showing
+        img.attr('src', src);
+        img.addClass('img-fluid').css({'max-height': '85vh', 'width': '', 'cursor': 'zoom-in'});
+        
+        $('#imageModalLabel').text(title);
+        $('#imageModal').modal('show');
+    };
+
+    // Safe initialization of event listeners
+    const initZoomListener = () => {
+        if (typeof $ !== 'undefined') {
+            $('#modalImage').off('click').on('click', function() {
+                const img = $(this);
+                
+                if (img.hasClass('img-fluid')) {
+                    // ZOOM IN: Show full size
+                    img.removeClass('img-fluid');
+                    img.css({
+                        'max-height': '', 
+                        'width': 'auto', 
+                        'max-width': 'none', 
+                        'cursor': 'zoom-out'
+                    });
+                } else {
+                    // ZOOM OUT: Fit screen
+                    img.addClass('img-fluid');
+                    img.css({
+                        'max-height': '85vh', 
+                        'width': '', 
+                        'max-width': '', 
+                        'cursor': 'zoom-in'
+                    });
+                }
+            });
+            console.log('Zoom listener attached');
+        } else {
+            // Retry if jQuery not ready
+            setTimeout(initZoomListener, 100);
+        }
+    };
+    
+    // Start initialization
+    initZoomListener();
 </script>
 <style>
     .hover-shadow { transition: transform .2s; }

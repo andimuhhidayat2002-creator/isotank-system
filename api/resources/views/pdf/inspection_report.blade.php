@@ -56,6 +56,7 @@
     
     <!-- HEADER -->
     <div class="header">
+        <!-- DEBUG: PDF VIEW UPDATED v3 -->
         @if(file_exists(public_path('assets/images/header_kln.png')))
             <img src="{{ public_path('assets/images/header_kln.png') }}" alt="KLN Header">
         @else
