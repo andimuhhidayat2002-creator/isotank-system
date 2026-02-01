@@ -54,12 +54,10 @@ class AdminController extends Controller
              'open_maintenance' => MaintenanceJob::whereIn('status', ['open', 'on_progress'])->tap($relationFilter)->count(),
              'deferred_maintenance' => MaintenanceJob::where('status', 'deferred')->tap($relationFilter)->count(),
              'open_inspections' => InspectionJob::whereIn('status', ['open', 'in_progress'])->tap($relationFilter)->count(),
-             'calibration_alerts' => MasterIsotankCalibrationStatus::where(function($q) {
-                    $q->where('status', '!=', 'valid')
-                      ->orWhere('valid_until', '<', now()->addMonth());
-                  })
+             'calibration_alerts' => \App\Models\MasterIsotankComponent::where('expiry_date', '<', now()->addMonth())
                   ->tap($relationFilter)
-                  ->count()
+                  ->distinct('isotank_id')
+                  ->count('isotank_id')
         ];
 
         // 2) Location distribution (SQL Group By)

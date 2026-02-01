@@ -138,7 +138,7 @@
                         </div>
                         <div class="mt-3 text-xs text-muted">
                             <span class="{{ $globalStats['calibration_alerts'] > 0 ? 'text-danger fw-bold' : 'text-success' }}">
-                                {{ $globalStats['calibration_alerts'] > 0 ? 'Expiring / Expired' : 'All Valid' }}
+                                {{ $globalStats['calibration_alerts'] > 0 ? 'Isotanks Expiring / Expired' : 'All Valid' }}
                             </span>
                         </div>
                     </div>
