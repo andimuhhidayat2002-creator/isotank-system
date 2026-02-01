@@ -338,14 +338,22 @@
                                 <td style="border:1px solid #eee;">Port Suction Condition</td>
                                 <td style="border:1px solid #eee;text-align:center;">
                                     @php
-                                        // ROBUST LOOKUP FOR PORT SUCTION
-                                        $psc = $t75Data['vacuum']['port_condition'] ?? null;
-                                        if(!$psc) $psc = $inspection->vacuum_port_suction_condition; // Column
-                                        if(!$psc) $psc = $jsonData['Port Suction Condition'] ?? null; // Legacy Key
-                                        if(!$psc) $psc = $jsonData['port_suction_condition'] ?? null; // Snake Key
-                                        if(!$psc) $psc = $jsonData['vacuum_port_suction_condition'] ?? null; // Full Snake Key
+                                        // DIRECT ROBUST LOOKUP (Bypassing Controller Logic to match Web Detail View)
+                                        $pscVal = $inspection->vacuum_port_suction_condition ?? null;
+                                        
+                                        // Fallback to JSON if column is empty
+                                        if (!$pscVal && !empty($jsonData)) {
+                                            $pscVal = $jsonData['port_suction_condition'] ?? 
+                                                      $jsonData['Port Suction Condition'] ?? 
+                                                      $jsonData['vacuum_port_suction_condition'] ?? null;
+                                        }
+                                        
+                                        // Final fallback to t75Data from controller
+                                        if (!$pscVal && isset($t75Data['vacuum']['port_condition'])) {
+                                            $pscVal = $t75Data['vacuum']['port_condition'];
+                                        }
                                     @endphp
-                                    {!! badge($psc) !!}
+                                    {!! badge($pscVal) !!}
                                 </td>
                                 <td style="border:1px solid #eee;text-align:center;color:#bbb;">-</td>
                             </tr>
