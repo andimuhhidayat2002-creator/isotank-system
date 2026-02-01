@@ -330,12 +330,22 @@
                             <tr><td colspan="3" class="section-title" style="background:#f9f9f9;font-weight:bold;border:1px solid #ddd;padding:2px;">F. VACUUM SYSTEM</td></tr>
                             <tr>
                                 <td style="border:1px solid #eee;">Vacuum Gauge Condition</td>
-                                <td style="border:1px solid #eee;text-align:center;">{!! badge($t75Data['vacuum']['gauge_condition']) !!}</td>
+                                <td style="border:1px solid #eee;text-align:center;">{!! badge($t75Data['vacuum']['gauge_condition'] ?? $inspection->vacuum_gauge_condition) !!}</td>
                                 <td style="border:1px solid #eee;text-align:center;color:#bbb;">-</td>
                             </tr>
                             <tr>
                                 <td style="border:1px solid #eee;">Port Suction Condition</td>
-                                <td style="border:1px solid #eee;text-align:center;">{!! badge($t75Data['vacuum']['port_condition'] ?? $inspection->vacuum_port_suction_condition) !!}</td>
+                                <td style="border:1px solid #eee;text-align:center;">
+                                    @php
+                                        // ROBUST LOOKUP FOR PORT SUCTION
+                                        $psc = $t75Data['vacuum']['port_condition'] ?? null;
+                                        if(!$psc) $psc = $inspection->vacuum_port_suction_condition; // Column
+                                        if(!$psc) $psc = $jsonData['Port Suction Condition'] ?? null; // Legacy Key
+                                        if(!$psc) $psc = $jsonData['port_suction_condition'] ?? null; // Snake Key
+                                        if(!$psc) $psc = $jsonData['vacuum_port_suction_condition'] ?? null; // Full Snake Key
+                                    @endphp
+                                    {!! badge($psc) !!}
+                                </td>
                                 <td style="border:1px solid #eee;text-align:center;color:#bbb;">-</td>
                             </tr>
                             <tr>
