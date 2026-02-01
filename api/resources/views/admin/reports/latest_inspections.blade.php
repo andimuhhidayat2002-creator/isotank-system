@@ -217,7 +217,7 @@
 
                             {{-- VACUUM --}}
                             <td>@include('admin.reports.partials.badge', ['status' => $log->vacuum_gauge_condition])</td>
-                            <td>@include('admin.reports.partials.badge', ['status' => $log->vacuum_port_suction_condition])</td>
+                            <td>@include('admin.reports.partials.badge', ['status' => $log->vacuum_port_suction_condition ?? $logData['port_suction_condition'] ?? $logData['Port Suction Condition'] ?? null])</td>
                             <td>{{ $log->vacuum_value ? (float)$log->vacuum_value : '-' }}</td>
                             <td>{{ $log->vacuum_temperature ?? '-' }}</td>
                             <td class="small">{{ $log->vacuum_check_datetime ? \Carbon\Carbon::parse($log->vacuum_check_datetime)->format('y-m-d') : '-' }}</td>
