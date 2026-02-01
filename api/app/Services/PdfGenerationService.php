@@ -146,14 +146,7 @@ class PdfGenerationService
         if(!is_array($json)) $json = [];
         
         $get = function($k) use ($i, $json) {
-            $val = $i->$k ?? $json[$k] ?? null;
-            if (strpos($k, 'suction') !== false) {
-                 \Log::info("PDF DEBUG [$k]: " . ($val ?? 'NULL'));
-                 if ($k === 'port_suction_condition' && $val === null) {
-                     \Log::info("PDF DEBUG JSON KEYS: " . implode(', ', array_keys($json)));
-                 }
-            }
-            return $val;
+            return $i->$k ?? $json[$k] ?? null;
         };
 
         // Helper timestamp cleaner
