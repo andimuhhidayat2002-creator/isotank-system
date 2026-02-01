@@ -233,6 +233,11 @@
                                         $val = $logData[$uLabelLower] ?? null;
                                     }
 
+                                    // 5b. SPECIAL MAP: Port Suction Condition (Dynamic Code vs DB Column)
+                                    if (!$val && $code === 'port_suction_condition') {
+                                        $val = $log->vacuum_port_suction_condition ?? null;
+                                    }
+
                                     // 6. Direct Label Match (Spaces preserved)
                                     if (!$val) {
                                         $val = $logData[$label] ?? null;

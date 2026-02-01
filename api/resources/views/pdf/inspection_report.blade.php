@@ -267,9 +267,13 @@
                                 $lKey = $legacyMap[$label];
                                 $val = $inspection->$lKey ?? ($jsonData[$lKey] ?? null);
                             }
-                            if (!$val) {
                                 $uLabel = str_replace([' ', '.', '/'], '_', strtolower($label));
                                 $val = $jsonData[$uLabel] ?? null;
+                            }
+                            
+                            // SPECIAL MAP: Port Suction Condition
+                            if (!$val && $code === 'port_suction_condition') {
+                                $val = $inspection->vacuum_port_suction_condition ?? null;
                             }
                             
                             $isConfirmedItem = in_array($item->code, $receiverCodes);
