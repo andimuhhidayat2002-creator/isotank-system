@@ -219,15 +219,20 @@ class AdminController extends Controller
         // Get all isotanks at this location
         $allIsotanks = MasterIsotank::whereIn('id', $isotanks)->get();
         
-        // Count by each status code
-        foreach (MasterIsotank::getValidFillingStatuses() as $code => $description) {
-            $count = $allIsotanks->where('filling_status_code', $code)->count();
-            if ($count > 0) {
-                $fillingStats[$code] = [
-                    'description' => $description,
-                    'count' => $count
-                ];
-            }
+        // DYNAMIC: Count by ANY status code present in the collection
+        $grouped = $allIsotanks->groupBy('filling_status_code');
+        $validDescriptions = MasterIsotank::getValidFillingStatuses();
+
+        foreach ($grouped as $code => $tanks) {
+            // Skip empty/null keys (handled by unspecified count below)
+            if (empty($code)) continue;
+
+            $description = $validDescriptions[$code] ?? ucwords(str_replace('_', ' ', $code));
+
+            $fillingStats[$code] = [
+                'description' => $description,
+                'count' => $tanks->count()
+            ];
         }
         
         // Count unspecified
