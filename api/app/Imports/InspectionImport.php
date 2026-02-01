@@ -55,13 +55,14 @@ class InspectionImport
                     $fillingStatusCode = $rowData['filling_status_code'] ?? null;
                     $fillingStatusDesc = $rowData['filling_status_description'] ?? null;
 
-                    if ($this->type === 'incoming_inspection') {
+                     if ($this->type === 'incoming_inspection') {
                          // Update ISOTANK directly
-                         $isotank->update([
-                             'location' => 'SMGRS',
-                             'filling_status_code' => $fillingStatusCode,
-                             'filling_status_desc' => $fillingStatusDesc
-                         ]);
+                         $updates = ['location' => 'SMGRS'];
+                         if (!empty($fillingStatusCode)) {
+                             $updates['filling_status_code'] = $fillingStatusCode;
+                             $updates['filling_status_desc'] = $fillingStatusDesc;
+                         }
+                         $isotank->update($updates);
 
                     } elseif ($this->type === 'outgoing_inspection') {
                          $destination = $rowData['destination'] ?? null;
@@ -71,10 +72,12 @@ class InspectionImport
                          
                          // UPDATE ISOTANK FILLING STATUS (User Request)
                          // When admin plans outgoing, status should reflect immediately (e.g. "Filled")
-                         $isotank->update([
-                             'filling_status_code' => $fillingStatusCode,
-                             'filling_status_desc' => $fillingStatusDesc
-                         ]);
+                         if (!empty($fillingStatusCode)) {
+                             $isotank->update([
+                                 'filling_status_code' => $fillingStatusCode,
+                                 'filling_status_desc' => $fillingStatusDesc
+                             ]);
+                         }
                     }
 
                     $plannedDate = now();
