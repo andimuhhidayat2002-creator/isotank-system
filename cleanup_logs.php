@@ -1,13 +1,15 @@
 <?php
-require __DIR__.'/api/vendor/autoload.php';
-$app = require_once __DIR__.'/api/bootstrap/app.php';
+// ADJUST PATHS FOR SERVER ENVIRONMENT (Running from /var/www/isotank-system/api)
+require __DIR__.'/vendor/autoload.php';
+$app = require_once __DIR__.'/bootstrap/app.php';
+
 $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
 $kernel->bootstrap();
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
-echo "--- CLEANING UP LOG DATA ---\n";
+echo "--- CLEANING UP LOG DATA (SERVER) ---\n";
 
 DB::statement('SET FOREIGN_KEY_CHECKS = 0');
 
