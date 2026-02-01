@@ -340,7 +340,7 @@
                         <!-- SECTION F: VACUUM SYSTEM (Hardcoded Legacy) -->
                         <tr class="table-secondary"><th colspan="2">F. VACUUM SYSTEM</th></tr>
                         <tr><td class="ps-3">Vacuum Gauge Condition</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->vacuum_gauge_condition])</td></tr>
-                        <tr><td class="ps-3">Port Suction Condition</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->vacuum_port_suction_condition ?? $logData['port_suction_condition'] ?? $logData['Port Suction Condition'] ?? null])</td></tr>
+                        <tr><td class="ps-3">Port Suction Condition</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->vacuum_port_suction_condition ?? $logData['port_suction_condition'] ?? $logData['Port Suction Condition'] ?? $logData['vacuum_port_suction_condition'] ?? $logData['vacuum_port_suction'] ?? $logData['port_suction'] ?? $logData['Port_Suction_Condition'] ?? null])</td></tr>
                         <tr><td class="ps-3">Vacuum Value</td><td class="text-center fw-bold">{{ $log->vacuum_value ? (float)$log->vacuum_value . ' mTorr' : '-' }}</td></tr>
                         <tr><td class="ps-3">Vacuum Temperature</td><td class="text-center">{{ $log->vacuum_temperature ? $log->vacuum_temperature . ' °C' : '-' }}</td></tr>
                         <tr><td class="ps-3">Check Datetime</td><td class="text-center">{{ $log->vacuum_check_datetime ? $log->vacuum_check_datetime->format('Y-m-d H:i') : '-' }}</td></tr>
@@ -441,64 +441,93 @@
 </div>
 
 @push('scripts')
-<script type="module">
-    // Vanilla JS Implementation - No jQuery Dependency
-    window.showImageModal = function(src, title) {
-        const modalEl = document.getElementById('imageModal');
-        const img = document.getElementById('modalImage');
-        const label = document.getElementById('imageModalLabel');
+<script>
+    // Robust Vanilla JS Modal Implementation
+    document.addEventListener('DOMContentLoaded', function() {
+        const modal = document.getElementById('imageModal');
+        const modalImg = document.getElementById('modalImage');
+        const modalLabel = document.getElementById('imageModalLabel');
+        const closeBtn = modal.querySelector('.btn-close');
         
-        // Reset state
-        img.src = src;
-        img.classList.add('img-fluid');
-        img.style.maxHeight = '85vh';
-        img.style.width = '';
-        img.style.cursor = 'zoom-in';
-        
-        label.textContent = title;
-        
-        // Use Bootstrap 5 API
-        // Assumes 'bootstrap' is globally available or we use the data-attribute trigger if possible.
-        // If bootstrap is imported as module in app.js, we might not have 'bootstrap' global.
-        // Fallback: Use a hidden button trigger if JS API fails, but usually window.bootstrap is available if app.js loads it.
-        // Safest: Check window.bootstrap
-        
-        if (window.bootstrap) {
-            const modal = new window.bootstrap.Modal(modalEl);
-            modal.show();
-        } else {
-             // Fallback for when bootstrap global is missing (module based)
-             // We can try to manually toggle classes if desperate, but better to log error
-             console.error('Bootstrap 5 Global API not found. Ensure `window.bootstrap = bootstrap;` is in your app.js');
-             // Try jQuery fallback just in case
-             if (window.jQuery) {
-                 window.jQuery(modalEl).modal('show');
-             }
-        }
-    };
+        // Global function to open modal (attached to window for inline onclick access)
+        window.showImageModal = function(src, title) {
+            modalImg.src = src;
+            modalLabel.textContent = title;
+            
+            // 1. Reset Zoom State
+            modalImg.classList.add('img-fluid');
+            modalImg.style.maxHeight = '85vh';
+            modalImg.style.width = '';
+            modalImg.style.cursor = 'zoom-in';
 
-    // Vanilla Event Listener for Zoom
-    document.addEventListener('DOMContentLoaded', () => {
-        const img = document.getElementById('modalImage');
-        if (img) {
-            img.addEventListener('click', function() {
-                if (this.classList.contains('img-fluid')) {
-                    // Zoom In
-                    this.classList.remove('img-fluid');
-                    this.style.maxHeight = '';
-                    this.style.width = 'auto';
-                    this.style.maxWidth = 'none';
-                    this.style.cursor = 'zoom-out';
-                } else {
-                    // Zoom Out
-                    this.classList.add('img-fluid');
-                    this.style.maxHeight = '85vh';
-                    this.style.width = '';
-                    this.style.maxWidth = '';
-                    this.style.cursor = 'zoom-in';
-                }
-            });
+            // 2. Show Modal (Bootstrap Class + Manual Display)
+            modal.classList.add('show');
+            modal.style.display = 'block';
+            modal.removeAttribute('aria-hidden');
+            modal.setAttribute('aria-modal', 'true');
+            
+            // 3. Add Backdrop
+            let backdrop = document.querySelector('.modal-backdrop');
+            if (!backdrop) {
+                backdrop = document.createElement('div');
+                backdrop.className = 'modal-backdrop fade show';
+                document.body.appendChild(backdrop);
+            }
+            document.body.classList.add('modal-open');
+        };
+
+        // Function to Close Modal
+        function closeModal() {
+            modal.classList.remove('show');
+            modal.style.display = 'none';
+            modal.setAttribute('aria-hidden', 'true');
+            modal.removeAttribute('aria-modal');
+            
+            // Remove Backdrop
+            const backdrop = document.querySelector('.modal-backdrop');
+            if (backdrop) backdrop.remove();
+            document.body.classList.remove('modal-open');
+            
+            // Clear Src to stop loading
+            modalImg.src = '';
         }
+
+        // Event Listeners
+        closeBtn.addEventListener('click', closeModal);
+        
+        // Close on click outside (Backdrop area)
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+
+        // Close on Escape Key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && modal.style.display === 'block') {
+                closeModal();
+            }
+        });
+
+        // Zoom Toggle Logic
+        modalImg.addEventListener('click', function(e) {
+            e.stopPropagation(); // Prevent closing when clicking image
+            if (this.classList.contains('img-fluid')) {
+                // Zoom In
+                this.classList.remove('img-fluid');
+                this.style.maxHeight = '';
+                this.style.width = 'auto';
+                this.style.maxWidth = 'none'; // Allow full overflow
+                this.style.cursor = 'zoom-out';
+            } else {
+                // Zoom Out
+                this.classList.add('img-fluid');
+                this.style.maxHeight = '85vh';
+                this.style.width = '';
+                this.style.maxWidth = '';
+                this.style.cursor = 'zoom-in';
+            }
+        });
     });
 </script>
 <style>

@@ -345,7 +345,11 @@
                                         if (!$pscVal && !empty($jsonData)) {
                                             $pscVal = $jsonData['port_suction_condition'] ?? 
                                                       $jsonData['Port Suction Condition'] ?? 
-                                                      $jsonData['vacuum_port_suction_condition'] ?? null;
+                                                      $jsonData['vacuum_port_suction_condition'] ?? 
+                                                      $jsonData['vacuum_port_suction'] ?? 
+                                                      $jsonData['port_suction'] ?? 
+                                                      $jsonData['Port_Suction_Condition'] ??
+                                                      null;
                                         }
                                         
                                         // Final fallback to t75Data from controller
