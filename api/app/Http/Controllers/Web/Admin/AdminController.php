@@ -123,25 +123,28 @@ class AdminController extends Controller
         $validStatuses = MasterIsotank::getValidFillingStatuses();
         
         // Map raw DB results to formatted stats
-        foreach ($validStatuses as $code => $description) {
-            if (isset($fillingRaw[$code])) {
-                $fillingStatusStats[] = [
-                    'code' => $code,
-                    'description' => $description,
-                    'count' => $fillingRaw[$code]
-                ];
-                unset($fillingRaw[$code]); // Remove processed
-            }
+        // DYNAMICALLY Capture all statuses present in DB, even if custom (e.g. "filled m29")
+        foreach ($fillingRaw as $code => $count) {
+             // Skip empty/null codes (handled separately as No Status)
+             if (empty($code)) continue;
+
+             $desc = $validStatuses[$code] ?? ucwords(str_replace('_', ' ', $code));
+             
+             $fillingStatusStats[] = [
+                 'code' => $code,
+                 'description' => $desc,
+                 'count' => $count
+             ];
         }
-        
+
         // Check for 'no status' (null or empty string key in result)
         $noStatusCount = ($fillingRaw[''] ?? 0) + ($fillingRaw[null] ?? 0);
         
         if ($noStatusCount > 0) {
             $fillingStatusStats[] = [
-                'code' => 'no_status',
-                'description' => 'No Status',
-                'count' => $noStatusCount
+                 'code' => 'no_status',
+                 'description' => 'No Status',
+                 'count' => $noStatusCount
             ];
         }
 
