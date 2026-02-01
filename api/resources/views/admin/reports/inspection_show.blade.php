@@ -151,7 +151,9 @@
                                 'Air Source Connection' => 'air_source_connection',
                                 'ESDV' => 'esdv',
                                 'Blind Flange' => 'blind_flange',
-                                'PRV' => 'prv'
+                                'PRV' => 'prv',
+                                'GPS/4G/LP LAN Antenna' => 'gps_antenna',
+                                'Port Suction Condition' => 'vacuum_port_suction_condition',
                             ];
                         @endphp
 
@@ -233,10 +235,7 @@
                                         $val = $logData[$uLabelLower] ?? null;
                                     }
 
-                                    // 5b. SPECIAL MAP: Port Suction Condition (Dynamic Code vs DB Column)
-                                    if (!$val && $code === 'port_suction_condition') {
-                                        $val = $log->vacuum_port_suction_condition ?? null;
-                                    }
+
 
                                     // 6. Direct Label Match (Spaces preserved)
                                     if (!$val) {

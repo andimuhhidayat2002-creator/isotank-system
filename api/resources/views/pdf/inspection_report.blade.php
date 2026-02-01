@@ -189,6 +189,7 @@
             'Blind Flange' => 'blind_flange', 'Blind Flange, nuts and bolts' => 'blind_flange',
             'PRV (Pressure Relief Valve)' => 'prv', 'PRV' => 'prv',
             'GPS/4G/LP LAN Antenna' => 'gps_antenna', 'Antena,GPS,4G' => 'gps_antenna', 'TOP: Antena,GPS,4G' => 'gps_antenna',
+            'Port Suction Condition' => 'vacuum_port_suction_condition',
         ];
 
         // Fetch Receiver Confirmations if outgoing
@@ -271,10 +272,7 @@
                                 $val = $jsonData[$uLabel] ?? null;
                             }
                             
-                            // SPECIAL MAP: Port Suction Condition
-                            if (!$val && $code === 'port_suction_condition') {
-                                $val = $inspection->vacuum_port_suction_condition ?? null;
-                            }
+
                             
                             $isConfirmedItem = in_array($item->code, $receiverCodes);
                             $conf = $recvConfirmations[$item->code] ?? null;
