@@ -104,3 +104,20 @@ We operate on **TWO SEPARATE** repositories. Always verify which one you are wor
 *   **Access Control:** All photos are accessed strictly via the `MediaController` route (`/admin/media/{path}`) which is protected by the `auth:web` middleware in `routes/web.php`.
 *   **No Symlinks:** There are no symbolic links exposing `storage/app/inspections` to `public/storage`.
 *   **Conclusion:** Photos are NOT accessible via direct URL on the internet. They require a valid administrator login session to view.
+
+### O. System Logic & Dashboard Integrity Updates (Feb 1, 2026 20:20)
+*   **1. Maintenance Block Logic (Flutter):**
+    *   **Relaxed:** If an item is "Not Good" BUT has an *existing* open maintenance ticket, `photo` & `remark` become optional (to prevent blocking). Warns user with orange box.
+    *   **Strict:** If it is a NEW defect, photo/remark remains mandatory.
+*   **2. Vacuum Validity Check:**
+    *   **Strict:** Submission is now BLOCKED if `vacuum_check_datetime` is > 10 months old (Red error). Inspector MUST re-check.
+*   **3. Dashboard Occupancy & Location:**
+    *   **Fix:** Charts now count "Not Specified" / NULL status as **Empty**.
+    *   **Dynamic:** Charts now support custom statuses (e.g. `filled m29`) derived from DB, instead of just hardcoded values.
+*   **4. Filled Status Logic Protection (Server):**
+    *   **Preservation:** If Admin wrote a specific status (e.g. `filled m29`) and Inspector selects generic "Filled", the specific status is **PRESERVED**.
+    *   **Overwrite:** If Inspector selects a different state (e.g. "Empty"), it overwrites as normal.
+*   **5. Master List Optimization:**
+    *   **Search Fix:** Changed pagination to `get()` (load all) on Master Isotank view to ensure client-side search finds ALL records, not just the first 50.
+*   **6. Excel Import Fix:**
+    *   Importing Inspection Excel with empty `filling_status` column no longer overwrites existing status with NULL. It preserves the existing value.
