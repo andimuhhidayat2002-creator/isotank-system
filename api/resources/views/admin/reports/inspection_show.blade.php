@@ -424,14 +424,17 @@
 
 <!-- Image Modal -->
 <div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-lg modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="imageModalLabel">Photo</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content bg-dark border-secondary">
+      <div class="modal-header border-secondary">
+        <h5 class="modal-title text-white" id="imageModalLabel">Photo</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <div class="modal-body text-center bg-dark">
-        <img src="" id="modalImage" class="img-fluid" style="max-height: 80vh;">
+      <div class="modal-body text-center p-0 overflow-auto" style="max-height: 90vh;">
+        <img src="" id="modalImage" class="img-fluid" style="max-height: 85vh; cursor: zoom-in;">
+      </div>
+      <div class="modal-footer border-secondary py-1 justify-content-center">
+          <small class="text-muted">Click image to zoom in/out</small>
       </div>
     </div>
   </div>
@@ -440,14 +443,60 @@
 @push('scripts')
 <script>
 function showImageModal(src, title) {
-    $('#modalImage').attr('src', src);
+    const img = $('#modalImage');
+    
+    // Reset state before showing
+    img.attr('src', src);
+    img.addClass('img-fluid').css({'max-height': '85vh', 'width': '', 'cursor': 'zoom-in'});
+    
     $('#imageModalLabel').text(title);
     $('#imageModal').modal('show');
 }
+
+$(document).ready(function() {
+    $('#modalImage').on('click', function() {
+        const img = $(this);
+        
+        if (img.hasClass('img-fluid')) {
+            // ZOOM IN: Show full size
+            img.removeClass('img-fluid');
+            img.css({
+                'max-height': '', 
+                'width': 'auto', 
+                'max-width': 'none', 
+                'cursor': 'zoom-out'
+            });
+        } else {
+            // ZOOM OUT: Fit screen
+            img.addClass('img-fluid');
+            img.css({
+                'max-height': '85vh', 
+                'width': '', 
+                'max-width': '', 
+                'cursor': 'zoom-in'
+            });
+        }
+    });
+});
 </script>
 <style>
     .hover-shadow { transition: transform .2s; }
     .hover-shadow:hover { transform: scale(1.05); box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important; }
+    /* Hide scrollbar for cleaner look but allow scrolling */
+    .modal-body::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    .modal-body::-webkit-scrollbar-track {
+      background: #212529; 
+    }
+    .modal-body::-webkit-scrollbar-thumb {
+      background: #495057; 
+      border-radius: 4px;
+    }
+    .modal-body::-webkit-scrollbar-thumb:hover {
+      background: #6c757d; 
+    }
 </style>
 @endpush
 
