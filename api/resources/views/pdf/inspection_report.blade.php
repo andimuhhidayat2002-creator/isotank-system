@@ -268,6 +268,7 @@
                                 $lKey = $legacyMap[$label];
                                 $val = $inspection->$lKey ?? ($jsonData[$lKey] ?? null);
                             }
+                            if (!$val) {
                                 $uLabel = str_replace([' ', '.', '/'], '_', strtolower($label));
                                 $val = $jsonData[$uLabel] ?? null;
                             }
