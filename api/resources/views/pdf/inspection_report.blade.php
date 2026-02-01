@@ -335,7 +335,7 @@
                             </tr>
                             <tr>
                                 <td style="border:1px solid #eee;">Port Suction Condition</td>
-                                <td style="border:1px solid #eee;text-align:center;">{!! badge($t75Data['vacuum']['port_condition']) !!}</td>
+                                <td style="border:1px solid #eee;text-align:center;">{!! badge($t75Data['vacuum']['port_condition'] ?? $inspection->vacuum_port_suction_condition) !!}</td>
                                 <td style="border:1px solid #eee;text-align:center;color:#bbb;">-</td>
                             </tr>
                             <tr>
