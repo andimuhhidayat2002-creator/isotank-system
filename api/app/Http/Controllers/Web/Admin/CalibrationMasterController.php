@@ -26,7 +26,7 @@ class CalibrationMasterController extends Controller
             $msg = "Processed {$import->successCount} rows.";
             if ($import->errorCount > 0) {
                 $msg .= " {$import->errorCount} errors skipped.";
-                return back()->with('warning', $msg);
+                return back()->with('warning', $msg)->with('import_errors', $import->errors);
             }
             return back()->with('success', $msg);
 

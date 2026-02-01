@@ -17,6 +17,22 @@
         </div>
     </div>
 
+    @if(session('import_errors'))
+    <div class="alert alert-warning border-warning shadow-sm">
+        <h5 class="alert-heading fw-bold"><i class="bi bi-exclamation-triangle"></i> Import Failures ({{ count(session('import_errors')) }})</h5>
+        <div style="max-height: 200px; overflow-y: auto;">
+            <ul class="mb-0 ps-3">
+                @foreach(array_slice(session('import_errors'), 0, 100) as $err)
+                    <li><strong>Row {{ $err['row'] }}</strong> [{{ $err['iso'] }}]: {{ $err['message'] }}</li>
+                @endforeach
+            </ul>
+        </div>
+        @if(count(session('import_errors')) > 100)
+            <div class="mt-2 fst-italic text-muted">... and {{ count(session('import_errors')) - 100 }} more errors.</div>
+        @endif
+    </div>
+    @endif
+
     <!-- Import Modal -->
     <div class="modal fade" id="importModal" tabindex="-1">
         <div class="modal-dialog">
