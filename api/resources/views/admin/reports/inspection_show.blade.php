@@ -441,7 +441,7 @@
 </div>
 
 @push('scripts')
-<script>
+<script type="module">
 function showImageModal(src, title) {
     const img = $('#modalImage');
     

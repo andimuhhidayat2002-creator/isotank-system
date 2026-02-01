@@ -1334,6 +1334,7 @@ class AdminController extends Controller
         // VACUUM SYSTEM
         $data['vacuum'] = [
             'gauge_condition' => $get('vacuum_gauge_condition'),
+            // Robust check for Port Suction
             'port_condition' => $get('vacuum_port_suction_condition') ?? $get('port_suction_condition') ?? $get('Port Suction Condition') ?? $get('Port_Suction_Condition'),
             'value' => $get('vacuum_value') ? (float)$get('vacuum_value') . ' ' . ($get('vacuum_unit') ?? 'mTorr') : '-',
             'temp' => $get('vacuum_temperature') ? $get('vacuum_temperature').' °C' : '-',
