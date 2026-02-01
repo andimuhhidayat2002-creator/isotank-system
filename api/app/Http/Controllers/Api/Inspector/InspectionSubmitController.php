@@ -537,11 +537,25 @@ class InspectionSubmitController extends Controller
                     // UPDATE MASTER ISOTANK FILLING STATUS (for incoming)
                     $isotankUpdates = [];
                     if (!empty($validated['filling_status_code'])) {
-                        $isotankUpdates['filling_status_code'] = $validated['filling_status_code'];
+                        $newStatus = $validated['filling_status_code'];
+                        $currentStatus = $job->isotank->filling_status_code;
+
+                        // RULE: If Admin set a specific "filled ..." status (e.g. "filled m29"), 
+                        // and Inspector selects generic "filled", WE KEEP THE SPECIFIC ONE.
+                        // But if Inspector selects something else (e.g. "empty"), we update it.
+                        $isGenericFilled = ($newStatus === 'filled');
+                        $isSpecificFilled = (str_starts_with($currentStatus, 'filled ') || $currentStatus === 'filled_m29'); // catch spaces or other variants
+
+                        if ($isGenericFilled && $isSpecificFilled) {
+                             // Do NOT update status. Keep the valuable info (e.g. m29).
+                        } else {
+                             $isotankUpdates['filling_status_code'] = $newStatus;
+                             if (!empty($validated['filling_status_desc'])) {
+                                 $isotankUpdates['filling_status_desc'] = $validated['filling_status_desc'];
+                             }
+                        }
                     }
-                    if (!empty($validated['filling_status_desc'])) {
-                        $isotankUpdates['filling_status_desc'] = $validated['filling_status_desc'];
-                    }
+                    
                     if (!empty($isotankUpdates)) {
                         $job->isotank->update($isotankUpdates);
                     }
