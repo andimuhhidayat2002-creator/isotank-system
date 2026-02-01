@@ -551,7 +551,10 @@ class AdminController extends Controller
             $query->where('iso_number', 'LIKE', "%{$search}%");
         }
 
-        $isotanks = $query->orderBy('iso_number')->paginate(50);
+        // Fetch ALL to allow DataTables client-side filtering to work on full dataset
+        // Warning: This loads all ~2000 rows into DOM. 
+        // Future optimization: Switch to Server-Side DataTables (AJAX) if dataset > 5000
+        $isotanks = $query->orderBy('iso_number')->get();
         return view('admin.isotanks', compact('isotanks'));
     }
 
