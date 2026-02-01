@@ -167,6 +167,11 @@
                                     
                                     // 2. Direct Column match
                                     if (!$val) $val = $iLog->$code ?? ($log->$code ?? null);
+
+                                    // FIX: Port Suction Condition Column Mismatch
+                                    if (!$val && $code === 'port_suction_condition') {
+                                        $val = $log->vacuum_port_suction_condition ?? null;
+                                    }
                                     
                                     // 3. Underscore-version of Code in JSON
                                     if (!$val) {
