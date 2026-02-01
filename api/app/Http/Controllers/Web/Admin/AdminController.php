@@ -406,26 +406,33 @@ class AdminController extends Controller
 
     public function calibrationMonitoring() {
         try {
-            // 5) Calibration Monitoring (GLOBAL)
+            // 5) Calibration Monitoring (GLOBAL) - SOURCE OF TRUTH: MasterIsotankComponent
             
-            // Calibration status summary
-            $statusSummary = MasterIsotankCalibrationStatus::select('status', DB::raw('count(*) as count'))
-                ->groupBy('status')
-                ->pluck('count', 'status')
-                ->toArray();
+            // Calculate Status based on COMPONENTS (Real-time)
+            $expiredCount = \App\Models\MasterIsotankComponent::where('expiry_date', '<', now())->distinct('isotank_id')->count('isotank_id');
+            $totalWithComponents = \App\Models\MasterIsotankComponent::distinct('isotank_id')->count('isotank_id');
+            $validCount = max(0, $totalWithComponents - $expiredCount);
 
-            // Expiring calibration (30 / 60 / 90 days)
-            $expiring30 = MasterIsotankCalibrationStatus::whereDate('valid_until', '<=', now()->addDays(30))
-                ->whereDate('valid_until', '>=', now())
-                ->count();
+            $statusSummary = [
+                'valid' => $validCount,
+                'expired' => $expiredCount
+            ];
+
+            // Expiring calibration (30 / 60 / 90 days) - Counts distinct ISOTANKS
+            $expiring30 = \App\Models\MasterIsotankComponent::where('expiry_date', '>=', now())
+                ->where('expiry_date', '<=', now()->addDays(30))
+                ->distinct('isotank_id')
+                ->count('isotank_id');
             
-            $expiring60 = MasterIsotankCalibrationStatus::whereDate('valid_until', '<=', now()->addDays(60))
-                ->whereDate('valid_until', '>=', now())
-                ->count();
+            $expiring60 = \App\Models\MasterIsotankComponent::where('expiry_date', '>=', now())
+                ->where('expiry_date', '<=', now()->addDays(60))
+                ->distinct('isotank_id')
+                ->count('isotank_id');
 
-            $expiring90 = MasterIsotankCalibrationStatus::whereDate('valid_until', '<=', now()->addDays(90))
-                ->whereDate('valid_until', '>=', now())
-                ->count();
+            $expiring90 = \App\Models\MasterIsotankComponent::where('expiry_date', '>=', now())
+                ->where('expiry_date', '<=', now()->addDays(90))
+                ->distinct('isotank_id')
+                ->count('isotank_id');
 
             // Rejected calibration history (Top 20 recent)
             $rejectedHistory = CalibrationLog::where('status', 'rejected')
