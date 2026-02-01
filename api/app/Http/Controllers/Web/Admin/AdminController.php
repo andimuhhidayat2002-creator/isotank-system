@@ -66,7 +66,7 @@ class AdminController extends Controller
             ->selectRaw('count(*) as active_count')
             ->selectRaw('count(distinct owner) as owner_count')
             ->selectRaw('count(distinct manufacturer) as manufacturer_count')
-            ->selectRaw("sum(case when filling_status_code != 'filled' and filling_status_code is not null and filling_status_code != '' then 1 else 0 end) as empty_count")
+            ->selectRaw("count(*) - sum(case when filling_status_code = 'filled' then 1 else 0 end) as empty_count")
             ->selectRaw("sum(case when filling_status_code = 'filled' then 1 else 0 end) as filled_count")
             ->whereNotNull('location')
             ->where('location', '!=', '')
