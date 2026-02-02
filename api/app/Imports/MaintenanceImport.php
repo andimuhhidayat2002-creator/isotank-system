@@ -13,6 +13,13 @@ class MaintenanceImport
     public $errorCount = 0;
     public $errors = [];
 
+    private function normalizeIso($iso)
+    {
+        // Remove all non-alphanumeric characters except hyphen
+        // This handles spaces, tabs, newlines, and pesky Non-Breaking Spaces (NBSP)
+        return strtoupper(preg_replace('/[^a-zA-Z0-9-]/', '', $iso));
+    }
+
     public function import($file)
     {
         ini_set('memory_limit', '512M');
@@ -30,16 +37,18 @@ class MaintenanceImport
                 return strtolower(str_replace(' ', '_', trim($h)));
             }, $header);
 
-            // OPTIMIZATION: Load all isotanks into memory (Case-Insensitive Keys)
+            // OPTIMIZATION: Load all isotanks into memory (Normalized Keys)
             $isotankMap = MasterIsotank::pluck('id', 'iso_number')
                 ->mapWithKeys(function ($item, $key) {
-                    return [strtoupper(trim($key)) => $item];
+                    return [$this->normalizeIso($key) => $item];
                 })->toArray();
                 
             $isotankStatus = MasterIsotank::pluck('status', 'iso_number')
                  ->mapWithKeys(function ($item, $key) {
-                    return [strtoupper(trim($key)) => $item];
+                    return [$this->normalizeIso($key) => $item];
                 })->toArray();
+
+            \Log::info("Maintenance Import: Loaded " . count($isotankMap) . " reference isotanks.");
 
             foreach ($rows as $index => $row) {
                 if (empty(array_filter($row))) continue;
@@ -50,11 +59,11 @@ class MaintenanceImport
                     $rawIso = $rowData['iso_number'] ?? null;
                     if (!$rawIso) throw new \Exception("Missing ISO Number");
                     
-                    $iso = strtoupper(trim($rawIso)); // Normalize to Upper Case
+                    $iso = $this->normalizeIso($rawIso);
 
                     if (!isset($isotankMap[$iso])) {
-                        // Try strict match failure debug
-                         throw new \Exception("Isotank '$rawIso' not found in system.");
+                        // Detailed error for debugging
+                        throw new \Exception("Isotank '$rawIso' (Normalized: $iso) not found. Map Sample: " . implode(',', array_slice(array_keys($isotankMap), 0, 3)));
                     }
                     if (($isotankStatus[$iso] ?? '') !== 'active') {
                         throw new \Exception("Isotank '$rawIso' is inactive.");
@@ -144,6 +153,9 @@ class MaintenanceImport
                     $this->successCount++;
                 } catch (\Exception $e) {
                     $this->errorCount++;
+                    // LOG ERROR FOR DEBUGGING
+                    \Log::error("Maintenance Import Row " . ($index + 2) . " Failed: " . $e->getMessage());
+                    
                     $this->errors[] = [
                         'row' => $index + 2,
                         'iso_number' => $rowData['iso_number'] ?? 'UNKNOWN',
