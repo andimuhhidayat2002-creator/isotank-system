@@ -137,8 +137,8 @@ class AdminController extends Controller
              ];
         }
 
-        // Check for 'no status' (null or empty string key in result)
-        $noStatusCount = ($fillingRaw[''] ?? 0) + ($fillingRaw[null] ?? 0);
+        // Check for 'no status' (null or empty string in DB becomes '' key in array)
+        $noStatusCount = $fillingRaw[''] ?? 0;
         
         if ($noStatusCount > 0) {
             $fillingStatusStats[] = [
