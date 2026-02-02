@@ -67,7 +67,7 @@ class MaintenanceImport
                     }
                     
                     if ($isotank->status !== 'active') {
-                        throw new \Exception("Isotank '$valIso' is inactive.");
+                        throw new \Exception("Isotank '$cleanIso' is inactive.");
                     }
                     
                     $isotankId = $isotank->id;
