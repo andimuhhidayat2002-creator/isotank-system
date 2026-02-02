@@ -59,21 +59,23 @@ class MaintenanceImport
                         if (is_numeric($val)) {
                             $plannedDate = Date::excelToDateTimeObject($val);
                         } else {
-                            // Try d/m/Y (e.g. 08/02/2024)
-                            try {
-                                $plannedDate = \Carbon\Carbon::createFromFormat('d/m/Y', $val);
-                            } catch (\Exception $e) {
-                                // Try d/m/y (e.g. 08/02/24)
+                            // Try multiple formats based on log evidence "1/18/2026" (m/d/Y)
+                            $formats = ['d/m/Y', 'm/d/Y', 'd/m/y', 'm/d/y', 'Y-m-d'];
+                            foreach ($formats as $format) {
                                 try {
-                                    $plannedDate = \Carbon\Carbon::createFromFormat('d/m/y', $val);
-                                } catch (\Exception $e2) {
-                                    // Fallback to generic parse
-                                    try {
-                                        $plannedDate = \Carbon\Carbon::parse($val);
-                                    } catch (\Exception $e3) {
-                                         // Last resort
-                                         $plannedDate = now();
-                                    }
+                                    $plannedDate = \Carbon\Carbon::createFromFormat($format, $val);
+                                    break; // Stop if successful
+                                } catch (\Exception $e) {
+                                    continue;
+                                }
+                            }
+                            
+                            // If still null, try generic parse
+                            if (!$plannedDate) {
+                                try {
+                                    $plannedDate = \Carbon\Carbon::parse($val);
+                                } catch (\Exception $e) {
+                                    $plannedDate = now();
                                 }
                             }
                         }
