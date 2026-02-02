@@ -174,7 +174,7 @@ class AdminController extends Controller
         
         $assetSummary = [
             'total_isotanks' => $isotanks->count(),
-            'open_maintenance' => MaintenanceJob::whereIn('isotank_id', $isotanks)->where('status', '!=', 'closed')->count(),
+            'open_maintenance' => MaintenanceJob::whereIn('isotank_id', $isotanks)->count(),
             'expired_calibration' => MasterIsotankCalibrationStatus::whereIn('isotank_id', $isotanks)
                 ->where(function ($q) {
                     $q->where('status', 'expired')->orWhere('valid_until', '<', now());
