@@ -37,19 +37,6 @@ class MaintenanceImport
                 return strtolower(str_replace(' ', '_', trim($h)));
             }, $header);
 
-            // OPTIMIZATION: Load all isotanks into memory (Normalized Keys)
-            $isotankMap = MasterIsotank::pluck('id', 'iso_number')
-                ->mapWithKeys(function ($item, $key) {
-                    return [$this->normalizeIso($key) => $item];
-                })->toArray();
-                
-            $isotankStatus = MasterIsotank::pluck('status', 'iso_number')
-                 ->mapWithKeys(function ($item, $key) {
-                    return [$this->normalizeIso($key) => $item];
-                })->toArray();
-
-            \Log::info("Maintenance Import: Loaded " . count($isotankMap) . " reference isotanks.");
-
             foreach ($rows as $index => $row) {
                 if (empty(array_filter($row))) continue;
                 
@@ -59,17 +46,26 @@ class MaintenanceImport
                     $rawIso = $rowData['iso_number'] ?? null;
                     if (!$rawIso) throw new \Exception("Missing ISO Number");
                     
-                    $iso = $this->normalizeIso($rawIso);
+                    $valIso = trim($rawIso);
 
-                    if (!isset($isotankMap[$iso])) {
-                        // Detailed error for debugging
-                        throw new \Exception("Isotank '$rawIso' (Normalized: $iso) not found. Map Sample: " . implode(',', array_slice(array_keys($isotankMap), 0, 3)));
+                    // REVERT TO DATABASE LOOKUP (Safest for case-insensitivity)
+                    // We try exact match first, then generic match to let MySQL handle casing
+                    $isotank = MasterIsotank::where('iso_number', $valIso)->first();
+                    
+                    if (!$isotank) {
+                         // Fallback try: Remove spaces
+                         $isotank = MasterIsotank::where('iso_number', str_replace(' ', '', $valIso))->first();
                     }
-                    if (($isotankStatus[$iso] ?? '') !== 'active') {
-                        throw new \Exception("Isotank '$rawIso' is inactive.");
+
+                    if (!$isotank) {
+                        throw new \Exception("Isotank '$valIso' not found in database.");
                     }
                     
-                    $isotankId = $isotankMap[$iso];
+                    if ($isotank->status !== 'active') {
+                        throw new \Exception("Isotank '$valIso' is inactive.");
+                    }
+                    
+                    $isotankId = $isotank->id;
 
                     // ROBUST DATE PARSING
                     $plannedDate = null;
