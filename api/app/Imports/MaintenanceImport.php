@@ -67,24 +67,23 @@ class MaintenanceImport
                         if (is_numeric($val)) {
                             $plannedDate = Date::excelToDateTimeObject($val);
                         } else {
-                            // Try multiple formats based on log evidence "1/18/2026" (m/d/Y)
+                            // Try multiple formats with STRICT validation to prevent 2027 bug
                             $formats = ['d/m/Y', 'm/d/Y', 'd/m/y', 'm/d/y', 'Y-m-d'];
                             foreach ($formats as $format) {
-                                try {
-                                    $plannedDate = \Carbon\Carbon::createFromFormat($format, $val);
-                                    break; // Stop if successful
-                                } catch (\Exception $e) {
-                                    continue;
+                                $d = \DateTime::createFromFormat($format, $val);
+                                if ($d) {
+                                    $errors = \DateTime::getLastErrors();
+                                    // Check for overflow warnings (e.g., month 27 -> year 2027)
+                                    if ($errors['warning_count'] == 0 && $errors['error_count'] == 0) {
+                                        $plannedDate = \Carbon\Carbon::instance($d);
+                                        break;
+                                    }
                                 }
                             }
                             
-                            // If still null, try generic parse
+                            // If still null, use now() as fallback
                             if (!$plannedDate) {
-                                try {
-                                    $plannedDate = \Carbon\Carbon::parse($val);
-                                } catch (\Exception $e) {
-                                    $plannedDate = now();
-                                }
+                                $plannedDate = now();
                             }
                         }
                     }
