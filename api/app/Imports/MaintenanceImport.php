@@ -59,18 +59,20 @@ class MaintenanceImport
                         if (is_numeric($val)) {
                             $plannedDate = Date::excelToDateTimeObject($val);
                         } else {
-                            // Try multiple formats based on log evidence "1/18/2026" (m/d/Y)
-                            $formats = ['d/m/Y', 'm/d/Y', 'd/m/y', 'm/d/y', 'Y-m-d'];
+                            // Try multiple formats with STRICT overflow checking
+                            $formats = ['d/m/Y', 'm/d/Y', 'd/m/y', 'm/d/y', 'Y-m-d', 'Y/m/d'];
                             foreach ($formats as $format) {
-                                try {
-                                    $plannedDate = \Carbon\Carbon::createFromFormat($format, $val);
-                                    break; // Stop if successful
-                                } catch (\Exception $e) {
-                                    continue;
+                                $d = \DateTime::createFromFormat($format, $val);
+                                $errors = \DateTime::getLastErrors();
+                                
+                                // Check for errors OR warnings (warnings catch overflows like Month 27)
+                                if ($d && $errors['warning_count'] == 0 && $errors['error_count'] == 0) {
+                                    $plannedDate = \Carbon\Carbon::instance($d);
+                                    break; 
                                 }
                             }
                             
-                            // If still null, try generic parse
+                            // If still null, try generic parse as last resort (with Carbon's best guess)
                             if (!$plannedDate) {
                                 try {
                                     $plannedDate = \Carbon\Carbon::parse($val);
