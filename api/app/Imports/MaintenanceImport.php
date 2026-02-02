@@ -98,6 +98,8 @@ class MaintenanceImport
                         'part_damage' => $rowData['part_damage'] ?? null,
                         'damage_type' => $rowData['damage_type'] ?? null,
                         'location' => $rowData['location'] ?? null,
+                        // FIX: Use Planned Date as created_at/reported_date for historical accuracy
+                        'created_at' => $plannedDate ?? now(),
                     ]);
 
                     $this->successCount++;
