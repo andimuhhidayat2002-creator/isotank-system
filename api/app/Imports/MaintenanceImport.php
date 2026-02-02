@@ -13,13 +13,6 @@ class MaintenanceImport
     public $errorCount = 0;
     public $errors = [];
 
-    private function normalizeIso($iso)
-    {
-        // Remove all non-alphanumeric characters except hyphen
-        // This handles spaces, tabs, newlines, and pesky Non-Breaking Spaces (NBSP)
-        return strtoupper(preg_replace('/[^a-zA-Z0-9-]/', '', $iso));
-    }
-
     public function import($file)
     {
         ini_set('memory_limit', '512M');
@@ -37,56 +30,35 @@ class MaintenanceImport
                 return strtolower(str_replace(' ', '_', trim($h)));
             }, $header);
 
+            // OPTIMIZATION: Load all isotanks into memory
+            $isotankMap = MasterIsotank::pluck('id', 'iso_number')->toArray();
+            $isotankStatus = MasterIsotank::pluck('status', 'iso_number')->toArray();
+
             foreach ($rows as $index => $row) {
                 if (empty(array_filter($row))) continue;
                 
-                // FIX: Ensure row has same number of columns as header
-                $headerCount = count($header);
-                $rowCount = count($row);
-                
-                if ($rowCount < $headerCount) {
-                    // Pad with nulls if row is shorter
-                    $row = array_pad($row, $headerCount, null);
-                } elseif ($rowCount > $headerCount) {
-                    // Trim if row is longer
-                    $row = array_slice($row, 0, $headerCount);
+                // Ensure row has same column count as header
+                if (count($row) < count($header)) {
+                    $row = array_pad($row, count($header), null);
+                } elseif (count($row) > count($header)) {
+                    $row = array_slice($row, 0, count($header));
                 }
                 
                 $rowData = array_combine($header, $row);
-                if ($rowData === false) {
-                    \Log::error("Row " . ($index + 2) . " skipped: array_combine failed");
-                    continue;
-                }
+                if ($rowData === false) continue; // Skip invalid rows
 
                 try {
-                    $rawIso = $rowData['iso_number'] ?? null;
-                    if (!$rawIso) throw new \Exception("Missing ISO Number");
-                    
-                    // NUCLEAR CLEANING: Remove ANYTHING that is not a letter, number, or hyphen.
-                    // This kills Zero-Width spaces, NBSP, BOMs, tabs, newlines, etc.
-                    $cleanIso = strtoupper(preg_replace('/[^a-zA-Z0-9-]/', '', $rawIso));
+                    $iso = $rowData['iso_number'] ?? null;
+                    if (!$iso) throw new \Exception("Missing ISO Number");
 
-                    if ($index === 0) {
-                        \Log::info("DEBUG IMPORT: Raw ISO: [" . bin2hex($rawIso) . "] Clean ISO: [" . $cleanIso . "]");
+                    if (!isset($isotankMap[$iso])) {
+                        throw new \Exception("Isotank $iso not found.");
                     }
-
-                    // DATABASE LOOKUP using the Clean ISO
-                    $isotank = MasterIsotank::where('iso_number', $cleanIso)->first();
-                    
-                    if (!$isotank) {
-                         // Fallback: Try fuzzy search just in case
-                         $isotank = MasterIsotank::where('iso_number', 'LIKE', $cleanIso)->first();
-                    }
-
-                    if (!$isotank) {
-                        throw new \Exception("Isotank '$cleanIso' (Raw: '$rawIso') not found in database.");
+                    if (($isotankStatus[$iso] ?? '') !== 'active') {
+                        throw new \Exception("Isotank $iso is inactive.");
                     }
                     
-                    if ($isotank->status !== 'active') {
-                        throw new \Exception("Isotank '$cleanIso' is inactive.");
-                    }
-                    
-                    $isotankId = $isotank->id;
+                    $isotankId = $isotankMap[$iso];
 
                     // ROBUST DATE PARSING
                     $plannedDate = null;
@@ -95,20 +67,18 @@ class MaintenanceImport
                         if (is_numeric($val)) {
                             $plannedDate = Date::excelToDateTimeObject($val);
                         } else {
-                            // Try multiple formats with STRICT overflow checking
-                            $formats = ['d/m/Y', 'm/d/Y', 'd/m/y', 'm/d/y', 'Y-m-d', 'Y/m/d'];
+                            // Try multiple formats based on log evidence "1/18/2026" (m/d/Y)
+                            $formats = ['d/m/Y', 'm/d/Y', 'd/m/y', 'm/d/y', 'Y-m-d'];
                             foreach ($formats as $format) {
-                                $d = \DateTime::createFromFormat($format, $val);
-                                $errors = \DateTime::getLastErrors();
-                                
-                                // Check for errors OR warnings (warnings catch overflows like Month 27)
-                                if ($d && $errors['warning_count'] == 0 && $errors['error_count'] == 0) {
-                                    $plannedDate = \Carbon\Carbon::instance($d);
-                                    break; 
+                                try {
+                                    $plannedDate = \Carbon\Carbon::createFromFormat($format, $val);
+                                    break; // Stop if successful
+                                } catch (\Exception $e) {
+                                    continue;
                                 }
                             }
                             
-                            // If still null, try generic parse as last resort (with Carbon's best guess)
+                            // If still null, try generic parse
                             if (!$plannedDate) {
                                 try {
                                     $plannedDate = \Carbon\Carbon::parse($val);
@@ -170,9 +140,6 @@ class MaintenanceImport
                     $this->successCount++;
                 } catch (\Exception $e) {
                     $this->errorCount++;
-                    // LOG ERROR FOR DEBUGGING
-                    \Log::error("Maintenance Import Row " . ($index + 2) . " Failed: " . $e->getMessage());
-                    
                     $this->errors[] = [
                         'row' => $index + 2,
                         'iso_number' => $rowData['iso_number'] ?? 'UNKNOWN',
