@@ -40,7 +40,23 @@ class MaintenanceImport
             foreach ($rows as $index => $row) {
                 if (empty(array_filter($row))) continue;
                 
+                // FIX: Ensure row has same number of columns as header
+                $headerCount = count($header);
+                $rowCount = count($row);
+                
+                if ($rowCount < $headerCount) {
+                    // Pad with nulls if row is shorter
+                    $row = array_pad($row, $headerCount, null);
+                } elseif ($rowCount > $headerCount) {
+                    // Trim if row is longer
+                    $row = array_slice($row, 0, $headerCount);
+                }
+                
                 $rowData = array_combine($header, $row);
+                if ($rowData === false) {
+                    \Log::error("Row " . ($index + 2) . " skipped: array_combine failed");
+                    continue;
+                }
 
                 try {
                     $rawIso = $rowData['iso_number'] ?? null;
