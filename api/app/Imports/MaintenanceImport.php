@@ -46,19 +46,24 @@ class MaintenanceImport
                     $rawIso = $rowData['iso_number'] ?? null;
                     if (!$rawIso) throw new \Exception("Missing ISO Number");
                     
-                    $valIso = trim($rawIso);
+                    // NUCLEAR CLEANING: Remove ANYTHING that is not a letter, number, or hyphen.
+                    // This kills Zero-Width spaces, NBSP, BOMs, tabs, newlines, etc.
+                    $cleanIso = strtoupper(preg_replace('/[^a-zA-Z0-9-]/', '', $rawIso));
 
-                    // REVERT TO DATABASE LOOKUP (Safest for case-insensitivity)
-                    // We try exact match first, then generic match to let MySQL handle casing
-                    $isotank = MasterIsotank::where('iso_number', $valIso)->first();
+                    if ($index === 0) {
+                        \Log::info("DEBUG IMPORT: Raw ISO: [" . bin2hex($rawIso) . "] Clean ISO: [" . $cleanIso . "]");
+                    }
+
+                    // DATABASE LOOKUP using the Clean ISO
+                    $isotank = MasterIsotank::where('iso_number', $cleanIso)->first();
                     
                     if (!$isotank) {
-                         // Fallback try: Remove spaces
-                         $isotank = MasterIsotank::where('iso_number', str_replace(' ', '', $valIso))->first();
+                         // Fallback: Try fuzzy search just in case
+                         $isotank = MasterIsotank::where('iso_number', 'LIKE', $cleanIso)->first();
                     }
 
                     if (!$isotank) {
-                        throw new \Exception("Isotank '$valIso' not found in database.");
+                        throw new \Exception("Isotank '$cleanIso' (Raw: '$rawIso') not found in database.");
                     }
                     
                     if ($isotank->status !== 'active') {
