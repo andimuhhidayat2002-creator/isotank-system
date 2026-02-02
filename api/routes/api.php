@@ -21,7 +21,7 @@ use Illuminate\Support\Facades\Route;
 Route::post('/login', [AuthController::class, 'login']);
 
 // Protected routes
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', 'log.activity'])->group(function () {
     // SECURE MEDIA ACCESS
     Route::get('/media/{path}', [\App\Http\Controllers\Api\MediaController::class, 'show'])
         ->where('path', '.*')

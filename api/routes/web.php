@@ -27,7 +27,7 @@ Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Admin Protected Routes
-Route::middleware(['auth:web', 'role:admin,management,yard_operator'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth:web', 'role:admin,management,yard_operator', 'log.activity'])->prefix('admin')->name('admin.')->group(function () {
     
     // Dashboard
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');

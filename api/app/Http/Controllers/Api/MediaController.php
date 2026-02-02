@@ -20,11 +20,6 @@ class MediaController extends Controller
             abort(403, 'Invalid path');
         }
 
-        // 2. Decode path if it was URL encoded
-        // Path might come as "inspections/photo1.jpg"
-        // But Laravel router might capture only first segment if not careful with regex or catch-all.
-        // We will assume the route definition uses `where('path', '.*')` to capture full path.
-
         // 3. Check if file exists in 'local' (private) storage
         if (!Storage::disk('local')->exists($path)) {
             // Fallback: Check 'public' disk just in case (during migration phase)
@@ -32,6 +27,21 @@ class MediaController extends Controller
                 return Storage::disk('public')->response($path);
             }
             abort(404, 'File not found');
+        }
+
+        // LOGGING: Track who views this media
+        try {
+            \App\Models\ActivityLog::create([
+                'user_id' => auth()->id(),
+                'action' => 'View Media',
+                'description' => 'User viewed private file: ' . $path,
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+                'details' => ['path' => $path]
+            ]);
+        } catch (\Exception $e) {
+            // Don't block media access if logging fails
+            \Log::error('Failed to log media access: ' . $e->getMessage());
         }
 
         // 4. Return file stream
