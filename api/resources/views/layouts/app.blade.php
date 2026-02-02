@@ -58,6 +58,13 @@
                 <a href="{{ route('admin.reports.maintenance') }}" class="{{ request()->routeIs('admin.reports.maintenance*') ? 'active' : '' }}">Maintenance Jobs</a>
                 <a href="{{ route('admin.reports.calibration') }}" class="{{ request()->routeIs('admin.reports.calibration') ? 'active' : '' }}">Calibration History</a>
                 <a href="{{ route('admin.reports.vacuum') }}" class="{{ request()->routeIs('admin.reports.vacuum') ? 'active' : '' }}">Vacuum Suction</a>
+
+                @if(auth()->user()->role === 'admin')
+                    <hr style="border-color: rgba(255,255,255,0.1); margin: 6px 0;">
+                    <a href="{{ route('admin.monitoring.index') }}" class="{{ request()->routeIs('admin.monitoring*') ? 'active' : '' }}">
+                        <i class="bi bi-shield-check me-2"></i> System Monitoring
+                    </a>
+                @endif
             </div>
             
             <!-- 3. Footer (Fixed Bottom) -->

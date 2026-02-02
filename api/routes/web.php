@@ -124,6 +124,13 @@ Route::middleware(['auth:web', 'role:admin,management,yard_operator', 'log.activ
     Route::get('/reports/maintenance/{id}', [AdminController::class, 'showMaintenanceJob'])->name('reports.maintenance.show');
     Route::get('/reports/calibration', [AdminController::class, 'calibrationLogs'])->name('reports.calibration');
     Route::get('/reports/vacuum', [AdminController::class, 'vacuumActivities'])->name('reports.vacuum');
+
+    // System Monitoring (Admin Only)
+    Route::middleware('role:admin')->prefix('monitoring')->name('monitoring.')->group(function() {
+        Route::get('/', [\App\Http\Controllers\Web\Admin\MonitoringController::class, 'index'])->name('index');
+        Route::get('/system', [\App\Http\Controllers\Web\Admin\MonitoringController::class, 'systemLogs'])->name('system');
+        Route::post('/system/clear', [\App\Http\Controllers\Web\Admin\MonitoringController::class, 'clearSystemLogs'])->name('system.clear');
+    });
 });
 
 // Yard Management (Visual Only)
