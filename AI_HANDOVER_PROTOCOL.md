@@ -108,6 +108,7 @@ We operate on **TWO SEPARATE** repositories. Always verify which one you are wor
 ### O. System Logic & Dashboard Integrity Updates (Feb 1, 2026 20:20)
 *   **1. Maintenance Block Logic (Flutter):**
     *   **Relaxed:** If an item is "Not Good" BUT has an *existing* open maintenance ticket, `photo` & `remark` become optional (to prevent blocking). Warns user with orange box.
+    *   **Robust Matching (Feb 2, 2026):** App now checks `source_item` against Code, Label, and Case-Insensitive variations to ensure existing tickets are detected even if naming differs slightly.
     *   **Strict:** If it is a NEW defect, photo/remark remains mandatory.
 *   **2. Vacuum Validity Check:**
     *   **Strict:** Submission is now BLOCKED if `vacuum_check_datetime` is > 10 months old (Red error). Inspector MUST re-check.
@@ -115,8 +116,9 @@ We operate on **TWO SEPARATE** repositories. Always verify which one you are wor
     *   **Fix:** Charts now count "Not Specified" / NULL status as **Empty**.
     *   **Dynamic:** Charts now support custom statuses (e.g. `filled m29`) derived from DB, instead of just hardcoded values.
 *   **4. Filled Status Logic Protection (Server):**
-    *   **Preservation:** If Admin wrote a specific status (e.g. `filled m29`) and Inspector selects generic "Filled", the specific status is **PRESERVED**.
+    *   **Preservation:** If Admin wrote a specific status (e.g. `filled m29`) and Inspector selects generic "Filled", the specific status is **PRESERVED** (logic checks for substring).
     *   **Overwrite:** If Inspector selects a different state (e.g. "Empty"), it overwrites as normal.
+    *   **Location Update (Receiver Confirm):** Isotank location now forcibly updates to the Destination from the Inspection Log (or Job plan). If missing, warns but does not block.
 *   **5. Master List Optimization:**
     *   **Search Fix:** Changed pagination to `get()` (load all) on Master Isotank view to ensure client-side search finds ALL records, not just the first 50.
 *   **6. Excel Import Fix:**

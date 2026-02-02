@@ -1190,13 +1190,25 @@ class InspectionSubmitController extends Controller
             }
 
             // CRITICAL: CLEAR YARD POSITION
-            // The isotank has officially left the yard (destination updated).
-            // We must remove it from any yard slot so it becomes "Unplaced" when it returns.
-            \App\Models\IsotankPosition::where('isotank_id', $job->isotank_id)->delete();
-        }
+            // 5. UPDATE ISOTANK LOCATION (OFFICIAL OUT)
+            // Use destination from Log (Inspector input) OR Job (Admin plan)
+            $destination = $inspectionLog->destination;
+            if (empty($destination)) {
+                 $destination = $job->destination;
+            }
 
+            if (!empty($destination)) {
+                $job->isotank->update([
+                    'location' => $destination,
+                    'status' => 'active', // Ensure it remains active
+                ]);
+            } else {
+                // If no destination is set anywhere, we cannot move it, but we don't block confirmation.
+                // Just log it.
+                \Log::warning("Receiver Confirmation: No destination found for Isotank {$job->isotank_id} (Job {$job->id}). Location not updated.");
+            }
 
-            // AUTO-GENERATE OUTGOING PDF (Extension Requirement)
+            // 6. GENERATE PDF (NOW IT'S TIME)
             try {
                 $pdfService = new PdfGenerationService();
                 $pdfPath = $pdfService->generateOutgoingPdf($inspectionLog);

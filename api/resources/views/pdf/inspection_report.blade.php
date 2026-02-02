@@ -82,7 +82,8 @@
         </tr>
         <tr>
             <td class="label">Owner</td><td>{{ $isotank->owner ?? '-' }}</td>
-            <td class="label">Location</td><td>{{ $isotank->location ?? '-' }}</td>
+            {{-- FIX: For Outgoing Inspection, Location is ALWAYS the Origin (SMGRS), not the Destination --}}
+            <td class="label">Location</td><td>{{ $type == 'outgoing' ? 'SMGRS' : ($isotank->location ?? '-') }}</td>
             <td class="label">Insp. Date</td><td>{{ $inspection->inspection_date ? \Carbon\Carbon::parse($inspection->inspection_date)->format('d M Y') : '-' }}</td>
         </tr>
     </table>

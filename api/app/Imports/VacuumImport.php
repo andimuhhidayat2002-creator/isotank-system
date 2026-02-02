@@ -98,7 +98,7 @@ class VacuumImport
                     // Date Parsing
                     $dateRaw = $getVal($dateAliases);
                     $checkDate = $this->parseDate($dateRaw);
-                    if (!$checkDate) $checkDate = now(); 
+                    if (!$checkDate) $checkDate = now();
 
                     // Value Parsing
                     $val = $getVal($vacuumAliases) ?? 0;
