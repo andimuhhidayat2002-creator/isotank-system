@@ -30,9 +30,16 @@ class MaintenanceImport
                 return strtolower(str_replace(' ', '_', trim($h)));
             }, $header);
 
-            // OPTIMIZATION: Load all isotanks into memory
-            $isotankMap = MasterIsotank::pluck('id', 'iso_number')->toArray();
-            $isotankStatus = MasterIsotank::pluck('status', 'iso_number')->toArray();
+            // OPTIMIZATION: Load all isotanks into memory (Case-Insensitive Keys)
+            $isotankMap = MasterIsotank::pluck('id', 'iso_number')
+                ->mapWithKeys(function ($item, $key) {
+                    return [strtoupper(trim($key)) => $item];
+                })->toArray();
+                
+            $isotankStatus = MasterIsotank::pluck('status', 'iso_number')
+                 ->mapWithKeys(function ($item, $key) {
+                    return [strtoupper(trim($key)) => $item];
+                })->toArray();
 
             foreach ($rows as $index => $row) {
                 if (empty(array_filter($row))) continue;
@@ -40,14 +47,17 @@ class MaintenanceImport
                 $rowData = array_combine($header, $row);
 
                 try {
-                    $iso = $rowData['iso_number'] ?? null;
-                    if (!$iso) throw new \Exception("Missing ISO Number");
+                    $rawIso = $rowData['iso_number'] ?? null;
+                    if (!$rawIso) throw new \Exception("Missing ISO Number");
+                    
+                    $iso = strtoupper(trim($rawIso)); // Normalize to Upper Case
 
                     if (!isset($isotankMap[$iso])) {
-                        throw new \Exception("Isotank $iso not found.");
+                        // Try strict match failure debug
+                         throw new \Exception("Isotank '$rawIso' not found in system.");
                     }
                     if (($isotankStatus[$iso] ?? '') !== 'active') {
-                        throw new \Exception("Isotank $iso is inactive.");
+                        throw new \Exception("Isotank '$rawIso' is inactive.");
                     }
                     
                     $isotankId = $isotankMap[$iso];
