@@ -45,7 +45,11 @@ class MaintenanceImport
                 }
                 
                 $rowData = array_combine($header, $row);
-                if ($rowData === false) continue; // Skip invalid rows
+                if ($rowData === false || !is_array($rowData)) {
+                    $this->errorCount++;
+                    $this->errors[] = ['row' => $index + 2, 'iso_number' => 'N/A', 'error' => 'Invalid row format'];
+                    continue;
+                }
 
                 try {
                     $iso = $rowData['iso_number'] ?? null;
