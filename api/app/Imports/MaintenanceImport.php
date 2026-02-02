@@ -100,6 +100,8 @@ class MaintenanceImport
                         'location' => $rowData['location'] ?? null,
                         // FIX: Use Planned Date as created_at/reported_date for historical accuracy
                         'created_at' => $plannedDate ?? now(),
+                        // FIX: Also force updated_at to match created_at so "Last Update" doesn't show today
+                        'updated_at' => $plannedDate ?? now(),
                     ]);
 
                     $this->successCount++;
