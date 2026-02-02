@@ -123,3 +123,11 @@ We operate on **TWO SEPARATE** repositories. Always verify which one you are wor
     *   **Search Fix:** Changed pagination to `get()` (load all) on Master Isotank view to ensure client-side search finds ALL records, not just the first 50.
 *   **6. Excel Import Fix:**
     *   Importing Inspection Excel with empty `filling_status` column no longer overwrites existing status with NULL. It preserves the existing value.
+
+### P. Maintenance Excel Date Parsing Fix (Feb 2, 2026 20:35)
+*   **Problem:** Maintenance Excel import was failing with "Trying to access array offset on false" error for all 1624 rows. Investigation revealed the issue was caused by overly strict date validation logic introduced to prevent a "2027 overflow bug".
+*   **Root Cause:** The strict validation using `DateTime::getLastErrors()` was rejecting ALL valid dates from the Excel file, causing `$plannedDate` to remain null and default to `now()`. This made previously working Excel files fail completely.
+*   **Solution:** Reverted to the original working date parsing logic (commit `318c012`) that uses `Carbon::createFromFormat()` with try-catch, but maintained the fix of prioritizing `m/d/Y` (American format) before `d/m/Y` to prevent incorrect date interpretation.
+*   **Result:** Successfully imported 1617 maintenance jobs (7 errors from invalid/empty rows). Date range: 2024-02-08 to 2026-01-22. No more 2027 dates.
+*   **Key Learning:** When fixing bugs, preserve the working logic and only change what's necessary. The strict validation was solving a problem that didn't exist in the actual Excel data.
+*   **File Modified:** `api/app/Imports/MaintenanceImport.php`

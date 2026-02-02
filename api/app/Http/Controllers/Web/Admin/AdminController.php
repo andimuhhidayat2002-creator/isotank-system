@@ -1303,8 +1303,8 @@ class AdminController extends Controller
                 fputcsv($file, [
                     $tank->iso_number,
                     $tank->status,
-                    $tank->filling_status ?? '-',
-                    $tank->description ?? '-',
+                    $tank->filling_status_code ?? '-',
+                    $tank->filling_status_desc ?? '-',
                     $tank->capacity ?? '-',
                     $tank->owner ?? '-',
                     $tank->tank_category ?? 'T75'
