@@ -68,7 +68,8 @@ class MaintenanceImport
                             $plannedDate = Date::excelToDateTimeObject($val);
                         } else {
                             // Try multiple formats with STRICT validation to prevent 2027 bug
-                            $formats = ['d/m/Y', 'm/d/Y', 'd/m/y', 'm/d/y', 'Y-m-d'];
+                            // PRIORITIZE m/d/Y (American) since Excel uses 3/8/2025 = March 8, 2025
+                            $formats = ['m/d/Y', 'd/m/Y', 'm/d/y', 'd/m/y', 'Y-m-d'];
                             foreach ($formats as $format) {
                                 $d = \DateTime::createFromFormat($format, $val);
                                 if ($d) {
