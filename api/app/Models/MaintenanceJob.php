@@ -29,6 +29,8 @@ class MaintenanceJob extends Model
         'part_damage',
         'damage_type',
         'location',
+        'created_at', // Allow manual override for import
+        'updated_at', // Allow manual override for import
     ];
 
 

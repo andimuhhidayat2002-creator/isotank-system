@@ -15,6 +15,9 @@ class MaintenanceImport
 
     public function import($file)
     {
+        ini_set('memory_limit', '512M');
+        set_time_limit(0); // Prevent timeout
+        
         try {
             $spreadsheet = IOFactory::load($file->getRealPath());
             $worksheet = $spreadsheet->getActiveSheet();
@@ -27,36 +30,42 @@ class MaintenanceImport
                 return strtolower(str_replace(' ', '_', trim($h)));
             }, $header);
 
+            // OPTIMIZATION: Load all isotanks into memory
+            $isotankMap = MasterIsotank::pluck('id', 'iso_number')->toArray();
+            $isotankStatus = MasterIsotank::pluck('status', 'iso_number')->toArray();
+
             foreach ($rows as $index => $row) {
                 if (empty(array_filter($row))) continue;
                 
-                // DEBUG: Log raw row data
-                \Log::info("Maintenance Excel Row " . ($index + 2) . " RAW: " . json_encode($row));
-                
                 $rowData = array_combine($header, $row);
-                
-                // DEBUG: Log combined row data
-                \Log::info("Maintenance Excel Row " . ($index + 2) . " PROCESSED: " . json_encode($rowData));
 
                 try {
                     $iso = $rowData['iso_number'] ?? null;
                     if (!$iso) throw new \Exception("Missing ISO Number");
 
-                    $isotank = MasterIsotank::where('iso_number', $iso)->first();
-
-                    if (!$isotank) {
+                    if (!isset($isotankMap[$iso])) {
                         throw new \Exception("Isotank $iso not found.");
                     }
-                    if ($isotank->status !== 'active') {
+                    if (($isotankStatus[$iso] ?? '') !== 'active') {
                         throw new \Exception("Isotank $iso is inactive.");
                     }
+                    
+                    $isotankId = $isotankMap[$iso];
 
+                    // ROBUST DATE PARSING
                     $plannedDate = null;
                     if (!empty($rowData['planned_date'])) {
-                        if (is_numeric($rowData['planned_date'])) {
-                            $plannedDate = Date::excelToDateTimeObject($rowData['planned_date']);
+                        $val = $rowData['planned_date'];
+                        if (is_numeric($val)) {
+                            $plannedDate = Date::excelToDateTimeObject($val);
                         } else {
-                            $plannedDate = date('Y-m-d', strtotime($rowData['planned_date']));
+                            // Try d/m/Y first (User's format 08/02/2024)
+                            try {
+                                $plannedDate = \Carbon\Carbon::createFromFormat('d/m/Y', $val);
+                            } catch (\Exception $e) {
+                                // Fallback
+                                $plannedDate = date('Y-m-d', strtotime($val));
+                            }
                         }
                     }
 
@@ -78,7 +87,11 @@ class MaintenanceImport
                              if (is_numeric($rowData['completion_date'])) {
                                 $completedAt = Date::excelToDateTimeObject($rowData['completion_date']);
                             } else {
-                                $completedAt = date('Y-m-d H:i:s', strtotime($rowData['completion_date']));
+                                try {
+                                    $completedAt = \Carbon\Carbon::createFromFormat('d/m/Y', $rowData['completion_date']);
+                                } catch (\Exception $e) {
+                                    $completedAt = date('Y-m-d H:i:s', strtotime($rowData['completion_date']));
+                                }
                             }
                         } else {
                             // If completed but no completion date, use planned date or now
@@ -87,7 +100,7 @@ class MaintenanceImport
                     }
 
                     MaintenanceJob::create([
-                        'isotank_id' => $isotank->id,
+                        'isotank_id' => $isotankId,
                         'source_item' => $rowData['item_name'] ?? 'General',
                         'description' => $rowData['description'] ?? 'Bulk uploaded maintenance job',
                         'work_description' => $rowData['work_description'] ?? null,
