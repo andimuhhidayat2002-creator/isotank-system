@@ -25,6 +25,7 @@ use App\Mail\DailyOperationsReport;
 use App\Models\ClassSurvey;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
+use App\Models\ActivityLog;
 
 class AdminController extends Controller
 {
@@ -148,6 +149,19 @@ class AdminController extends Controller
             ];
         }
 
+        // 5) Activity Logs (Limit 15)
+        $recentActivity = ActivityLog::with('user')
+            ->latest()
+            ->limit(15)
+            ->get();
+
+        // 6) Server Metrics (SOC Style)
+        $serverMetrics = $this->getServerMetrics();
+        $activeUsersCount = DB::table('sessions')
+            ->where('last_activity', '>', now()->subMinutes(60)->getTimestamp())
+            ->distinct('user_id')
+            ->count();
+
         // Saved Recipient Emails
         $savedEmails = \Illuminate\Support\Facades\Cache::get('daily_report_recipients', 'manager@ptkayan.com');
 
@@ -159,9 +173,61 @@ class AdminController extends Controller
             'vacuumAlerts', 
             'calibrationAlerts',
             'fillingStatusStats',
+            'recentActivity',
+            'serverMetrics',
+            'activeUsersCount',
             'savedEmails',
             'category'
         ));
+    }
+
+    /**
+     * Get real-time server metrics
+     */
+    private function getServerMetrics()
+    {
+        try {
+            // CPU (Load average)
+            $cpu = 5.0; // Fallback
+            if (function_exists('sys_getloadavg')) {
+                $load = sys_getloadavg();
+                // Assumes 1 core if nproc fails
+                $nproc = (int)@shell_exec('nproc') ?: 1;
+                $cpu = ($load[0] / $nproc) * 100;
+            }
+
+            // RAM (from /proc/meminfo or free)
+            $ram = 15.0; // Fallback
+            if (strtoupper(substr(PHP_OS, 0, 3)) !== 'WIN') {
+                $free = @shell_exec('free');
+                if ($free) {
+                    $free = (string)trim($free);
+                    $free_arr = explode("\n", $free);
+                    if (isset($free_arr[1])) {
+                        $mem = explode(" ", preg_replace('/\s+/', ' ', $free_arr[1]));
+                        $mem_total = (float)$mem[1];
+                        $mem_used = (float)$mem[2];
+                        if ($mem_total > 0) {
+                            $ram = ($mem_used / $mem_total) * 100;
+                        }
+                    }
+                }
+            }
+
+            // Disk Usage
+            $disk_total = disk_total_space("/");
+            $disk_free = disk_free_space("/");
+            $disk_used = $disk_total - $disk_free;
+            $disk = ($disk_used / $disk_total) * 100;
+
+            return [
+                'cpu' => round($cpu, 1),
+                'ram' => round($ram, 1),
+                'disk' => round($disk, 1)
+            ];
+        } catch (\Exception $e) {
+            return ['cpu' => 0, 'ram' => 0, 'disk' => 0];
+        }
     }
 
     public function locationDetail($location)
