@@ -511,6 +511,10 @@ h6 {
     background-color: var(--neon-cyan) !important;
 }
 
+.bg-purple {
+    background-color: var(--neon-purple) !important;
+}
+
 .bg-secondary {
     background-color: #334155 !important;
 }

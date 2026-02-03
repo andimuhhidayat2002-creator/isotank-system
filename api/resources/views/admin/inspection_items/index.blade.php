@@ -62,7 +62,7 @@
                         @elseif($item->input_type === 'date')
                             <span class="badge bg-warning">Date</span>
                         @else
-                            <span class="badge bg-dark">{{ ucfirst($item->input_type) }}</span>
+                            <span class="badge bg-secondary">{{ ucfirst($item->input_type) }}</span>
                         @endif
                     </td>
                     <td>
