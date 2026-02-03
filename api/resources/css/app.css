@@ -599,3 +599,98 @@ h6 {
 ::-webkit-scrollbar-thumb:hover {
     background: #3d4452;
 }
+
+/* ==========================================================================
+   NUCLEAR OPTION: Aggressive High-Specificity Overrides
+   ========================================================================== */
+
+/* 1. Neutralize Light Theme Text Classes */
+.text-dark,
+.text-body,
+.text-black,
+.text-muted,
+.text-secondary {
+    color: var(--dark-text-main) !important;
+}
+
+.text-white,
+.text-light {
+    color: white !important;
+}
+
+/* 2. Neutralize Light Theme Background Classes */
+.bg-white,
+.bg-light,
+.bg-body {
+    background-color: var(--dark-card) !important;
+    color: var(--dark-text-main) !important;
+}
+
+/* 3. Global Text Color Enforcement */
+body,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+span,
+div,
+li,
+ul,
+ol,
+label,
+input,
+select,
+textarea,
+th,
+td,
+a:not(.btn):not(.nav-link):not(.badge) {
+    color: var(--dark-text-main);
+}
+
+/* 4. High-Specificity Table Overrides */
+table.table td,
+table.table th,
+.table> :not(caption)>*>* {
+    color: var(--dark-text-main) !important;
+    background-color: transparent !important;
+    border-bottom-color: var(--dark-border) !important;
+}
+
+table.table-striped>tbody>tr:nth-of-type(odd)>*,
+table.table-hover>tbody>tr:hover>* {
+    color: white !important;
+}
+
+/* 5. Card Headers - Force Dark */
+.card-header {
+    background-color: rgba(255, 255, 255, 0.02) !important;
+    color: white !important;
+    border-bottom: 1px solid var(--dark-border) !important;
+}
+
+/* 6. Form Elements - Force Dark */
+input.form-control,
+select.form-select,
+textarea.form-control {
+    background-color: #0f1115 !important;
+    border-color: var(--dark-border) !important;
+    color: white !important;
+}
+
+input.form-control::placeholder,
+textarea.form-control::placeholder {
+    color: var(--dark-text-muted) !important;
+    opacity: 0.7;
+}
+
+/* 7. Dropdowns & Popups */
+.dropdown-menu,
+.popover,
+.tooltip-inner {
+    background-color: var(--dark-card) !important;
+    color: var(--dark-text-main) !important;
+    border-color: var(--dark-border) !important;
+}
