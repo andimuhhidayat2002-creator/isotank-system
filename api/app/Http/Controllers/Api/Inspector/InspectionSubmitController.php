@@ -232,6 +232,37 @@ class InspectionSubmitController extends Controller
             $request->merge(['inspection_date' => now()->toDateString()]); // YYYY-MM-DD format
         }
 
+        // FIX: Handle vacuum_check_datetime format from Flutter (ISO8601) and empty strings
+        if ($request->has('vacuum_check_datetime')) {
+            $val = $request->vacuum_check_datetime;
+            if (empty($val) || $val === 'null' || $val === 'Select Date') {
+                $request->merge(['vacuum_check_datetime' => null]);
+            } elseif (str_contains($val, 'T')) {
+                try {
+                    $formattedDate = date('Y-m-d H:i:s', strtotime($val));
+                    $request->merge(['vacuum_check_datetime' => $formattedDate]);
+                } catch (\Exception $e) {}
+            }
+        }
+
+        // FIX: Handle calibration dates if they are empty strings
+        $dateFields = [
+            'pressure_gauge_calibration_date', 'pressure_gauge_valid_until',
+            'psv1_calibration_date', 'psv1_valid_until', 'psv1_replacement_calibration_date',
+            'psv2_calibration_date', 'psv2_valid_until', 'psv2_replacement_calibration_date',
+            'psv3_calibration_date', 'psv3_valid_until', 'psv3_replacement_calibration_date',
+            'psv4_calibration_date', 'psv4_valid_until', 'psv4_replacement_calibration_date',
+        ];
+
+        foreach ($dateFields as $field) {
+            if ($request->has($field)) {
+                $val = $request->input($field);
+                if (empty($val) || $val === 'null' || $val === 'Select Date') {
+                    $request->merge([$field => null]);
+                }
+            }
+        }
+
         $validated = $request->validate($rules);
         $allInput = $request->all(); // Ensure $allInput is available
 
