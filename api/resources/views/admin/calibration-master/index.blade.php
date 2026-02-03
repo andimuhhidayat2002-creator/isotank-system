@@ -4,7 +4,7 @@
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2 class="fw-bold text-dark">Calibration Master</h2>
+            <h2 class="fw-bold text-white">Calibration Master</h2>
             <p class="text-muted">Manage certificates and calibration dates for all isotank components.</p>
         </div>
         <div>
@@ -82,7 +82,7 @@
     <div class="card shadow-sm border-0">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
-                <thead class="bg-light">
+                <thead>
                     <tr>
                         <th class="ps-4">Isotank Number</th>
                         <th>Location</th>
@@ -97,11 +97,11 @@
                     <tr>
                         <td class="ps-4 fw-bold">{{ $tank->iso_number }}</td>
                         <td>
-                            <span class="badge bg-light text-dark border">{{ $tank->location }}</span>
+                            <span class="badge bg-secondary text-white border">{{ $tank->location }}</span>
                         </td>
                         <td>
                             @if($tank->components_count > 0)
-                                <span class="badge bg-info text-dark">{{ $tank->components_count }} Parts</span>
+                                <span class="badge bg-info text-white">{{ $tank->components_count }} Parts</span>
                             @else
                                 <span class="badge bg-secondary">Not Set</span>
                             @endif
@@ -137,7 +137,7 @@
             </table>
         </div>
         @if($isotanks->hasPages())
-        <div class="card-footer bg-white">
+        <div class="card-footer border-top">
             {{ $isotanks->links() }}
         </div>
         @endif
