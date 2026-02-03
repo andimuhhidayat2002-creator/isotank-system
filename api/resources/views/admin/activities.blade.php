@@ -17,7 +17,7 @@
         <!-- Inspection -->
         <div class="col-md-3">
             <div class="card h-100">
-                <div class="card-header bg-primary text-white fw-bold d-flex justify-content-between align-items-center">
+                <div class="card-header d-flex justify-content-between align-items-center">
                     <span>Inspection Activity</span>
                     <i class="bi bi-search"></i>
                 </div>
@@ -38,17 +38,17 @@
         <!-- Maintenance -->
         <div class="col-md-3">
             <div class="card h-100">
-                <div class="card-header bg-warning text-dark fw-bold d-flex justify-content-between align-items-center">
+                <div class="card-header d-flex justify-content-between align-items-center">
                     <span>Maintenance Activity</span>
                     <i class="bi bi-tools"></i>
                 </div>
                 <div class="card-body">
                     <p class="small text-muted mb-3">Create a maintenance job for a specific item (e.g. Shell, Valves).</p>
                     <div class="d-grid gap-2">
-                        <button class="btn btn-warning text-dark" data-bs-toggle="modal" data-bs-target="#manualMaintenanceModal">
+                        <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#manualMaintenanceModal">
                             <i class="bi bi-plus-circle"></i> Add Manually
                         </button>
-                        <button class="btn btn-outline-warning text-dark" data-bs-toggle="modal" data-bs-target="#uploadMaintenanceModal">
+                        <button class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#uploadMaintenanceModal">
                             <i class="bi bi-file-earmark-excel"></i> Upload Excel
                         </button>
                     </div>
@@ -59,7 +59,7 @@
         <!-- Calibration -->
         <div class="col-md-3">
             <div class="card h-100">
-                <div class="card-header bg-info text-white fw-bold d-flex justify-content-between align-items-center">
+                <div class="card-header d-flex justify-content-between align-items-center">
                     <span>Calibration Activity</span>
                     <i class="bi bi-clock-history"></i>
                 </div>
@@ -80,7 +80,7 @@
         <!-- Vacuum -->
         <div class="col-md-3">
             <div class="card h-100">
-                <div class="card-header bg-danger text-white fw-bold d-flex justify-content-between align-items-center">
+                <div class="card-header d-flex justify-content-between align-items-center">
                     <span>Vacuum Activity</span>
                     <i class="bi bi-speedometer"></i>
                 </div>
@@ -550,7 +550,7 @@
                 </div>
                 <div class="card-body">
                     <table id="pendingInspectionsTable" class="table table-hover mb-0 align-middle">
-                        <thead class="table-light">
+                        <thead>
                             <tr>
                                 <th>ISO Number</th>
                                 <th>Type</th>
@@ -578,7 +578,7 @@
                             @endforeach
 
                         </tbody>
-                        <tfoot class="table-light">
+                        <tfoot>
                             <tr>
                                 <th>ISO Number</th>
                                 <th>Type</th>
@@ -601,7 +601,7 @@
                 </div>
                 <div class="card-body p-0">
                     <table class="table table-hover mb-0 align-middle">
-                        <thead class="table-light">
+                        <thead>
                             <tr>
                                 <th>ISO</th>
                                 <th>Item</th>
@@ -637,7 +637,7 @@
                 </div>
                 <div class="card-body p-0">
                     <table class="table table-hover mb-0 align-middle">
-                        <thead class="table-light">
+                        <thead>
                             <tr>
                                 <th>ISO</th>
                                 <th>Item</th>
@@ -675,7 +675,7 @@
     <div class="card mt-3">
         <div class="card-body">
         <table id="uploadHistoryTable" class="table table-hover mb-0 align-middle">
-            <thead class="table-light">
+            <thead>
                 <tr>
                     <th>Date</th>
                     <th>Activity</th>
@@ -709,7 +709,7 @@
                 </tr>
                 @endforeach
             </tbody>
-            <tfoot class="table-light">
+            <tfoot>
                 <tr>
                     <th>Date</th>
                     <th>Activity</th>

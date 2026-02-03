@@ -21,7 +21,7 @@
         <!-- Unplaced Isotanks Sidebar -->
         <div class="col-md-3">
             <div class="card shadow-sm h-100">
-                <div class="card-header bg-white">
+                <div class="card-header border-bottom">
                     <h5 class="mb-0">Unplaced (SMGRS)</h5>
                     <small class="text-muted">Drag to yard slot</small>
                 </div>
@@ -37,7 +37,7 @@
         <!-- Yard Map -->
         <div class="col-md-9">
             <div id="yard-main-card" class="card shadow-sm h-100">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div class="card-header border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <h5 class="mb-0">Yard Map</h5>
                     <div class="d-flex gap-3 align-items-center flex-wrap">
                         <!-- Search Box -->
@@ -53,7 +53,7 @@
                     </div>
                 </div>
                 <!-- STATISTICS BAR -->
-                <div id="yard-stats" class="d-flex gap-3 overflow-auto px-3 py-2 border-bottom bg-white small text-nowrap align-items-center" style="scrollbar-width: thin;">
+                <div id="yard-stats" class="d-flex gap-3 overflow-auto px-3 py-2 border-bottom small text-nowrap align-items-center" style="scrollbar-width: thin;">
                      <span class="text-muted fst-italic">Loading stats...</span>
                 </div>
 
@@ -62,14 +62,12 @@
                     <button class="btn btn-light shadow border" onclick="toggleFullScreen()" title="Full Screen">
                         <i class="bi bi-arrows-fullscreen"></i>
                     </button>
-                    <div class="btn-group-vertical shadow border bg-white rounded">
-                        <button class="btn btn-light py-2 fw-bold" onclick="updateZoom(currentZoom + 0.1)" title="Zoom In">+</button>
-                        <button class="btn btn-light py-2" onclick="updateZoom(1.0)" title="Reset 1:1">⟲</button>
-                        <button class="btn btn-light py-2 fw-bold" onclick="updateZoom(currentZoom - 0.1)" title="Zoom Out">-</button>
+                    <div class="btn-group-vertical shadow border rounded" style="background-color: var(--dark-card);">
+                        <button class="btn btn-dark py-2 fw-bold" onclick="updateZoom(currentZoom - 0.1)" title="Zoom Out">-</button>
                     </div>
                 </div>
 
-                <div id="yard-view-wrapper" class="card-body p-0 overflow-auto bg-light position-relative" style="max-height: 80vh;">
+                <div id="yard-view-wrapper" class="card-body p-0 overflow-auto position-relative" style="max-height: 80vh; background-color: #0d1117;">
                     <div id="yard-container" class="p-3">
                         <!-- Areas -> Blocks -> Rows -> Tiers rendered here -->
                     </div>
@@ -113,11 +111,11 @@
 <style>
     /* Premium Design System */
     :root {
-        --primary-gradient: linear-gradient(135deg, #0d47a1 0%, #1565c0 100%);
-        --slot-empty-bg: #f8f9fa;
-        --slot-border: #e2e8f0;
-        --area-bg: #ffffff;
-        --area-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        --primary-gradient: linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%);
+        --slot-empty-bg: #161b22;
+        --slot-border: #30363d;
+        --area-bg: #1c1f26;
+        --area-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
     }
 
     /* MAP LAYOUT - ABSOLUTE MODE */
@@ -135,7 +133,7 @@
         align-items: center;
         justify-content: center;
         font-size: 0.6rem;
-        color: #cbd5e1;
+        color: var(--dark-text-muted);
         transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
     
@@ -167,7 +165,7 @@
 
     /* Unplaced */
     .unplaced-item {
-        background: white; border: 1px solid #e2e8f0; padding: 10px; border-radius: 6px;
+        background: var(--dark-card); border: 1px solid var(--dark-border); padding: 10px; border-radius: 6px;
         cursor: grab; border-left: 4px solid #3b82f6; margin-bottom: 8px; font-size: 0.8rem;
     }
     .unplaced-item:hover { transform: translateX(4px); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
@@ -414,11 +412,13 @@
         div.style.position = 'fixed';
         div.style.bottom = '20px';
         div.style.right = '20px';
-        div.style.background = '#333';
+        div.style.background = 'rgba(28, 31, 38, 0.95)';
         div.style.color = '#fff';
-        div.style.padding = '10px 20px';
-        div.style.borderRadius = '5px';
-        div.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
+        div.style.border = '1px solid var(--dark-border)';
+        div.style.padding = '12px 24px';
+        div.style.borderRadius = '12px';
+        div.style.boxShadow = '0 10px 40px rgba(0,0,0,0.5)';
+        div.style.backdropFilter = 'blur(10px)';
         div.style.zIndex = '9999';
         div.textContent = msg;
         document.body.appendChild(div);
@@ -679,7 +679,7 @@
         baseCanvasHeight = (maxRow * CELL_HEIGHT) + (PADDING * 2);
         
         container.style.position = 'relative';
-        container.style.background = '#ffffff';
+        container.style.background = 'transparent';
         container.style.width = baseCanvasWidth + 'px';
         container.style.height = baseCanvasHeight + 'px';
         
@@ -754,19 +754,16 @@
             el.innerHTML = '<span class="text-muted">No stats available</span>';
             return;
         }
-
         let html = '<div class="fw-bold me-2">Area Usage:</div>';
         for (const [area, data] of Object.entries(stats)) {
-            // Calculate percentage
             const pct = data.total > 0 ? Math.round((data.occupied / data.total) * 100) : 0;
-            // Color code based on usage
             let badgeClass = 'bg-success';
             if (pct > 80) badgeClass = 'bg-danger';
             else if (pct > 50) badgeClass = 'bg-warning text-dark';
             else if (pct === 0) badgeClass = 'bg-secondary';
             
             html += `
-                <div class="d-flex align-items-center border rounded px-2 py-1 bg-light">
+                <div class="d-flex align-items-center border rounded px-2 py-1 bg-dark bg-opacity-25">
                     <span class="fw-bold me-2">${area}:</span>
                     <span class="badge ${badgeClass} me-1">${data.occupied}/${data.total}</span>
                     <span class="small text-muted">(${pct}%)</span>
@@ -792,9 +789,9 @@
             for (const [code, data] of Object.entries(fillingStatusStats)) {
                 const color = statusColors[code] || '#6c757d';
                 html += `
-                    <div class="d-flex align-items-center border rounded px-2 py-1 bg-light">
+                    <div class="d-flex align-items-center border rounded px-2 py-1 bg-dark bg-opacity-25">
                         <span class="badge me-1" style="background-color: ${color};">${data.count}</span>
-                        <span class="small">${data.description}</span>
+                        <span class="small text-muted">${data.description}</span>
                     </div>
                 `;
             }

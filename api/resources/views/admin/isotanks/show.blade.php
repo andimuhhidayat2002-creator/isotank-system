@@ -39,7 +39,7 @@
     <!-- LEFT: Overview Card -->
     <div class="col-md-4">
         <div class="card shadow-sm mb-4">
-            <div class="card-header bg-primary text-white">Overview</div>
+            <div class="card-header">Overview</div>
             <div class="card-body">
                 <table class="table table-sm">
                     <tr><th>ISO Number</th><td class="fw-bold">{{ $isotank->iso_number }}</td></tr>
@@ -59,7 +59,7 @@
         </div>
 
         <div class="card shadow-sm mb-4">
-            <div class="card-header bg-dark text-white">Technical Specs</div>
+            <div class="card-header">Technical Specs</div>
             <div class="card-body">
                 <table class="table table-sm">
                     <tr><th>Manufacturer</th><td>{{ $isotank->manufacturer ?? '-' }}</td></tr>
@@ -73,7 +73,7 @@
         </div>
         
         <div class="card shadow-sm mb-4">
-             <div class="card-header bg-warning text-dark">Certificates & Dates</div>
+             <div class="card-header">Certificates & Dates</div>
              <div class="card-body">
                 <table class="table table-sm">
                     <tr><th>Init Pressure Test</th><td>{{ $isotank->initial_pressure_test_date ? $isotank->initial_pressure_test_date->format('d/m/Y') : '-' }}</td></tr>
@@ -88,7 +88,7 @@
 
     <!-- RIGHT: Tabs for History -->
     <div class="col-md-8">
-        <ul class="nav nav-tabs mb-3 shadow-sm p-2 bg-white rounded" id="historyTab" role="tablist">
+        <ul class="nav nav-tabs mb-3 shadow-sm p-2 rounded" id="historyTab" role="tablist">
             <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#condition">Latest Condition</button></li>
             <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#inspections">Inspection History</button></li>
             <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#maintenance">Maintenance History</button></li>
@@ -121,7 +121,7 @@
                                 <h6>Items Condition</h6>
                                 <div class="table-responsive">
                                     <table class="table table-sm table-bordered">
-                                        <thead class="table-light">
+                        <thead>
                                             <tr>
                                                 <th>Category / Item Name</th>
                                                 <th class="text-center">Condition/Value</th>
@@ -349,7 +349,7 @@
             <div class="tab-pane fade" id="inspections">
                 <div class="card shadow-sm"><div class="card-body p-0">
                 <table class="table table-hover mb-0">
-                    <thead class="table-light"><tr><th>Date</th><th>Type</th><th>Inspector</th><th>Status</th><th>PDF</th></tr></thead>
+                    <thead><tr><th>Date</th><th>Type</th><th>Inspector</th><th>Status</th><th>PDF</th></tr></thead>
                     <tbody>
                         @forelse($inspections as $ins)
                         <tr>
@@ -374,7 +374,7 @@
             <div class="tab-pane fade" id="maintenance">
                  <div class="card shadow-sm"><div class="card-body p-0">
                 <table class="table table-hover mb-0">
-                    <thead class="table-light"><tr><th>Date</th><th>Item / Component</th><th>Status</th><th>Technician</th><th>Desc</th><th>Action</th></tr></thead>
+                    <thead><tr><th>Date</th><th>Item / Component</th><th>Status</th><th>Technician</th><th>Desc</th><th>Action</th></tr></thead>
                     <tbody>
                         @forelse($maintenance as $job)
                         <tr>
@@ -420,7 +420,7 @@
 
                       <div class="table-responsive">
                           <table class="table table-bordered table-striped">
-                              <thead class="table-light">
+                              <thead>
                                   <tr>
                                       <th>Component</th>
                                       <th>Position</th>
@@ -463,7 +463,7 @@
              <div class="tab-pane fade" id="vacuum">
                    <div class="card shadow-sm"><div class="card-body p-0">
                     <table class="table table-hover mb-0">
-                        <thead class="table-light"><tr><th>Check Date</th><th>Value</th><th>Temp</th><th>Remark</th></tr></thead>
+                        <thead><tr><th>Check Date</th><th>Value</th><th>Temp</th><th>Remark</th></tr></thead>
                         <tbody>
                             @forelse($vacuumLogs as $v)
                             <tr>

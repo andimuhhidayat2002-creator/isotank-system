@@ -31,7 +31,7 @@
     <div class="card shadow-sm">
         <div class="card-body">
             <table id="isotankTable" class="table table-hover align-middle">
-                <thead class="table-light">
+                <thead>
                     <tr>
                         <th style="width: 30px;"><input type="checkbox" id="selectAllIsotanks" class="form-check-input"></th>
                         <th>ISO Number</th>
@@ -59,7 +59,7 @@
                         <td><span class="badge bg-info text-dark">{{ $iso->tank_category ?? 'T75' }}</span></td> <!-- Added -->
                         <td class="text-muted">{{ $iso->owner ?? '-' }}</td>
                         <td>
-                            <div class="fw-bold text-dark">{{ $iso->manufacturer ?? '-' }}</div>
+                            <div class="fw-bold text-white">{{ $iso->manufacturer ?? '-' }}</div>
                             <div class="small text-muted" style="font-size: 0.75rem;">{{ $iso->model_type ?? '' }}</div>
                         </td>
                         <td class="text-muted">{{ $iso->manufacturer_serial_number ?? '-' }}</td>
@@ -115,7 +115,7 @@
                                         @foreach($statuses as $cal)
                                             <li class="mb-1 border-bottom pb-1 px-3 pt-2">
                                                 <div class="d-flex justify-content-between align-items-center mb-1">
-                                                    <small class="fw-bold text-dark">{{ str_replace('_', ' ', $cal->item_name) }}</small>
+                                                    <small class="fw-bold text-white">{{ str_replace('_', ' ', $cal->item_name) }}</small>
                                                     @if($cal->status === 'valid')
                                                         <span class="badge bg-success bg-opacity-10 text-success" style="font-size: 0.6rem;">VALID</span>
                                                     @else
@@ -151,7 +151,7 @@
                     </tr>
                     @endforeach
                 </tbody>
-                <tfoot class="table-light">
+                <tfoot>
                     <tr>
                         <th></th>
                         <th>ISO Number</th>

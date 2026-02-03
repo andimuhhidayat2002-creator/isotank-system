@@ -81,7 +81,7 @@
 
         <!-- Main Content -->
         <!-- Added margin-left: 260px to compensate for fixed sidebar -->
-        <main class="flex-grow-1 p-4" style="margin-left: 260px; min-width: 0; background-color: #f4f6f9;">
+        <main class="flex-grow-1 p-4" style="margin-left: 260px; min-width: 0;">
             @if(session('success'))
                 <div class="alert alert-success">{{ session('success') }}</div>
             @endif
