@@ -352,28 +352,28 @@
 
                         @if($tankCat == 'T75')
                         <!-- SECTION G: PSV (Hardcoded Legacy) -->
-                        <tr class="bg-light"><th colspan="2">G. PSV (PRESSURE SAFETY VALVES)</th></tr>
+                        <tr class="bg-dark bg-opacity-50"><th colspan="2" class="text-white">G. PSV (PRESSURE SAFETY VALVES)</th></tr>
                         @foreach(['psv1', 'psv2', 'psv3', 'psv4'] as $p)
                             <tr>
-                                <td class="ps-3 fw-bold">{{ strtoupper($p) }} Condition</td>
+                                <td class="ps-3 fw-bold text-white">{{ strtoupper($p) }} Condition</td>
                                 <td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->{$p.'_condition'}])</td>
                             </tr>
                             <tr>
-                                <td class="ps-3 text-muted small">
+                                <td class="ps-3 text-white small">
                                     STATUS: {{ strtoupper($log->{$p.'_status'} ?? '-') }} | SN: {{ $log->{$p.'_serial_number'} ?? '-' }}
                                     <br>Cal. Date: {{ $log->{$p.'_calibration_date'} ? $log->{$p.'_calibration_date'}->format('Y-m-d') : '-' }}
                                 </td>
-                                <td class="text-center small">Valid Until: {{ $log->{$p.'_valid_until'} ? $log->{$p.'_valid_until'}->format('Y-m-d') : '-' }}</td>
+                                <td class="text-center small text-white">Valid Until: {{ $log->{$p.'_valid_until'} ? $log->{$p.'_valid_until'}->format('Y-m-d') : '-' }}</td>
                             </tr>
                         @endforeach
                         @endif
 
                         <!-- SIGNATURES -->
-                        <tr class="bg-light"><th colspan="2">SIGNATURES</th></tr>
+                        <tr class="bg-dark bg-opacity-50"><th colspan="2" class="text-white">SIGNATURES</th></tr>
                         
                         <!-- Inspector Signature -->
                         <tr>
-                            <td class="ps-3 fw-bold">Inspector Signature</td>
+                            <td class="ps-3 fw-bold text-white">Inspector Signature</td>
                             <td class="text-center">
                                 @php
                                     // Inspector Signature Logic
@@ -387,17 +387,17 @@
                                 @if($inspSigUrl)
                                     <img src="{{ $inspSigUrl }}" alt="Inspector Signature" style="max-height: 80px; max-width: 200px; border: 1px solid #eee;">
                                 @else
-                                    <span class="text-muted fst-italic">No Digital Signature</span>
+                                    <span class="text-white fst-italic">No Digital Signature</span>
                                 @endif
                                 <br>
-                                <small class="text-muted">{{ $log->inspector->name ?? 'Unknown Inspector' }}</small>
+                                <small class="text-white">{{ $log->inspector->name ?? 'Unknown Inspector' }}</small>
                             </td>
                         </tr>
 
                         <!-- Receiver Signature (Outgoing Only) -->
                         @if($log->inspection_type === 'outgoing_inspection')
                         <tr>
-                            <td class="ps-3 fw-bold">Receiver Signature</td>
+                            <td class="ps-3 fw-bold text-white">Receiver Signature</td>
                             <td class="text-center">
                                 @php
                                     // Receiver Signature Logic (One-time event)
@@ -411,10 +411,10 @@
                                 @if($recvSigUrl)
                                     <img src="{{ $recvSigUrl }}" alt="Receiver Signature" style="max-height: 80px; max-width: 200px; border: 1px solid #eee;">
                                 @else
-                                    <span class="text-muted fst-italic">{{ $log->receiver_confirmed_at ? 'Confirmed but no signature' : 'Waiting for confirmation...' }}</span>
+                                    <span class="text-white fst-italic">{{ $log->receiver_confirmed_at ? 'Confirmed but no signature' : 'Waiting for confirmation...' }}</span>
                                 @endif
                                 <br>
-                                <small class="text-muted">{{ $log->receiver_name ?? 'Unknown Receiver' }}</small>
+                                <small class="text-white">{{ $log->receiver_name ?? 'Unknown Receiver' }}</small>
                             </td>
                         </tr>
                         @endif
