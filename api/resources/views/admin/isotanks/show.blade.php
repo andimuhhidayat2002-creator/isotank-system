@@ -88,12 +88,18 @@
 
     <!-- RIGHT: Tabs for History -->
     <div class="col-md-8">
-        <ul class="nav nav-tabs mb-3 shadow-sm p-2 rounded" id="historyTab" role="tablist">
-            <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#condition">Latest Condition</button></li>
-            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#inspections">Inspection History</button></li>
-            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#maintenance">Maintenance History</button></li>
+        <style>
+            .nav-tabs .nav-link { color: #aaa; border: 1px solid transparent; }
+            .nav-tabs .nav-link:hover { color: #fff; border-color: #444; }
+            .nav-tabs .nav-link.active { background-color: #343a40 !important; color: #fff !important; border-color: #6c757d #6c757d #343a40 !important; }
+            .nav-tabs { border-bottom: 1px solid #6c757d; }
+        </style>
+        <ul class="nav nav-tabs mb-3 border-secondary" id="historyTab" role="tablist">
+            <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#condition">Condition</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#inspections">Inspections</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#maintenance">Maintenance</button></li>
             <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#calib">Calibration</button></li>
-            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#vacuum">Vacuum Logs</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#vacuum">Vacuum</button></li>
         </ul>
 
         <div class="tab-content">
