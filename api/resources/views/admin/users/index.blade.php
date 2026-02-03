@@ -24,9 +24,9 @@
             <tbody>
                 @foreach($users as $user)
                 <tr>
-                    <td>{{ $user->id }}</td>
-                    <td>{{ $user->name }}</td>
-                    <td>{{ $user->email }}</td>
+                    <td class="text-white">{{ $user->id }}</td>
+                    <td class="text-white">{{ $user->name }}</td>
+                    <td class="text-white">{{ $user->email }}</td>
                     <td>
                         <span class="badge 
                             @if($user->role === 'admin') bg-danger
@@ -39,7 +39,7 @@
                             {{ ucfirst($user->role) }}
                         </span>
                     </td>
-                    <td>{{ $user->created_at->format('d M Y H:i') }}</td>
+                    <td class="text-white">{{ $user->created_at->format('d M Y H:i') }}</td>
                     <td>
                         <div class="btn-group btn-group-sm" role="group">
                             <!-- Edit Button -->

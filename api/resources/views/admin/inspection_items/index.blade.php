@@ -43,8 +43,8 @@
                 <tr data-id="{{ $item->id }}" data-order="{{ $item->order }}">
                     <td class="drag-handle" style="cursor: move;"><i class="bi bi-grip-vertical"></i></td>
                     <td><span class="badge bg-secondary">{{ $item->order }}</span></td>
-                    <td><code>{{ $item->code }}</code></td>
-                    <td><strong>{{ $item->label }}</strong></td>
+                    <td><code class="text-white">{{ $item->code }}</code></td>
+                    <td class="text-white"><strong>{{ $item->label }}</strong></td>
                     <td>
                         @if($item->category)
                             <span class="badge bg-info">{{ ucfirst($item->category) }}</span>

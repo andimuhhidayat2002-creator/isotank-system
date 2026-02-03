@@ -694,3 +694,49 @@ textarea.form-control::placeholder {
     color: var(--dark-text-main) !important;
     border-color: var(--dark-border) !important;
 }
+
+/* 8. DataTables Specific Overrides (The Final Boss) */
+table.dataTable tbody tr {
+    background-color: transparent !important;
+    color: var(--dark-text-main) !important;
+}
+
+table.dataTable tbody tr.even,
+table.dataTable tbody tr.odd {
+    background-color: transparent !important;
+}
+
+table.dataTable tbody td {
+    color: var(--dark-text-main) !important;
+}
+
+/* Force striping to be subtle */
+table.dataTable.table-striped>tbody>tr.odd>* {
+    box-shadow: inset 0 0 0 9999px rgba(255, 255, 255, 0.02) !important;
+}
+
+table.dataTable thead th,
+table.dataTable thead td {
+    border-bottom: 1px solid var(--dark-border) !important;
+    background-color: rgba(255, 255, 255, 0.02) !important;
+    color: white !important;
+}
+
+/* Search inputs in DataTables */
+.dataTables_filter input {
+    background-color: #0f1115 !important;
+    border: 1px solid var(--dark-border) !important;
+    color: white !important;
+}
+
+/* Sorting icons (fix visibility if needed, usually inherit color) */
+table.dataTable thead .sorting,
+table.dataTable thead .sorting_asc,
+table.dataTable thead .sorting_desc {
+    color: white !important;
+}
+
+/* Master Isotanks Specific Fixes */
+.dt-buttons .btn {
+    color: white !important;
+}

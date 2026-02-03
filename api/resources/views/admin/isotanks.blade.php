@@ -57,14 +57,14 @@
                         <td><input type="checkbox" class="form-check-input iso-checkbox" value="{{ $iso->id }}"></td>
                         <td class="fw-bold"><a href="{{ route('admin.isotanks.show', $iso->id) }}" class="text-decoration-none text-info">{{ $iso->iso_number }}</a></td>
                         <td><span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25">{{ $iso->tank_category ?? 'T75' }}</span></td> <!-- Added -->
-                        <td class="text-muted">{{ $iso->owner ?? '-' }}</td>
+                        <td class="text-white">{{ $iso->owner ?? '-' }}</td>
                         <td>
                             <div class="fw-bold text-white">{{ $iso->manufacturer ?? '-' }}</div>
                             <div class="small text-muted" style="font-size: 0.75rem;">{{ $iso->model_type ?? '' }}</div>
                         </td>
-                        <td class="text-muted">{{ $iso->manufacturer_serial_number ?? '-' }}</td>
-                        <td>{{ $iso->location ?? '-' }}</td>
-                        <td class="fw-medium">{{ $iso->product ?? '-' }}</td>
+                        <td class="text-white">{{ $iso->manufacturer_serial_number ?? '-' }}</td>
+                        <td class="text-white">{{ $iso->location ?? '-' }}</td>
+                        <td class="fw-medium text-white">{{ $iso->product ?? '-' }}</td>
                         <td>
                             @php
                                 $fillingClass = 'bg-secondary';
@@ -76,19 +76,19 @@
                                 elseif(in_array($iso->filling_status_code, ['under_maintenance', 'class_survey'])) $fillingClass = 'bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25'; // Orange/Yellow
                                 elseif($iso->filling_status_code === 'ongoing_inspection') $fillingClass = 'bg-info bg-opacity-10 text-info border border-info border-opacity-25';
                             @endphp
-                            <span class="badge {{ $fillingClass }} fw-normal px-2 py-1">{{ $fillingText }}</span>
+                            <span class="badge {{ $fillingClass }} fw-normal px-2 py-1 text-white border-0">{{ $fillingText }}</span>
                         </td>
                         <td>
-                            <span class="badge {{ $iso->status === 'active' ? 'bg-success bg-opacity-10 text-success border border-success' : 'bg-secondary bg-opacity-10 text-secondary border' }}">
+                            <span class="badge {{ $iso->status === 'active' ? 'bg-success text-white' : 'bg-secondary text-white' }} border-0">
                                 {{ ucfirst($iso->status) }}
                             </span>
                         </td>
                         
                         <!-- Dates (Muted for readability) -->
-                        <td class="text-muted small">{{ $iso->initial_pressure_test_date ? $iso->initial_pressure_test_date->format('d/m/Y') : '-' }}</td>
-                        <td class="text-muted small">{{ $iso->csc_initial_test_date ? $iso->csc_initial_test_date->format('d/m/Y') : '-' }}</td>
-                        <td class="text-muted small">{{ $iso->csc_survey_expiry_date ? $iso->csc_survey_expiry_date->format('d/m/Y') : '-' }}</td>
-                        <td class="text-muted small">
+                        <td class="text-white small">{{ $iso->initial_pressure_test_date ? $iso->initial_pressure_test_date->format('d/m/Y') : '-' }}</td>
+                        <td class="text-white small">{{ $iso->csc_initial_test_date ? $iso->csc_initial_test_date->format('d/m/Y') : '-' }}</td>
+                        <td class="text-white small">{{ $iso->csc_survey_expiry_date ? $iso->csc_survey_expiry_date->format('d/m/Y') : '-' }}</td>
+                        <td class="text-white small">
                             {{ $iso->class_survey_expiry_date ? $iso->class_survey_expiry_date->format('d/m/Y') : '-' }}
                         </td>
 
