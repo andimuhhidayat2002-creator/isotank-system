@@ -514,32 +514,40 @@ h6 {
     letter-spacing: 0.02em;
 }
 
+
 .bg-primary {
     background-color: var(--neon-blue) !important;
+    color: white !important;
 }
 
 .bg-success {
     background-color: var(--neon-green) !important;
+    color: white !important;
 }
 
 .bg-warning {
     background-color: var(--neon-orange) !important;
+    color: white !important;
 }
 
 .bg-danger {
     background-color: var(--neon-red) !important;
+    color: white !important;
 }
 
 .bg-info {
     background-color: var(--neon-cyan) !important;
+    color: white !important;
 }
 
 .bg-purple {
     background-color: var(--neon-purple) !important;
+    color: white !important;
 }
 
 .bg-secondary {
     background-color: #334155 !important;
+    color: white !important;
 }
 
 /* List Groups */

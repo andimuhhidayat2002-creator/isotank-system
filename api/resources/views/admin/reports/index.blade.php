@@ -4,7 +4,7 @@
 <div class="container-fluid">
     <div class="row mb-4">
         <div class="col-md-6">
-            <h2 class="fw-bold text-dark">Management Reports</h2>
+            <h2 class="fw-bold text-white">Management Reports</h2>
             <p class="text-muted">Weekly Operations Summary & Fleet Status</p>
         </div>
         <div class="col-md-6 text-end">
@@ -70,7 +70,7 @@
     </div>
 
     <div class="card shadow-sm border-0">
-        <div class="card-header bg-white py-3">
+        <div class="card-header border-bottom py-3">
             <h5 class="card-title mb-0">Report Preview</h5>
         </div>
         <div class="card-body p-0">

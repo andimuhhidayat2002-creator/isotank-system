@@ -13,7 +13,7 @@
         {{-- Current Exceed (>8) --}}
         <div class="col-md-6 mb-4">
             <div class="card shadow-sm h-100 border-top-danger">
-                <div class="card-header bg-danger text-white">
+                <div class="card-header border-bottom border-danger text-danger">
                     <h5 class="m-0"><i class="bi bi-exclamation-triangle-fill me-2"></i> Current High Vacuum (>8 mTorr)</h5>
                 </div>
                 <div class="card-body p-0">
@@ -46,7 +46,7 @@
         {{-- Expiry Alerts (>11 months) --}}
         <div class="col-md-6 mb-4">
             <div class="card shadow-sm h-100 border-top-warning">
-                <div class="card-header bg-warning text-dark">
+                <div class="card-header border-bottom border-warning text-warning">
                     <h5 class="m-0"><i class="bi bi-clock-history me-2"></i> Measurement Expired (>11 Months)</h5>
                 </div>
                 <div class="card-body p-0">
@@ -79,7 +79,7 @@
         {{-- Suction History --}}
         <div class="col-md-8 mb-4">
             <div class="card shadow-sm">
-                <div class="card-header bg-white font-weight-bold">
+                <div class="card-header border-bottom font-weight-bold">
                     Latest Vacuum Suction Activities
                 </div>
                 <div class="card-body p-0">
@@ -120,7 +120,7 @@
         {{-- Frequent Exceeders --}}
         <div class="col-md-4 mb-4">
             <div class="card shadow-sm h-100">
-                <div class="card-header bg-white font-weight-bold">
+                <div class="card-header border-bottom font-weight-bold">
                     Most Frequent High Vacuum
                 </div>
                 <div class="card-body p-0">
@@ -148,7 +148,7 @@
     <div class="row mb-4">
         <div class="col-lg-12">
             <div class="card shadow-sm">
-                <div class="card-header bg-white">
+                <div class="card-header border-bottom">
                     <h5 class="m-0 fw-bold text-primary"><i class="bi bi-graph-up"></i> Global Vacuum Trend (Last 12 Months)</h5>
                 </div>
                 <div class="card-body">
@@ -161,13 +161,13 @@
     <div class="row">
         <div class="col-lg-12">
             <div class="card shadow-sm">
-                <div class="card-header bg-white">
+                <div class="card-header border-bottom">
                     <h5 class="m-0 fw-bold"><i class="bi bi-arrow-left-right"></i> Vacuum Stability Analysis (Current vs Last Year)</h5>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-bordered table-hover" id="comparisonTable">
-                            <thead class="table-light">
+                            <thead>
                                 <tr>
                                     <th>Isotank</th>
                                     <th>Current Reading</th>
@@ -207,7 +207,7 @@
                                     <td class="{{ $change === null ? 'text-muted' : ($change > 0 ? 'text-danger' : 'text-success') }} fw-bold">
                                         {{ $change !== null ? ($change > 0 ? '+' : '') . number_format($change, 1) : '-' }}
                                     </td>
-                                    <td><span class="badge bg-light border {{ $statusClass }}">{{ $status }}</span></td>
+                                    <td><span class="badge border {{ $statusClass }}">{{ $status }}</span></td>
                                 </tr>
                                 @endforeach
                             </tbody>

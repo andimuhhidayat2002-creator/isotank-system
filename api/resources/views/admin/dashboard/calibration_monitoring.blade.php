@@ -36,7 +36,7 @@
             </div>
         </div>
         <div class="col-md-3">
-             <div class="card shadow-sm text-center h-100 bg-light">
+             <div class="card shadow-sm text-center h-100 border-left-secondary">
                  <div class="card-body pt-2">
                      <h6 class="text-muted text-uppercase mb-3 mt-2 font-weight-bold">Expiring Soon</h6>
                      <div class="d-flex justify-content-around">
@@ -62,7 +62,7 @@
     <div class="row mb-4">
         <div class="col-12">
             <div class="card shadow-sm border-left-warning">
-                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <div class="card-header border-bottom py-3 d-flex justify-content-between align-items-center">
                     <h6 class="m-0 font-weight-bold text-danger">Attention Required (Expired & Upcoming)</h6>
                     <div>
                         <a href="{{ route('admin.calibration.export_csv') }}" class="btn btn-sm btn-success">
@@ -74,7 +74,7 @@
                 <div class="card-body p-0">
                     <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
                         <table class="table table-hover mb-0">
-                            <thead class="bg-light sticky-top">
+                            <thead class="sticky-top">
                                 <tr>
                                     <th>Expiry Date</th>
                                     <th>Days Left</th>
@@ -104,7 +104,7 @@
                                         @elseif($daysLeft < 0)
                                             <span class="badge bg-danger">Exp {{ abs((int)$daysLeft) }} days ago</span>
                                         @else
-                                            <span class="badge {{ $daysLeft < 30 ? 'bg-danger' : 'bg-warning' }} text-dark">{{ (int)$daysLeft }} Days</span>
+                                            <span class="badge {{ $daysLeft < 30 ? 'bg-danger' : 'bg-warning' }}">{{ (int)$daysLeft }} Days</span>
                                         @endif
                                     </td>
                                     <td>
@@ -134,7 +134,7 @@
         {{-- Rejected History --}}
         <div class="col-lg-8 mb-4">
             <div class="card shadow-sm h-100">
-                <div class="card-header bg-white py-3">
+                <div class="card-header border-bottom py-3">
                     <h6 class="m-0 font-weight-bold text-danger">Rejected Calibration History</h6>
                 </div>
                 <div class="card-body p-0">
@@ -171,7 +171,7 @@
         {{-- Vendor Breakdown --}}
         <div class="col-lg-4 mb-4">
             <div class="card shadow-sm h-100">
-                <div class="card-header bg-white py-3">
+                <div class="card-header border-bottom py-3">
                     <h6 class="m-0 font-weight-bold text-primary">Calibration by Vendor</h6>
                 </div>
                 <div class="card-body p-0">
