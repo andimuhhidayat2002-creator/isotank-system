@@ -20,10 +20,10 @@
 
 <div class="row">
     <div class="col-md-4">
-        <div class="card mb-4">
+        <div class="card mb-4 bg-dark text-white border-secondary">
             <div class="card-header border-bottom">A. DATA OF TANK</div>
             <div class="card-body">
-                <table class="table table-sm mb-0">
+                <table class="table table-sm table-dark table-borderless mb-0">
                     <tr><th class="text-white">Inspection Type</th><td class="text-white">{{ strtoupper(str_replace('_', ' ', $log->inspection_type)) }}</td></tr>
                     <tr><th class="text-white">Date</th><td class="text-white">{{ $log->inspection_date->format('Y-m-d') }}</td></tr>
                     <tr><th class="text-white">Inspector</th><td class="text-white">{{ $log->inspector->name ?? '-' }}</td></tr>
@@ -38,7 +38,7 @@
             </div>
         </div>
         
-        <div class="card mb-4">
+        <div class="card mb-4 bg-dark text-white border-secondary">
             <div class="card-header border-bottom">Photos (Click to Enlarge)</div>
             <div class="card-body p-2">
                 <div class="row g-2">
@@ -75,10 +75,10 @@
     </div>
 
     <div class="col-md-8">
-        <div class="card mb-4">
+        <div class="card mb-4 bg-dark text-white border-secondary">
             <div class="card-header border-bottom">Full Inspection Checklist</div>
             <div class="card-body p-0">
-                <table class="table table-bordered table-sm mb-0">
+                <table class="table table-bordered table-sm table-dark border-secondary mb-0">
                         <thead>
                         <tr><th class="text-white">Category / Item Name</th><th class="text-center text-white" width="150">Condition/Value</th></tr>
                     </thead>

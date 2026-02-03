@@ -38,10 +38,10 @@
 <div class="row">
     <!-- LEFT: Overview Card -->
     <div class="col-md-4">
-        <div class="card shadow-sm mb-4">
+        <div class="card shadow-sm mb-4 bg-dark text-white border-secondary">
             <div class="card-header">Overview</div>
             <div class="card-body">
-                <table class="table table-sm">
+                <table class="table table-sm table-dark table-borderless mb-0">
                     <tr><th class="text-white">ISO Number</th><td class="fw-bold text-white">{{ $isotank->iso_number }}</td></tr>
                     <tr><th class="text-white">Owner</th><td class="text-white">{{ $isotank->owner ?? '-' }}</td></tr>
                     <tr><th class="text-white">Location</th><td class="text-white">{{ $isotank->location ?? '-' }}</td></tr>
@@ -58,10 +58,10 @@
             </div>
         </div>
 
-        <div class="card shadow-sm mb-4">
+        <div class="card shadow-sm mb-4 bg-dark text-white border-secondary">
             <div class="card-header">Technical Specs</div>
             <div class="card-body">
-                <table class="table table-sm">
+                <table class="table table-sm table-dark table-borderless mb-0">
                     <tr><th class="text-white">Manufacturer</th><td class="text-white">{{ $isotank->manufacturer ?? '-' }}</td></tr>
                     <tr><th class="text-white">Serial No</th><td class="text-white">{{ $isotank->manufacturer_serial_number ?? '-' }}</td></tr>
                     <tr><th class="text-white">Model Type</th><td class="text-white">{{ $isotank->model_type ?? '-' }}</td></tr>
@@ -72,10 +72,10 @@
             </div>
         </div>
         
-        <div class="card shadow-sm mb-4">
+        <div class="card shadow-sm mb-4 bg-dark text-white border-secondary">
              <div class="card-header">Certificates & Dates</div>
              <div class="card-body">
-                <table class="table table-sm">
+                <table class="table table-sm table-dark table-borderless mb-0">
                     <tr><th class="text-white">Init Pressure Test</th><td class="text-white">{{ $isotank->initial_pressure_test_date ? $isotank->initial_pressure_test_date->format('d/m/Y') : '-' }}</td></tr>
                     <tr><th class="text-white">CSC Init Test</th><td class="text-white">{{ $isotank->csc_initial_test_date ? $isotank->csc_initial_test_date->format('d/m/Y') : '-' }}</td></tr>
                      <tr><td colspan="2"><hr class="my-1"></td></tr>
@@ -100,7 +100,7 @@
             <!-- Latest Condition -->
             <div class="tab-pane fade show active" id="condition">
                  @if($isotank->latestInspection)
-                    <div class="card shadow-sm">
+                    <div class="card shadow-sm bg-dark text-white border-secondary">
                         <div class="card-body">
                             <h5 class="text-white">Last Inspection: {{ $isotank->latestInspection->updated_at->format('d M Y') }}</h5>
                             <p class="text-white">Inspector: {{ $isotank->latestInspection->inspector->name ?? '-' }}</p>
@@ -121,7 +121,7 @@
                             <div class="mt-4">
                                 <h5 class="text-white border-bottom border-secondary pb-2">Items Condition</h5>
                                 <div class="table-responsive">
-                                    <table class="table table-sm table-bordered">
+                                    <table class="table table-sm table-bordered table-dark border-secondary">
                         <thead>
                                             <tr>
                                                 <th class="text-white">Category / Item Name</th>
@@ -348,8 +348,8 @@
 
             <!-- Inspection History -->
             <div class="tab-pane fade" id="inspections">
-                <div class="card shadow-sm"><div class="card-body p-0">
-                <table class="table table-hover mb-0">
+                <div class="card shadow-sm bg-dark text-white border-secondary"><div class="card-body p-0">
+                <table class="table table-hover table-dark mb-0">
                     <thead><tr><th>Date</th><th>Type</th><th>Inspector</th><th>Status</th><th>PDF</th></tr></thead>
                     <tbody>
                         @forelse($inspections as $ins)
@@ -373,8 +373,8 @@
 
             <!-- Maintenance History -->
             <div class="tab-pane fade" id="maintenance">
-                 <div class="card shadow-sm"><div class="card-body p-0">
-                <table class="table table-hover mb-0">
+                 <div class="card shadow-sm bg-dark text-white border-secondary"><div class="card-body p-0">
+                <table class="table table-hover table-dark mb-0">
                     <thead><tr><th>Date</th><th>Item / Component</th><th>Status</th><th>Technician</th><th>Desc</th><th>Action</th></tr></thead>
                     <tbody>
                         @forelse($maintenance as $job)
@@ -407,7 +407,7 @@
             </div>
             
               <div class="tab-pane fade" id="calib">
-                  <div class="card shadow-sm"><div class="card-body">
+                  <div class="card shadow-sm bg-dark text-white border-secondary"><div class="card-body">
                       <h5>Calibration Status</h5>
                       
                       <!-- General Status Alert -->
@@ -420,7 +420,7 @@
                       @endif
 
                       <div class="table-responsive">
-                          <table class="table table-bordered table-striped">
+                          <table class="table table-bordered table-striped table-dark border-secondary">
                               <thead>
                                   <tr>
                                       <th>Component</th>
@@ -462,8 +462,8 @@
              
              <!-- Vacuum Logs -->
              <div class="tab-pane fade" id="vacuum">
-                   <div class="card shadow-sm"><div class="card-body p-0">
-                    <table class="table table-hover mb-0">
+                   <div class="card shadow-sm bg-dark text-white border-secondary"><div class="card-body p-0">
+                    <table class="table table-hover table-dark mb-0">
                         <thead><tr><th>Check Date</th><th>Value</th><th>Temp</th><th>Remark</th></tr></thead>
                         <tbody>
                             @forelse($vacuumLogs as $v)
