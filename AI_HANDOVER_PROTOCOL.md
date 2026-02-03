@@ -131,3 +131,26 @@ We operate on **TWO SEPARATE** repositories. Always verify which one you are wor
 *   **Result:** Successfully imported 1617 maintenance jobs (7 errors from invalid/empty rows). Date range: 2024-02-08 to 2026-01-22. No more 2027 dates.
 *   **Key Learning:** When fixing bugs, preserve the working logic and only change what's necessary. The strict validation was solving a problem that didn't exist in the actual Excel data.
 *   **File Modified:** `api/app/Imports/MaintenanceImport.php`
+
+### Q. Deployment Automation & SSH Security (Feb 2, 2026 22:00)
+*   **SSH Key Setup:** Generated Ed25519 SSH key on local machine and added it to VPS `~/.ssh/authorized_keys`.
+*   **Result:** Deployment scripts (`deploy_to_vps.bat`) and `ssh` commands now run without password prompts. This prevents the "hanging/stuck processes" issue caused by hidden password requests in background scripts.
+
+### R. System Monitoring & Activity Logs (Feb 2, 2026 22:05)
+*   **Audit Trail:** Created `activity_logs` table and `ActivityLog` model to record system-wide actions.
+*   **Automatic Write Logging:** Implemented `LogActivity` middleware that automatically records all `POST`, `PUT`, `PATCH`, and `DELETE` requests across Web Admin and API.
+    *   **Privacy Aware:** Automatically filters out sensitive fields like `password`, `_token`, and `signature_data` from being stored in logs.
+*   **Media Access Audit:** Explicitly added logging to `MediaController@show`. Every time a private inspection photo is viewed, it records the User ID, File Path, IP Address, and Timestamp.
+*   **Deployment Integrity:** Successful migration and deployment of logging features to VPS.
+
+### S. Domain & SSL Security Deployment (Feb 2, 2026 22:45)
+*   **Domain Name:** Registered and pointed `kayanconect.com` to VPS IP `202.10.44.146`.
+*   **SSL Implementation:** Installed Certbot and issued a valid Let's Encypt SSL certificate for `kayanconect.com`.
+*   **Security Hardening:** 
+    *   Configured Nginx to force HTTP to HTTPS redirection.
+    *   Updated Laravel `APP_URL` to `https://kayanconect.com`.
+    *   Enabled HSTS and secure cookie flags.
+*   **Result:** The system is now fully encrypted. All data transfer between users and the server is secure.
+
+---
+*Last Updated: Feb 2, 2026 22:45 - Antigravity Agent*
