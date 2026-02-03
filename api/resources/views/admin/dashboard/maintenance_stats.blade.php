@@ -41,7 +41,7 @@
         {{-- Most Frequent Failures --}}
         <div class="col-md-6 mb-4">
             <div class="card shadow-sm h-100">
-                <div class="card-header bg-white py-3">
+                <div class="card-header border-bottom py-3">
                     <h6 class="m-0 font-weight-bold text-primary">Most Frequent Failed Items</h6>
                 </div>
                 <div class="card-body p-0">
@@ -62,7 +62,7 @@
         {{-- Maintenance by Location --}}
         <div class="col-md-6 mb-4">
             <div class="card shadow-sm h-100">
-                <div class="card-header bg-white py-3">
+                <div class="card-header border-bottom py-3">
                     <h6 class="m-0 font-weight-bold text-info">Maintenance Activity by Location</h6>
                 </div>
                 <div class="card-body p-0">
@@ -89,8 +89,8 @@
 
     {{-- Maintenance Count per Isotank --}}
     <div class="card shadow-sm mb-4">
-        <div class="card-header bg-white py-3">
-            <h6 class="m-0 font-weight-bold text-dark">Top Isotanks by Maintenance Frequency (Top 20)</h6>
+        <div class="card-header border-bottom py-3">
+            <h6 class="m-0 font-weight-bold text-white">Top Isotanks by Maintenance Frequency (Top 20)</h6>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">

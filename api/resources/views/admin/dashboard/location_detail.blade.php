@@ -7,7 +7,7 @@
             <a href="{{ route('admin.dashboard') }}" class="text-decoration-none text-muted mb-2 d-inline-block small">
                 <i class="bi bi-arrow-left me-1"></i> Back to Global Dashboard
             </a>
-            <h1 class="fw-bold text-dark mb-1" style="font-size: 1.75rem;">LOCATION: <span class="text-primary">{{ strtoupper($location) }}</span></h1>
+            <h1 class="fw-bold mb-1" style="font-size: 1.75rem;">LOCATION: <span class="text-primary">{{ strtoupper($location) }}</span></h1>
             <div class="text-muted small">Asset & Operational Detail</div>
         </div>
     </div>
@@ -20,7 +20,7 @@
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
                             <div class="text-uppercase text-muted fw-bold mb-1" style="font-size: 0.75rem; letter-spacing: 0.5px;">Total Isotanks</div>
-                            <div class="display-6 fw-bold text-dark">{{ $assetSummary['total_isotanks'] }}</div>
+                            <div class="display-6 fw-bold text-white">{{ $assetSummary['total_isotanks'] }}</div>
                         </div>
                         <div class="p-3 rounded bg-primary bg-opacity-10 text-primary">
                             <i class="bi bi-box-seam fs-4"></i>
@@ -36,7 +36,7 @@
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
                             <div class="text-uppercase text-muted fw-bold mb-1" style="font-size: 0.75rem; letter-spacing: 0.5px;">Maintenance</div>
-                            <div class="display-6 fw-bold text-dark">{{ $assetSummary['open_maintenance'] }}</div>
+                            <div class="display-6 fw-bold text-white">{{ $assetSummary['open_maintenance'] }}</div>
                         </div>
                         <div class="p-3 rounded bg-warning bg-opacity-10 text-warning opacity-75">
                             <i class="bi bi-tools fs-4"></i>
@@ -52,7 +52,7 @@
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
                             <div class="text-uppercase text-muted fw-bold mb-1" style="font-size: 0.75rem; letter-spacing: 0.5px;">Calibration Exp/Due</div>
-                            <div class="display-6 fw-bold {{ $assetSummary['expired_calibration'] > 0 ? 'text-warning' : 'text-dark' }}">{{ $assetSummary['expired_calibration'] }}</div>
+                            <div class="display-6 fw-bold {{ $assetSummary['expired_calibration'] > 0 ? 'text-warning' : 'text-white' }}">{{ $assetSummary['expired_calibration'] }}</div>
                         </div>
                         <div class="p-3 rounded bg-warning bg-opacity-10 text-warning">
                             <i class="bi bi-exclamation-triangle fs-4"></i>
@@ -68,7 +68,7 @@
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
                             <div class="text-uppercase text-muted fw-bold mb-1" style="font-size: 0.75rem; letter-spacing: 0.5px;">High Vacuum</div>
-                            <div class="display-6 fw-bold {{ $assetSummary['high_vacuum'] > 0 ? 'text-danger' : 'text-dark' }}">{{ $assetSummary['high_vacuum'] }}</div>
+                            <div class="display-6 fw-bold {{ $assetSummary['high_vacuum'] > 0 ? 'text-danger' : 'text-white' }}">{{ $assetSummary['high_vacuum'] }}</div>
                         </div>
                         <div class="p-3 rounded bg-danger bg-opacity-10 text-danger">
                             <i class="bi bi-speedometer2 fs-4"></i>
@@ -81,7 +81,7 @@
     </div>
 
     {{-- Filling Status Overview --}}
-    <h5 class="fw-bold text-dark mb-3">Filling Status (Content)</h5>
+    <h5 class="fw-bold mb-3">Filling Status (Content)</h5>
     <div class="row mb-5">
         @php
             $statusColors = [
@@ -116,7 +116,7 @@
         {{-- B. Maintenance Snapshot --}}
         <div class="col-lg-6">
             <div class="card shadow-sm border-0 h-100">
-                <div class="card-header bg-white py-3 border-0">
+                <div class="card-header border-bottom py-3 border-0">
                     <h6 class="m-0 fw-bold fs-5">Maintenance Snapshot</h6>
                 </div>
                 <div class="card-body">
@@ -140,7 +140,7 @@
                         @forelse($frequentFailures as $fail)
                             <li class="list-group-item d-flex justify-content-between align-items-center px-0">
                                 {{ ucfirst(str_replace('_', ' ', $fail->source_item)) }}
-                                <span class="badge bg-light text-dark border">{{ $fail->count }}</span>
+                                <span class="badge bg-secondary text-white border">{{ $fail->count }}</span>
                             </li>
                         @empty
                             <li class="list-group-item text-muted px-0">No failures recorded.</li>
@@ -154,14 +154,14 @@
         <div class="col-lg-6">
             {{-- C. Vacuum Exceed List --}}
             <div class="card shadow-sm border-0 mb-4">
-                <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
+                <div class="card-header border-bottom py-3 border-0 d-flex justify-content-between align-items-center">
                     <h6 class="m-0 fw-bold fs-6 text-danger">High Vacuum (>8 mTorr)</h6>
                     <i class="bi bi-speedometer2 text-danger opacity-50"></i>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
                         <table class="table table-hover mb-0 align-middle">
-                            <thead class="bg-light">
+                            <thead>
                                 <tr>
                                     <th class="ps-4">Isotank</th>
                                     <th>Value</th>
@@ -186,14 +186,14 @@
 
             {{-- D. Calibration Snapshot --}}
             <div class="card shadow-sm border-0">
-                <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
+                <div class="card-header border-bottom py-3 border-0 d-flex justify-content-between align-items-center">
                     <h6 class="m-0 fw-bold fs-6 text-warning">Calibration Due (< 90 Days)</h6>
                     <i class="bi bi-rulers text-warning opacity-50"></i>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
                          <table class="table table-hover mb-0 align-middle">
-                            <thead class="bg-light">
+                            <thead>
                                 <tr>
                                     <th class="ps-4">Isotank</th>
                                     <th>Item</th>
@@ -227,8 +227,8 @@
     <div class="row">
         <div class="col-lg-12">
             <div class="card shadow-sm border-0 mb-4">
-                <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
-                     <h6 class="m-0 fw-bold fs-5 text-dark">Isotanks Inventory: {{ $location }}</h6>
+                <div class="card-header border-bottom py-3 border-0 d-flex justify-content-between align-items-center">
+                     <h6 class="m-0 fw-bold fs-5 text-white">Isotanks Inventory: {{ $location }}</h6>
                      <a href="{{ route('admin.dashboard.location.export', urlencode($location)) }}" class="btn btn-sm btn-success text-white fw-bold">
                         <i class="bi bi-file-earmark-excel me-1"></i> Download Excel
                      </a>
@@ -236,7 +236,7 @@
                 <div class="card-body p-0">
                     <div class="table-responsive">
                         <table class="table table-striped table-hover mb-0 align-middle" id="isotankTable">
-                            <thead class="table-light">
+                            <thead>
                                 <tr>
                                     <th class="ps-4">ISO Number</th>
                                     <th>Status</th>
@@ -256,7 +256,7 @@
                                     </td>
                                     <td>
                                         @if($iso->filling_status_code)
-                                            <span class="badge bg-light text-dark border">{{ $iso->filling_status_code }}</span>
+                                            <span class="badge bg-secondary text-white border">{{ $iso->filling_status_code }}</span>
                                         @else
                                             <span class="text-muted">-</span>
                                         @endif
@@ -272,13 +272,13 @@
             </div>
             
             <div class="card shadow-sm border-0">
-                <div class="card-header bg-white py-3 border-0">
-                     <h6 class="m-0 fw-bold fs-5 text-dark">Recent Activities</h6>
+                <div class="card-header border-bottom py-3 border-0">
+                     <h6 class="m-0 fw-bold fs-5 text-white">Recent Activities</h6>
                 </div>
                 <div class="card-body p-0">
                      <div class="table-responsive">
                         <table class="table table-hover mb-0 align-middle">
-                             <thead class="bg-light">
+                             <thead>
                                 <tr>
                                     <th class="ps-4">Date</th>
                                     <th>ISO Number</th>

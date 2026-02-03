@@ -69,7 +69,7 @@
                         <button class="btn btn-info text-white" data-bs-toggle="modal" data-bs-target="#manualCalibrationModal">
                             <i class="bi bi-plus-circle"></i> Add Manually
                         </button>
-                        <button class="btn btn-outline-info text-dark" data-bs-toggle="modal" data-bs-target="#uploadCalibrationModal">
+                        <button class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#uploadCalibrationModal">
                             <i class="bi bi-file-earmark-excel"></i> Upload Excel
                         </button>
                     </div>
@@ -87,7 +87,7 @@
                 <div class="card-body">
                     <p class="small text-muted mb-3">Upload historical vacuum readings or schedule checks.</p>
                     <div class="d-grid gap-2">
-                        <button class="btn btn-outline-danger text-dark" data-bs-toggle="modal" data-bs-target="#uploadVacuumModal">
+                        <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#uploadVacuumModal">
                             <i class="bi bi-file-earmark-excel"></i> Upload Excel
                         </button>
                     </div>
