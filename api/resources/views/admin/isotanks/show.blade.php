@@ -102,8 +102,8 @@
                  @if($isotank->latestInspection)
                     <div class="card shadow-sm">
                         <div class="card-body">
-                            <h5>Last Inspection: {{ $isotank->latestInspection->updated_at->format('d M Y') }}</h5>
-                            <p>Inspector: {{ $isotank->latestInspection->inspector->name ?? '-' }}</p>
+                            <h5 class="text-white">Last Inspection: {{ $isotank->latestInspection->updated_at->format('d M Y') }}</h5>
+                            <p class="text-white">Inspector: {{ $isotank->latestInspection->inspector->name ?? '-' }}</p>
                             @php 
                                 // Load the ACTUAL InspectionLog (not MasterLatestInspection)
                                 // MasterLatestInspection only has hardcoded columns, no inspection_data JSON
@@ -112,19 +112,19 @@
                             <div class="row">
                                 <div class="col-6">
                                     <ul class="list-group">
-                                        <li class="list-group-item d-flex justify-content-between"><span>Vacuum</span> <strong>{{ $log->vacuum_value ? (float)$log->vacuum_value : '-' }}</strong></li>
-                                        <li class="list-group-item d-flex justify-content-between"><span>Pressure</span> <strong>{{ $log->pressure_1 ? (float)$log->pressure_1 : '-' }}</strong></li>
-                                        <li class="list-group-item d-flex justify-content-between"><span>Level</span> <strong>{{ $log->level_1 ? (float)$log->level_1 : '-' }}</strong></li>
+                                        <li class="list-group-item bg-dark bg-opacity-50 border-secondary d-flex justify-content-between"><span class="text-white">Vacuum</span> <strong class="text-white">{{ $log->vacuum_value ? (float)$log->vacuum_value : '-' }}</strong></li>
+                                        <li class="list-group-item bg-dark bg-opacity-50 border-secondary d-flex justify-content-between"><span class="text-white">Pressure</span> <strong class="text-white">{{ $log->pressure_1 ? (float)$log->pressure_1 : '-' }}</strong></li>
+                                        <li class="list-group-item bg-dark bg-opacity-50 border-secondary d-flex justify-content-between"><span class="text-white">Level</span> <strong class="text-white">{{ $log->level_1 ? (float)$log->level_1 : '-' }}</strong></li>
                                     </ul>
                                 </div>
                             <div class="mt-4">
-                                <h6>Items Condition</h6>
+                                <h6 class="text-white">Items Condition</h6>
                                 <div class="table-responsive">
                                     <table class="table table-sm table-bordered">
                         <thead>
                                             <tr>
-                                                <th>Category / Item Name</th>
-                                                <th class="text-center">Condition/Value</th>
+                                                <th class="text-white">Category / Item Name</th>
+                                                <th class="text-center text-white">Condition/Value</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -223,7 +223,7 @@
 
                                              @foreach($grouped as $categoryName => $items)
                                                 @if(($tankCat ?? 'T75') !== 'T75' || !in_array($categoryName, ['d', 'e', 'f', 'g']))
-                                                    <tr class="table-secondary"><th colspan="2">{{ $categoryMap[$categoryName] ?? strtoupper($categoryName) }}</th></tr>
+                                                    <tr class="bg-dark bg-opacity-50"><th colspan="2" class="text-white">{{ $categoryMap[$categoryName] ?? strtoupper($categoryName) }}</th></tr>
                                                     @foreach($items as $item)
                                                         @php 
                                                             $code = $item->code; 
@@ -277,7 +277,7 @@
                                                         @endphp
                                                         @php $displayLabel = str_replace(['FRONT: ', 'REAR: ', 'RIGHT: ', 'LEFT: ', 'TOP: '], '', $item->label); @endphp
                                                         <tr>
-                                                            <td class="ps-3">{{ $displayLabel }}</td>
+                                                            <td class="ps-3 text-white">{{ $displayLabel }}</td>
                                                             <td class="text-center">
                                                                 @include('admin.reports.partials.badge', ['status' => $val ?: '-'])
                                                             </td>
