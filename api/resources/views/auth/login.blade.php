@@ -67,7 +67,7 @@
         <div class="card-body">
             <div class="text-center mb-5">
                 <div class="mb-3">
-                    <img src="{{ asset('images/kayan-logo.jpg') }}" alt="PT Kayan LNG Nusantara" style="max-width: 280px; width: 100%; height: auto; border-radius: 12px;">
+                    <img src="{{ asset('images/kayan_logo.png') }}" alt="PT Kayan LNG Nusantara" style="max-width: 280px; width: 100%; height: auto;">
                 </div>
                 <h3 class="fw-bold mt-3 text-white">ISOTANK MANAGEMENT SYSTEM</h3>
                 <p class="text-muted small text-uppercase" style="letter-spacing: 2px;">PT Kayan LNG Nusantara</p>
