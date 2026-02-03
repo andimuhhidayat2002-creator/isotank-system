@@ -66,13 +66,11 @@
     <div class="card login-card p-4">
         <div class="card-body">
             <div class="text-center mb-5">
-                <div class="mb-3 d-inline-block p-3 rounded-circle bg-primary bg-opacity-10">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="var(--neon-blue)" class="bi bi-box-seam" viewBox="0 0 16 16">
-                        <path d="M8.186 1.113a.5.5 0 0 0-.372 0L1.846 3.5l2.404.961L10.404 2zm3.564 1.426L5.596 5 8 5.961 14.154 3.5l-2.404-.961zm3.25 1.7-6.5 2.6v7.922l6.5-2.6V4.24zM7.5 14.722V6.812L1 4.212V12.12l6.5 2.6zM12.758 1.512a1.5 1.5 0 0 1 .844 0l2.404.961a1.5 1.5 0 0 1 .908 1.459v8.434a1.5 1.5 0 0 1-.908 1.458l-6.5 2.6a1.5 1.5 0 0 1-1.112 0l-6.5-2.6A1.5 1.5 0 0 1 0 12.12V3.682a1.5 1.5 0 0 1 .908-1.458l2.404-.961z"/>
-                    </svg>
+                <div class="mb-3">
+                    <img src="{{ asset('images/kayan-logo.jpg') }}" alt="PT Kayan LNG Nusantara" style="max-width: 280px; width: 100%; height: auto; border-radius: 12px;">
                 </div>
-                <h3 class="fw-bold mt-2 text-white">ISOTANK ADMIN</h3>
-                <p class="text-muted small text-uppercase" style="letter-spacing: 2px;">Command Center Login</p>
+                <h3 class="fw-bold mt-3 text-white">ISOTANK MANAGEMENT SYSTEM</h3>
+                <p class="text-muted small text-uppercase" style="letter-spacing: 2px;">PT Kayan LNG Nusantara</p>
             </div>
             
             @if($errors->any())

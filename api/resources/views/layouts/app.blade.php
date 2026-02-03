@@ -18,7 +18,9 @@
         <nav class="sidebar p-3">
             <!-- 1. Header (Fixed) -->
             <div>
-                <h4 class="mb-3 fw-bold text-white px-2 mt-2">ISOTANK</h4>
+                <div class="text-center mb-3">
+                    <img src="{{ asset('images/kayan-logo.jpg') }}" alt="PT Kayan LNG" style="max-width: 180px; width: 100%; height: auto; border-radius: 8px;">
+                </div>
                 
                 <!-- Compact Profile -->
                 <div class="mb-3 px-2 py-2 rounded" style="background-color: rgba(255, 255, 255, 0.05);">
