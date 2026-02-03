@@ -564,10 +564,10 @@
                             @foreach($pendingInspections as $job)
                             <tr>
                                 <td class="fw-bold"><a href="{{ route('admin.isotanks.show', $job->isotank_id) }}" class="text-decoration-none text-primary">{{ optional($job->isotank)->iso_number ?? 'UNKNOWN' }}</a></td>
-                                <td>{{ strtoupper(str_replace('_', ' ', $job->activity_type)) }}</td>
-                                <td>{{ $job->planned_date ? $job->planned_date->format('Y-m-d') : '-' }}</td>
-                                <td>{{ $job->destination ?? '-' }}</td>
-                                <td>{{ $job->receiver_name ?? '-' }}</td>
+                                <td class="text-white">{{ strtoupper(str_replace('_', ' ', $job->activity_type)) }}</td>
+                                <td class="text-white">{{ $job->planned_date ? $job->planned_date->format('Y-m-d') : '-' }}</td>
+                                <td class="text-white">{{ $job->destination ?? '-' }}</td>
+                                <td class="text-white">{{ $job->receiver_name ?? '-' }}</td>
                                 <td class="text-end">
                                     <form action="{{ route('admin.activities.inspection.delete', $job->id) }}" method="POST" class="d-inline delete-alert-form">
                                         @csrf @method('DELETE')
