@@ -261,10 +261,33 @@
         </div>
     </div>
 
-    {{-- 3. SYSTEM OCCUPANCY (VISUAL BAR) --}}
+    {{-- 3. QUICK ACCESS MODULE (RESTORED) --}}
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="glass-card p-4 d-flex align-items-center justify-content-between flex-wrap gap-3">
+                <h5 class="fw-bold mb-0"><i class="bi bi-lightning-charge me-2 text-warning"></i>Operations Shortcuts</h5>
+                <div class="d-flex gap-3">
+                    <a href="{{ route('admin.dashboard.maintenance') }}" class="btn btn-outline-light border-secondary text-muted">
+                        <i class="bi bi-tools me-2 text-warning"></i> Maintenance Stats
+                    </a>
+                    <a href="{{ route('admin.dashboard.vacuum') }}" class="btn btn-outline-light border-secondary text-muted">
+                        <i class="bi bi-speedometer2 me-2 text-info"></i> Vacuum Monitoring
+                    </a>
+                    <a href="{{ route('admin.dashboard.calibration') }}" class="btn btn-outline-light border-secondary text-muted">
+                        <i class="bi bi-rulers me-2 text-danger"></i> Calibration Alerts
+                    </a>
+                    <a href="{{ route('admin.isotanks.index') }}" class="btn btn-outline-light border-secondary text-muted">
+                        <i class="bi bi-search me-2 text-primary"></i> Fleet Search
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- 4. SYSTEM OCCUPANCY (VISUAL BAR) --}}
     @if(!empty($fillingStatusStats))
     <div class="glass-card p-4 mb-5">
-        <h5 class="fw-bold mb-4">System Occupancy</h5>
+        <h5 class="fw-bold mb-4">Current Fleet Occupancy</h5>
         
         {{-- Glow Bar --}}
         <div class="progress mb-4" style="height: 32px; background: rgba(0,0,0,0.3);">
@@ -311,7 +334,69 @@
     </div>
     @endif
 
-    {{-- 4. SYSTEM HEALTH & LIVE ACTIVITY (SOC ROW) --}}
+    {{-- 5. LOCATION SATELLITE VIEW --}}
+    <div class="mb-5">
+        <h5 class="fw-bold mb-3">Location Distribution (Satellite View)</h5>
+        <div class="row g-4">
+            @forelse($locations as $loc)
+            <div class="col-xl-3 col-md-6">
+                <a href="{{ route('admin.dashboard.location', urlencode($loc->location)) }}" class="text-decoration-none">
+                    <div class="glass-card p-4 h-100 hover-border-primary">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h5 class="fw-bold text-white mb-0">{{ $loc->location }}</h5>
+                            <span class="badge bg-primary bg-opacity-20 text-primary border border-primary border-opacity-20">{{ $loc->active_count }} Units</span>
+                        </div>
+                        
+                        {{-- Mini Sat Stats --}}
+                        <div class="d-flex align-items-center mb-3 text-muted small">
+                             <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span>Filled</span>
+                                    <span class="text-white">{{ $loc->filled_count }}</span>
+                                </div>
+                                <div class="progress" style="height: 3px;">
+                                    <div class="progress-bar bg-primary" style="width: {{ $loc->active_count > 0 ? ($loc->filled_count / $loc->active_count)*100 : 0 }}%"></div>
+                                </div>
+                             </div>
+                             <div class="mx-3 border-end" style="height: 20px;"></div>
+                             <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span>Empty</span>
+                                    <span class="text-white">{{ $loc->empty_count }}</span>
+                                </div>
+                                <div class="progress" style="height: 3px;">
+                                    <div class="progress-bar bg-secondary" style="width: {{ $loc->active_count > 0 ? ($loc->empty_count / $loc->active_count)*100 : 0 }}%"></div>
+                                </div>
+                             </div>
+                        </div>
+
+                        {{-- Owner Tags --}}
+                         <div style="min-height: 24px;">
+                             @if(isset($ownerBreakdown[$loc->location]))
+                                <div class="d-flex flex-wrap gap-1">
+                                @foreach($ownerBreakdown[$loc->location] as $o)
+                                    @if($loop->index < 3)
+                                    <span class="badge bg-dark border border-secondary text-muted fw-normal" style="font-size: 0.65rem;">
+                                        {{ \Illuminate\Support\Str::limit($o->owner ?? 'N/A', 8) }} {{ $o->count }}
+                                    </span>
+                                    @endif
+                                @endforeach
+                                @if(count($ownerBreakdown[$loc->location]) > 3)
+                                    <span class="badge bg-dark border border-secondary text-muted fw-normal" style="font-size: 0.65rem;">+{{ count($ownerBreakdown[$loc->location]) - 3 }}</span>
+                                @endif
+                                </div>
+                             @endif
+                         </div>
+                    </div>
+                </a>
+            </div>
+            @empty
+            <div class="col-12"><div class="alert alert-dark border-secondary text-muted">No location data found.</div></div>
+            @endforelse
+        </div>
+    </div>
+
+    {{-- 6. SYSTEM HEALTH & LIVE ACTIVITY (SOC ROW) --}}
     <div class="row g-4 mb-5">
         {{-- Telemetry --}}
         <div class="col-xl-4 col-md-12">
@@ -408,71 +493,9 @@
                     @endforelse
                 </div>
                 <div class="p-3 bg-black bg-opacity-20 text-center">
-                    <a href="#" class="text-info text-decoration-none small fw-bold">VIEW AUDIT ARCHIVE <i class="bi bi-arrow-right-short"></i></a>
+                    <a href="{{ route('admin.monitoring.index') }}" class="text-info text-decoration-none small fw-bold">VIEW AUDIT ARCHIVE <i class="bi bi-arrow-right-short"></i></a>
                 </div>
             </div>
-        </div>
-    </div>
-
-    {{-- 5. LOCATION SATELLITE VIEW --}}
-    <div class="mb-5">
-        <h5 class="fw-bold mb-3">Location Distribution (Satellite View)</h5>
-        <div class="row g-4">
-            @forelse($locations as $loc)
-            <div class="col-xl-3 col-md-6">
-                <a href="{{ route('admin.dashboard.location', urlencode($loc->location)) }}" class="text-decoration-none">
-                    <div class="glass-card p-4 h-100 hover-border-primary">
-                        <div class="d-flex justify-content-between align-items-center mb-4">
-                            <h5 class="fw-bold text-white mb-0">{{ $loc->location }}</h5>
-                            <span class="badge bg-primary bg-opacity-20 text-primary border border-primary border-opacity-20">{{ $loc->active_count }} Units</span>
-                        </div>
-                        
-                        {{-- Mini Sat Stats --}}
-                        <div class="d-flex align-items-center mb-3 text-muted small">
-                             <div class="flex-grow-1">
-                                <div class="d-flex justify-content-between mb-1">
-                                    <span>Filled</span>
-                                    <span class="text-white">{{ $loc->filled_count }}</span>
-                                </div>
-                                <div class="progress" style="height: 3px;">
-                                    <div class="progress-bar bg-primary" style="width: {{ $loc->active_count > 0 ? ($loc->filled_count / $loc->active_count)*100 : 0 }}%"></div>
-                                </div>
-                             </div>
-                             <div class="mx-3 border-end" style="height: 20px;"></div>
-                             <div class="flex-grow-1">
-                                <div class="d-flex justify-content-between mb-1">
-                                    <span>Empty</span>
-                                    <span class="text-white">{{ $loc->empty_count }}</span>
-                                </div>
-                                <div class="progress" style="height: 3px;">
-                                    <div class="progress-bar bg-secondary" style="width: {{ $loc->active_count > 0 ? ($loc->empty_count / $loc->active_count)*100 : 0 }}%"></div>
-                                </div>
-                             </div>
-                        </div>
-
-                        {{-- Owner Tags --}}
-                         <div style="min-height: 24px;">
-                             @if(isset($ownerBreakdown[$loc->location]))
-                                <div class="d-flex flex-wrap gap-1">
-                                @foreach($ownerBreakdown[$loc->location] as $o)
-                                    @if($loop->index < 3)
-                                    <span class="badge bg-dark border border-secondary text-muted fw-normal" style="font-size: 0.65rem;">
-                                        {{ \Illuminate\Support\Str::limit($o->owner ?? 'N/A', 8) }} {{ $o->count }}
-                                    </span>
-                                    @endif
-                                @endforeach
-                                @if(count($ownerBreakdown[$loc->location]) > 3)
-                                    <span class="badge bg-dark border border-secondary text-muted fw-normal" style="font-size: 0.65rem;">+{{ count($ownerBreakdown[$loc->location]) - 3 }}</span>
-                                @endif
-                                </div>
-                             @endif
-                         </div>
-                    </div>
-                </a>
-            </div>
-            @empty
-            <div class="col-12"><div class="alert alert-dark border-secondary text-muted">No location data found.</div></div>
-            @endforelse
         </div>
     </div>
 
