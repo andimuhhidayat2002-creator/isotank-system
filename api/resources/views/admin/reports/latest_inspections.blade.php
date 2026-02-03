@@ -127,11 +127,11 @@
                     @endphp
                     <tr class="text-center">
                         <td class="fw-bold text-start sticky-col">
-                            <a href="{{ route('admin.isotanks.show', $log->isotank->id) }}" class="text-decoration-none text-info" target="_blank">
-                                {{ $log->isotank->iso_number }} <i class="bi bi-box-arrow-up-right small text-muted"></i>
+                            <a href="{{ route('admin.isotanks.show', $log->isotank->id) }}" class="text-decoration-none text-primary" target="_blank">
+                                {{ $log->isotank->iso_number }} <i class="bi bi-box-arrow-up-right small text-white"></i>
                             </a>
                         </td>
-                        <td class="small">{{ $log->updated_at ? $log->updated_at->format('Y-m-d') : '-' }}</td>
+                        <td class="small text-white">{{ $log->updated_at ? $log->updated_at->format('Y-m-d') : '-' }}</td>
                         
                         {{-- DYNAMIC VALUES --}}
                         @php

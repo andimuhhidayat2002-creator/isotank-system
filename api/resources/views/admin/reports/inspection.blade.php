@@ -36,11 +36,17 @@
                 <tbody class="border-top-0">
                     @foreach($logs as $log)
                     <tr>
-                        <td>{{ $log->inspection_date }}</td>
-                        <td class="fw-bold"><a href="{{ route('admin.isotanks.show', $log->isotank_id) }}" class="text-decoration-none text-info">{{ $log->isotank->iso_number ?? 'UNKNOWN' }}</a></td>
-                        <td>{{ str_replace('_', ' ', strtoupper($log->inspection_type)) }}</td>
-                        <td>{{ $log->inspector->name ?? '-' }}</td>
-                        <td><span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle">LOGGED</span></td>
+                        <td class="text-white">{{ $log->inspection_date }}</td>
+                        <td class="fw-bold"><a href="{{ route('admin.isotanks.show', $log->isotank_id) }}" class="text-decoration-none text-primary">{{ $log->isotank->iso_number ?? 'UNKNOWN' }}</a></td>
+                        <td class="text-white">{{ str_replace('_', ' ', strtoupper($log->inspection_type)) }}</td>
+                        <td class="text-white">{{ $log->inspector->name ?? '-' }}</td>
+                        <td>
+                            @if($log->status == 'missing')
+                                <span class="badge bg-warning text-white">MISSING</span>
+                            @else
+                                <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle text-white">LOGGED</span>
+                            @endif
+                        </td>
                         <td class="text-end">
                             <div class="btn-group btn-group-sm">
                                 @if($log->pdf_path)

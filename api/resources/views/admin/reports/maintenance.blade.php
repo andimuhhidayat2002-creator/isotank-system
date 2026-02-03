@@ -4,8 +4,8 @@
 <div class="container-fluid px-4 py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2 class="fw-bold text-dark mb-1">Maintenance Center</h2>
-            <div class="text-muted small">Manage repairs, deferred items, and history</div>
+            <h2 class="fw-bold text-white mb-1">Maintenance Center</h2>
+            <div class="text-white small">Manage repairs, deferred items, and history</div>
         </div>
     </div>
 

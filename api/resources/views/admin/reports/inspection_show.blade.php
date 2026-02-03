@@ -24,14 +24,14 @@
             <div class="card-header border-bottom">A. DATA OF TANK</div>
             <div class="card-body">
                 <table class="table table-sm mb-0">
-                    <tr><th>Inspection Type</th><td>{{ strtoupper(str_replace('_', ' ', $log->inspection_type)) }}</td></tr>
-                    <tr><th>Date</th><td>{{ $log->inspection_date->format('Y-m-d') }}</td></tr>
-                    <tr><th>Inspector</th><td>{{ $log->inspector->name ?? '-' }}</td></tr>
-                    <tr><th>Filling Status</th><td><b>{{ $log->filling_status_desc ?? 'Not Specified' }}</b></td></tr>
+                    <tr><th class="text-white">Inspection Type</th><td class="text-white">{{ strtoupper(str_replace('_', ' ', $log->inspection_type)) }}</td></tr>
+                    <tr><th class="text-white">Date</th><td class="text-white">{{ $log->inspection_date->format('Y-m-d') }}</td></tr>
+                    <tr><th class="text-white">Inspector</th><td class="text-white">{{ $log->inspector->name ?? '-' }}</td></tr>
+                    <tr><th class="text-white">Filling Status</th><td class="text-white"><b>{{ $log->filling_status_desc ?? 'Not Specified' }}</b></td></tr>
                 @if($log->inspection_type === 'outgoing_inspection')
-                    <tr><th>Receiver</th><td>{{ $log->receiver_name ?? 'Waiting...' }}</td></tr>
+                    <tr><th class="text-white">Receiver</th><td class="text-white">{{ $log->receiver_name ?? 'Waiting...' }}</td></tr>
                     @if($log->receiver_confirmed_at)
-                    <tr><th>Confirmed At</th><td>{{ $log->receiver_confirmed_at->format('Y-m-d H:i') }}</td></tr>
+                    <tr><th class="text-white">Confirmed At</th><td class="text-white">{{ $log->receiver_confirmed_at->format('Y-m-d H:i') }}</td></tr>
                     @endif
                 @endif
                 </table>
@@ -53,12 +53,12 @@
                                 <a href="#" onclick="showImageModal('{{ route('admin.media', ['path' => $log->$p]) }}', '{{ ucfirst(str_replace(['photo_', '_'], ' ', $p)) }}'); return false;">
                                     <img src="{{ route('admin.media', ['path' => $log->$p]) }}" class="img-fluid rounded border hover-shadow" alt="{{ $p }}" style="cursor: pointer; height: 120px; object-fit: cover; width: 100%;">
                                 </a>
-                                <small class="text-muted d-block text-center">{{ ucfirst(str_replace(['photo_', '_'], ' ', $p)) }}</small>
+                                <small class="text-white d-block text-center">{{ ucfirst(str_replace(['photo_', '_'], ' ', $p)) }}</small>
                             </div>
                         @endif
                     @endforeach
                     @if(!$hasPhotos)
-                        <div class="col-12 text-center text-muted p-3">No Photos Available</div>
+                        <div class="col-12 text-center text-white p-3">No Photos Available</div>
                     @endif
                 </div>
             </div>
@@ -80,7 +80,7 @@
             <div class="card-body p-0">
                 <table class="table table-bordered table-sm mb-0">
                         <thead>
-                        <tr><th>Category / Item Name</th><th class="text-center" width="150">Condition/Value</th></tr>
+                        <tr><th class="text-white">Category / Item Name</th><th class="text-center text-white" width="150">Condition/Value</th></tr>
                     </thead>
                     <tbody>
                         @php
@@ -194,7 +194,7 @@
                         @endphp
                         @foreach($catSpecificItems->groupBy('category') as $categoryName => $items)
                             @if(($tankCat ?? 'T75') !== 'T75' || ($categoryName !== 'd' && $categoryName !== 'e' && $categoryName !== 'f' && $categoryName !== 'g'))
-                            <tr class="bg-light"><th colspan="2">{{ $categoryMap[$categoryName] ?? strtoupper($categoryName) }}</th></tr>
+                            <tr class="bg-dark bg-opacity-50"><th colspan="2" class="text-white">{{ $categoryMap[$categoryName] ?? strtoupper($categoryName) }}</th></tr>
                             @foreach($items as $item)
                                  @php 
                                     $code = $item->code; 
@@ -246,7 +246,7 @@
                                      $displayLabel = str_replace(['FRONT: ', 'REAR: ', 'RIGHT: ', 'LEFT: ', 'TOP: '], '', $item->label);
                                   @endphp
                                  <tr>
-                                    <td class="ps-3">{{ $displayLabel }}</td>
+                                    <td class="ps-3 text-white">{{ $displayLabel }}</td>
                                     <td class="text-center">
                                         @include('admin.reports.partials.badge', ['status' => $val ?: '-'])
                                     </td>

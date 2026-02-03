@@ -3,7 +3,7 @@
 @elseif($status === 'damaged' || $status === '✗' || $status === 'open')
     <span class="badge bg-danger">DAMAGED</span>
 @elseif($status === 'missing' || $status === '?')
-    <span class="badge bg-warning text-dark">MISSING</span>
+    <span class="badge bg-warning text-white">MISSING</span>
 @else
     <span class="badge bg-secondary">{{ strtoupper($status ?? 'N/A') }}</span>
 @endif
