@@ -113,6 +113,36 @@
         border-color: var(--dark-border) !important;
         color: white !important;
     }
+
+    /* Telemetry & Activity Additions */
+    .telemetry-label { font-size: 0.7rem; text-transform: uppercase; color: var(--dark-text-muted); font-weight: bold; }
+    .telemetry-value { font-size: 1.2rem; font-weight: bold; color: var(--dark-text-main); }
+    
+    .activity-scroll::-webkit-scrollbar { width: 4px; }
+    .activity-scroll::-webkit-scrollbar-track { background: transparent; }
+    .activity-scroll::-webkit-scrollbar-thumb { background: var(--dark-border); border-radius: 10px; }
+    
+    .event-item { position: relative; transition: background 0.2s; padding: 12px; border-radius: 8px; margin-bottom: 8px; }
+    .event-item:hover { background: rgba(255,255,255,0.03); }
+    .event-item::before {
+        content: '';
+        position: absolute;
+        left: 0; top: 8px; bottom: 8px;
+        width: 3px;
+        background: var(--neon-blue);
+        border-radius: 0 4px 4px 0;
+        opacity: 0;
+        transition: opacity 0.2s;
+    }
+    .event-item:hover::before { opacity: 1; }
+    
+    .status-dot {
+        width: 10px; height: 10px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 8px;
+        box-shadow: 0 0 10px currentColor;
+    }
 </style>
 
 <div class="dashboard-dark-view">
@@ -281,21 +311,104 @@
     </div>
     @endif
 
-    {{-- 4. MODULE SHORTCUTS --}}
-    <div class="row mb-5">
-        <div class="col-12">
-            <div class="glass-card p-4 d-flex align-items-center justify-content-between flex-wrap gap-3">
-                <h5 class="fw-bold mb-0">Quick Access</h5>
-                <div class="d-flex gap-3">
-                    <a href="{{ route('admin.dashboard.maintenance') }}" class="btn btn-outline-light border-secondary text-muted">
-                        <i class="bi bi-tools me-2 text-warning"></i> Maintenance Stats
-                    </a>
-                    <a href="{{ route('admin.dashboard.vacuum') }}" class="btn btn-outline-light border-secondary text-muted">
-                        <i class="bi bi-speedometer2 me-2 text-info"></i> Vacuum Logs
-                    </a>
-                    <a href="{{ route('admin.isotanks.index') }}" class="btn btn-outline-light border-secondary text-muted">
-                        <i class="bi bi-search me-2 text-primary"></i> Search Fleet
-                    </a>
+    {{-- 4. SYSTEM HEALTH & LIVE ACTIVITY (SOC ROW) --}}
+    <div class="row g-4 mb-5">
+        {{-- Telemetry --}}
+        <div class="col-xl-4 col-md-12">
+            <div class="glass-card p-4 h-100">
+                <h5 class="fw-bold mb-4 d-flex align-items-center">
+                    <i class="bi bi-cpu me-2 text-primary"></i>Server Telemetry
+                </h5>
+                
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between telemetry-label mb-1">
+                        <span>CPU Load</span>
+                        <span>{{ $serverMetrics['cpu'] }}%</span>
+                    </div>
+                    <div class="progress" style="height: 6px;">
+                        <div class="progress-bar bg-primary neon-bar" style="width: {{ $serverMetrics['cpu'] }}%"></div>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between telemetry-label mb-1">
+                        <span>RAM Utilization</span>
+                        <span>{{ $serverMetrics['ram'] }}%</span>
+                    </div>
+                    <div class="progress" style="height: 6px;">
+                        <div class="progress-bar bg-success neon-bar" style="width: {{ $serverMetrics['ram'] }}%"></div>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between telemetry-label mb-1">
+                        <span>Disk Usage</span>
+                        <span>{{ $serverMetrics['disk'] }}%</span>
+                    </div>
+                    <div class="progress" style="height: 6px;">
+                        <div class="progress-bar bg-info neon-bar" style="width: {{ $serverMetrics['disk'] }}%"></div>
+                    </div>
+                </div>
+
+                <div class="mt-auto pt-2">
+                    <div class="glass-card p-3 bg-opacity-10" style="background: rgba(255,255,255,0.02); border-style: dashed;">
+                        <div class="telemetry-label mb-1">Active Personnel</div>
+                        <div class="d-flex align-items-center">
+                            <span class="status-dot text-success" style="color: #10b981;"></span>
+                            <span class="telemetry-value">{{ $activeUsersCount }}</span>
+                            <span class="ms-2 text-muted small">Sessions (Last 60m)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- Live Activity Stream --}}
+        <div class="col-xl-8 col-md-12">
+            <div class="glass-card h-100 d-flex flex-column">
+                <div class="p-4 border-bottom border-light border-opacity-10 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold"><i class="bi bi-activity me-2 text-info"></i>Global Event Stream</h5>
+                    <span class="badge rounded-pill bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-3 py-2">LIVE MONITORING</span>
+                </div>
+                <div class="flex-grow-1 overflow-auto p-3 activity-scroll" style="max-height: 400px; min-height: 400px;">
+                    @forelse($recentActivity as $log)
+                        @php
+                            $methodColor = 'text-primary';
+                            if(str_contains($log->action, 'POST')) $methodColor = 'text-success';
+                            if(str_contains($log->action, 'DELETE')) $methodColor = 'text-danger';
+                            if(str_contains($log->action, 'PUT') || str_contains($log->action, 'PATCH')) $methodColor = 'text-warning';
+                        @endphp
+                        <div class="event-item border-bottom border-light border-opacity-10">
+                            <div class="d-flex justify-content-between align-items-start gap-3">
+                                <div class="flex-grow-1">
+                                    <div class="d-flex align-items-center gap-2 mb-1">
+                                        <span class="fw-bold text-white small">{{ $log->user->name ?? 'System' }}</span>
+                                        <span class="badge bg-dark border-secondary border-opacity-25 text-muted fw-normal" style="font-size: 0.6rem;">{{ $log->user->role ?? 'N/A' }}</span>
+                                    </div>
+                                    <div class="text-white-50 small" style="letter-spacing: 0.02em;">
+                                        <span class="{{ $methodColor }} fw-bold me-1">{{ explode(' ', $log->action)[0] }}</span> 
+                                        {{ $log->description }}
+                                    </div>
+                                    <div class="mt-2 d-flex gap-3 text-muted" style="font-size: 0.65rem; opacity: 0.6;">
+                                        <span><i class="bi bi-geo-alt me-1"></i>{{ $log->ip_address }}</span>
+                                        <span><i class="bi bi-cpu me-1"></i>{{ \Illuminate\Support\Str::limit($log->user_agent, 40) }}</span>
+                                    </div>
+                                </div>
+                                <div class="text-end shrink-0">
+                                    <div class="text-muted" style="font-size: 0.7rem;">{{ $log->created_at->diffForHumans() }}</div>
+                                    <div class="text-muted mt-1" style="font-size: 0.65rem;">{{ $log->created_at->format('H:i:s') }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="p-5 text-center text-muted">
+                            <i class="bi bi-journal-x display-4 d-block mb-3 opacity-25"></i>
+                            No recent activity detected.
+                        </div>
+                    @endforelse
+                </div>
+                <div class="p-3 bg-black bg-opacity-20 text-center">
+                    <a href="#" class="text-info text-decoration-none small fw-bold">VIEW AUDIT ARCHIVE <i class="bi bi-arrow-right-short"></i></a>
                 </div>
             </div>
         </div>
