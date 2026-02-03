@@ -23,7 +23,7 @@
     <div class="card mt-4">
         <div class="card-body">
             <table id="inspectionLogTable" class="table table-hover align-middle">
-                <thead class="table-light">
+                <thead>
                     <tr>
                         <th>Date</th>
                         <th>ISO Number</th>
@@ -37,9 +37,9 @@
                     @foreach($logs as $log)
                     <tr>
                         <td>{{ $log->inspection_date }}</td>
-                        <td class="fw-bold"><a href="{{ route('admin.isotanks.show', $log->isotank_id) }}" class="text-decoration-none text-primary">{{ $log->isotank->iso_number ?? 'UNKNOWN' }}</a></td>
-                        <td class="text-dark">{{ str_replace('_', ' ', strtoupper($log->inspection_type)) }}</td>
-                        <td class="text-muted">{{ $log->inspector->name ?? '-' }}</td>
+                        <td class="fw-bold"><a href="{{ route('admin.isotanks.show', $log->isotank_id) }}" class="text-decoration-none text-info">{{ $log->isotank->iso_number ?? 'UNKNOWN' }}</a></td>
+                        <td>{{ str_replace('_', ' ', strtoupper($log->inspection_type)) }}</td>
+                        <td>{{ $log->inspector->name ?? '-' }}</td>
                         <td><span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle">LOGGED</span></td>
                         <td class="text-end">
                             <div class="btn-group btn-group-sm">
@@ -58,7 +58,7 @@
                     </tr>
                     @endforeach
                 </tbody>
-                <tfoot class="table-light">
+                <tfoot>
                     <tr>
                         <th>Date</th>
                         <th>ISO Number</th>

@@ -23,7 +23,7 @@
     <div class="card-body">
         <div class="table-responsive">
             <table id="latestConditionTable" class="table table-bordered table-sm align-middle text-nowrap" style="font-size: 0.75rem;">
-                <thead class="text-white text-center" style="background-color: #2B4C7E;">
+                <thead class="text-white text-center">
                     <tr>
                         <th rowspan="2" class="align-middle bg-secondary bg-opacity-75" style="width: 120px;">ISO NUMBER</th>
                         <th rowspan="2" class="align-middle bg-secondary bg-opacity-75" style="width: 100px;">UPDATED AT</th>
@@ -126,8 +126,8 @@
                              : [];
                     @endphp
                     <tr class="text-center">
-                        <td class="fw-bold text-start bg-light sticky-col">
-                            <a href="{{ route('admin.isotanks.show', $log->isotank->id) }}" class="text-decoration-none text-dark" target="_blank">
+                        <td class="fw-bold text-start sticky-col">
+                            <a href="{{ route('admin.isotanks.show', $log->isotank->id) }}" class="text-decoration-none text-info" target="_blank">
                                 {{ $log->isotank->iso_number }} <i class="bi bi-box-arrow-up-right small text-muted"></i>
                             </a>
                         </td>
@@ -326,11 +326,9 @@ $(document).ready(function() {
 @endpush
 
 <style>
-    .table-bordered th, .table-bordered td { border: 1px solid #dee2e6 !important; }
     th { font-size: 0.65rem; text-transform: uppercase; }
     .dataTables_wrapper .dataTables_filter { text-align: left; }
     .vertical-headers th { height: 140px; vertical-align: bottom; padding-bottom: 15px !important; position: relative; }
     .vertical-headers th div { writing-mode: vertical-rl; transform: rotate(180deg); white-space: nowrap; margin: 0 auto; width: 100%; text-align: left; }
-    .sticky-col { position: sticky; left: 0; z-index: 10; background-color: #f8f9fa !important; border-right: 2px solid #dee2e6 !important; }
 </style>
 @endsection

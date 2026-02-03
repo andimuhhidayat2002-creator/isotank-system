@@ -250,17 +250,77 @@ body {
     color: var(--dark-text-muted) !important;
 }
 
+.text-dark {
+    color: var(--dark-text-main) !important;
+}
+
 .bg-light {
-    background-color: rgba(255, 255, 255, 0.02) !important;
+    background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+.bg-white {
+    background-color: var(--dark-card) !important;
 }
 
 .border {
     border-color: var(--dark-border) !important;
 }
 
+.border-light {
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
 hr {
     border-color: var(--dark-border);
-    opacity: 0.5;
+    opacity: 0.3;
+}
+
+/* Force Light Text Globally for common elements */
+p,
+span,
+label,
+td,
+th,
+li,
+div {
+    color: inherit;
+}
+
+.card-body,
+.modal-body {
+    color: var(--dark-text-main);
+}
+
+/* Specific Table Fixes */
+.table td,
+.table th {
+    color: var(--dark-text-main);
+}
+
+.table-bordered th,
+.table-bordered td {
+    border-color: var(--dark-border) !important;
+}
+
+/* Sticky Column Support (for Condition Master) */
+.sticky-col {
+    background-color: var(--dark-card) !important;
+    border-right: 2px solid var(--dark-border) !important;
+}
+
+/* Dropdown visibility */
+.dropdown-menu {
+    background-color: var(--dark-card);
+    border: 1px solid var(--dark-border);
+}
+
+.dropdown-item {
+    color: var(--dark-text-main);
+}
+
+.dropdown-item:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: white;
 }
 
 /* SweetAlert2 Dark Mode */
@@ -364,6 +424,126 @@ h5,
 h6 {
     color: white;
     letter-spacing: -0.5px;
+}
+
+/* Navigation Tabs Fixes */
+.nav-tabs {
+    border-bottom: 1px solid var(--dark-border) !important;
+}
+
+.nav-link {
+    color: var(--dark-text-muted) !important;
+    transition: all 0.2s ease;
+}
+
+.nav-link:hover {
+    color: white !important;
+}
+
+.nav-tabs .nav-link.active {
+    background-color: var(--dark-bg) !important;
+    border-color: var(--dark-border) !important;
+    border-bottom-color: var(--dark-bg) !important;
+    color: var(--neon-blue) !important;
+    font-weight: 600;
+}
+
+.nav-pills .nav-link.active {
+    background-color: var(--neon-blue) !important;
+    color: white !important;
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+}
+
+/* Alert Component Overrides */
+.alert {
+    background-color: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--dark-border);
+    color: var(--dark-text-main);
+}
+
+.alert-danger {
+    background-color: rgba(239, 68, 68, 0.05) !important;
+    border-color: rgba(239, 68, 68, 0.2) !important;
+    color: #f87171 !important;
+}
+
+.alert-warning {
+    background-color: rgba(245, 158, 11, 0.05) !important;
+    border-color: rgba(245, 158, 11, 0.2) !important;
+    color: #fbbf24 !important;
+}
+
+.alert-success {
+    background-color: rgba(16, 185, 129, 0.05) !important;
+    border-color: rgba(16, 185, 129, 0.2) !important;
+    color: #34d399 !important;
+}
+
+.alert-info {
+    background-color: rgba(6, 182, 212, 0.05) !important;
+    border-color: rgba(6, 182, 212, 0.2) !important;
+    color: #22d3ee !important;
+}
+
+/* Badges */
+.badge {
+    font-weight: 500;
+    letter-spacing: 0.02em;
+}
+
+.bg-primary {
+    background-color: var(--neon-blue) !important;
+}
+
+.bg-success {
+    background-color: var(--neon-green) !important;
+}
+
+.bg-warning {
+    background-color: var(--neon-orange) !important;
+}
+
+.bg-danger {
+    background-color: var(--neon-red) !important;
+}
+
+.bg-info {
+    background-color: var(--neon-cyan) !important;
+}
+
+.bg-secondary {
+    background-color: #334155 !important;
+}
+
+/* List Groups */
+.list-group-item {
+    background-color: transparent !important;
+    border-color: var(--dark-border) !important;
+    color: var(--dark-text-main) !important;
+}
+
+/* Custom Scrollbars for all elements */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--dark-border) transparent;
+}
+
+*::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+*::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+    background-color: var(--dark-border);
+    border-radius: 20px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+    background-color: #3d4452;
 }
 
 /* Scrollbars */

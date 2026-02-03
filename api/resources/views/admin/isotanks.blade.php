@@ -55,8 +55,8 @@
                     @foreach($isotanks as $iso)
                     <tr>
                         <td><input type="checkbox" class="form-check-input iso-checkbox" value="{{ $iso->id }}"></td>
-                        <td class="fw-bold"><a href="{{ route('admin.isotanks.show', $iso->id) }}" class="text-decoration-none text-primary">{{ $iso->iso_number }}</a></td>
-                        <td><span class="badge bg-info text-dark">{{ $iso->tank_category ?? 'T75' }}</span></td> <!-- Added -->
+                        <td class="fw-bold"><a href="{{ route('admin.isotanks.show', $iso->id) }}" class="text-decoration-none text-info">{{ $iso->iso_number }}</a></td>
+                        <td><span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25">{{ $iso->tank_category ?? 'T75' }}</span></td> <!-- Added -->
                         <td class="text-muted">{{ $iso->owner ?? '-' }}</td>
                         <td>
                             <div class="fw-bold text-white">{{ $iso->manufacturer ?? '-' }}</div>
@@ -73,8 +73,8 @@
                                 // Industrial Palette Logic
                                 if($iso->filling_status_code === 'filled') $fillingClass = 'bg-primary'; // Blue
                                 elseif(in_array($iso->filling_status_code, ['ready_to_fill'])) $fillingClass = 'bg-success'; // Green
-                                elseif(in_array($iso->filling_status_code, ['under_maintenance', 'class_survey'])) $fillingClass = 'bg-warning text-dark'; // Orange/Yellow
-                                elseif($iso->filling_status_code === 'ongoing_inspection') $fillingClass = 'bg-info text-dark';
+                                elseif(in_array($iso->filling_status_code, ['under_maintenance', 'class_survey'])) $fillingClass = 'bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25'; // Orange/Yellow
+                                elseif($iso->filling_status_code === 'ongoing_inspection') $fillingClass = 'bg-info bg-opacity-10 text-info border border-info border-opacity-25';
                             @endphp
                             <span class="badge {{ $fillingClass }} fw-normal px-2 py-1">{{ $fillingText }}</span>
                         </td>

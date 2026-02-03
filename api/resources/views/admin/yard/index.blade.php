@@ -710,10 +710,10 @@
             if (slot.bg_color) {
                slotEl.style.backgroundColor = slot.bg_color;
                // Check contrast if needed, but for now simple
-               slotEl.style.border = '1px solid rgba(0,0,0,0.1)';
+               slotEl.style.border = '1px solid rgba(255,255,255,0.1)';
             } else {
-               slotEl.style.backgroundColor = '#f1f5f9'; // Default slot bg
-               slotEl.style.border = '1px solid #cbd5e1';
+               slotEl.style.backgroundColor = 'rgba(255, 255, 255, 0.05)'; // Default dark slot bg
+               slotEl.style.border = '1px solid var(--dark-border)';
             }
             
             // Find if occupied
@@ -729,12 +729,12 @@
             } else {
                 // Determine text color based on BG brightness? simplified:
                 // If BG exists, maybe white or black text? Defaulting to standard logic.
-                const textColor = slot.bg_color ? 'rgba(0,0,0,0.6)' : '#64748b';
+                const textColor = slot.bg_color ? 'rgba(255,255,255,0.7)' : 'var(--dark-text-muted)';
                 
                 // Show Area Label + Raw coords if empty
                 slotEl.innerHTML = `<div style="text-align:center;line-height:1.2;">
                     <div style="font-weight:bold; color:${textColor}; font-size:10px;">${slot.area_label || ''}</div>
-                    <div style="font-size:8px; color:#94a3b8;">${slot.row_index}-${slot.col_index}</div>
+                    <div style="font-size:8px; color:var(--dark-text-muted); opacity: 0.6;">${slot.row_index}-${slot.col_index}</div>
                 </div>`;
             }
 

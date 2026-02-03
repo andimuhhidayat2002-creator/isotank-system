@@ -21,7 +21,7 @@
 <div class="row">
     <div class="col-md-4">
         <div class="card mb-4">
-            <div class="card-header bg-dark text-white">A. DATA OF TANK</div>
+            <div class="card-header border-bottom">A. DATA OF TANK</div>
             <div class="card-body">
                 <table class="table table-sm mb-0">
                     <tr><th>Inspection Type</th><td>{{ strtoupper(str_replace('_', ' ', $log->inspection_type)) }}</td></tr>
@@ -39,7 +39,7 @@
         </div>
         
         <div class="card mb-4">
-            <div class="card-header bg-dark text-white">Photos (Click to Enlarge)</div>
+            <div class="card-header border-bottom">Photos (Click to Enlarge)</div>
             <div class="card-body p-2">
                 <div class="row g-2">
                     @php
@@ -66,7 +66,7 @@
         
         @if($log->maintenance_notes)
         <div class="card mb-4 bg-warning bg-opacity-10 border-warning">
-             <div class="card-header bg-warning text-dark">Maintenance Notes</div>
+             <div class="card-header border-bottom text-warning">Maintenance Notes</div>
              <div class="card-body">
                  {{ $log->maintenance_notes }}
              </div>
@@ -76,10 +76,10 @@
 
     <div class="col-md-8">
         <div class="card mb-4">
-            <div class="card-header bg-primary text-white">Full Inspection Checklist</div>
+            <div class="card-header border-bottom">Full Inspection Checklist</div>
             <div class="card-body p-0">
                 <table class="table table-bordered table-sm mb-0">
-                    <thead class="bg-light">
+                        <thead>
                         <tr><th>Category / Item Name</th><th class="text-center" width="150">Condition/Value</th></tr>
                     </thead>
                     <tbody>
@@ -194,7 +194,7 @@
                         @endphp
                         @foreach($catSpecificItems->groupBy('category') as $categoryName => $items)
                             @if(($tankCat ?? 'T75') !== 'T75' || ($categoryName !== 'd' && $categoryName !== 'e' && $categoryName !== 'f' && $categoryName !== 'g'))
-                            <tr class="table-secondary"><th colspan="2">{{ $categoryMap[$categoryName] ?? strtoupper($categoryName) }}</th></tr>
+                            <tr class="bg-light"><th colspan="2">{{ $categoryMap[$categoryName] ?? strtoupper($categoryName) }}</th></tr>
                             @foreach($items as $item)
                                  @php 
                                     $code = $item->code; 
@@ -257,7 +257,7 @@
 
                         {{-- Unmapped items (Last) --}}
                         @if(!empty($unmapped))
-                            <tr class="table-secondary"><th colspan="2">ADDITIONAL ITEMS</th></tr>
+                            <tr class="bg-light"><th colspan="2">ADDITIONAL ITEMS</th></tr>
                             @foreach($unmapped as $k => $v)
                                 <tr>
                                     <td class="ps-3">{{ ucwords(str_replace('_', ' ', $k)) }}</td>
@@ -270,7 +270,7 @@
 
                         @if($tankCat == 'T75')
                         <!-- SECTION D: IBOX SYSTEM (Hardcoded Legacy) -->
-                        <tr class="table-secondary"><th colspan="2">D. IBOX SYSTEM</th></tr>
+                        <tr class="bg-light"><th colspan="2">D. IBOX SYSTEM</th></tr>
                         <tr><td class="ps-3">IBOX Condition</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->ibox_condition])</td></tr>
                         <tr><td class="ps-3">Battery</td><td class="text-center">{{ $log->ibox_battery_percent ? $log->ibox_battery_percent.'%' : '-' }}</td></tr>
                         <tr><td class="ps-3">Pressure (Digital)</td><td class="text-center">{{ $log->ibox_pressure ?? '-' }}</td></tr>
@@ -297,7 +297,7 @@
                         <tr><td class="ps-3">Level (Digital)</td><td class="text-center">{{ $log->ibox_level ? $log->ibox_level.' %' : '-' }}</td></tr>
 
                         <!-- SECTION E: INSTRUMENTS (Hardcoded Legacy) -->
-                        <tr class="table-secondary"><th colspan="2">E. INSTRUMENTS</th></tr>
+                        <tr class="bg-light"><th colspan="2">E. INSTRUMENTS</th></tr>
                         <tr><td class="ps-3">Pressure Gauge Condition</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->pressure_gauge_condition])</td></tr>
                         <tr><td class="ps-3 text-muted ms-3">Serial Number</td><td class="text-center">{{ $log->pressure_gauge_serial_number ?? '-' }}</td></tr>
                         <tr><td class="ps-3 text-muted ms-3">Calibration Date</td><td class="text-center">{{ $log->pressure_gauge_calibration_date ? $log->pressure_gauge_calibration_date->format('Y-m-d') : '-' }}</td></tr>
@@ -342,7 +342,7 @@
                         </tr>
 
                         <!-- SECTION F: VACUUM SYSTEM (Hardcoded Legacy) -->
-                        <tr class="table-secondary"><th colspan="2">F. VACUUM SYSTEM</th></tr>
+                        <tr class="bg-light"><th colspan="2">F. VACUUM SYSTEM</th></tr>
                         <tr><td class="ps-3">Vacuum Gauge Condition</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->vacuum_gauge_condition])</td></tr>
                         <tr><td class="ps-3">Port Suction Condition</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->vacuum_port_suction_condition ?? $logData['port_suction_condition'] ?? $logData['Port Suction Condition'] ?? $logData['vacuum_port_suction_condition'] ?? $logData['vacuum_port_suction'] ?? $logData['port_suction'] ?? $logData['Port_Suction_Condition'] ?? null])</td></tr>
                         <tr><td class="ps-3">Vacuum Value</td><td class="text-center fw-bold">{{ $log->vacuum_value ? (float)$log->vacuum_value . ' mTorr' : '-' }}</td></tr>
@@ -352,7 +352,7 @@
 
                         @if($tankCat == 'T75')
                         <!-- SECTION G: PSV (Hardcoded Legacy) -->
-                        <tr class="table-secondary"><th colspan="2">G. PSV (PRESSURE SAFETY VALVES)</th></tr>
+                        <tr class="bg-light"><th colspan="2">G. PSV (PRESSURE SAFETY VALVES)</th></tr>
                         @foreach(['psv1', 'psv2', 'psv3', 'psv4'] as $p)
                             <tr>
                                 <td class="ps-3 fw-bold">{{ strtoupper($p) }} Condition</td>
@@ -369,7 +369,7 @@
                         @endif
 
                         <!-- SIGNATURES -->
-                        <tr class="table-dark"><th colspan="2">SIGNATURES</th></tr>
+                        <tr class="bg-light"><th colspan="2">SIGNATURES</th></tr>
                         
                         <!-- Inspector Signature -->
                         <tr>
