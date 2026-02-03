@@ -83,6 +83,16 @@ class MaintenanceJob extends Model
         return $query->where('status', 'not_complete');
     }
 
+    public function scopeDeferred($query)
+    {
+        return $query->where('status', 'deferred');
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('status', '!=', 'closed');
+    }
+
     public function scopeClosed($query)
     {
         return $query->where('status', 'closed');

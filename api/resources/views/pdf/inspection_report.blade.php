@@ -319,12 +319,7 @@
                         {{-- 1. IBOX SYSTEM --}}
                             <tr><td colspan="3" class="section-title" style="background:#f9f9f9;font-weight:bold;border:1px solid #ddd;padding:2px;">D. IBOX SYSTEM</td></tr>
                             
-                            {{-- Condition --}}
-                            <tr>
-                                <td style="border:1px solid #eee;">Condition</td>
-                                <td style="border:1px solid #eee;text-align:center;">{!! badge($t75Data['ibox']['condition']) !!}</td>
-                                <td style="border:1px solid #eee;text-align:center;color:#bbb;">-</td>
-                            </tr>
+                            {{-- Condition removed to prevent duplication --}}
                              <tr><td style="border:1px solid #eee;">Battery</td><td style="border:1px solid #eee;text-align:center;">{{ $t75Data['ibox']['battery'] }}</td><td style="border:1px solid #eee;color:#bbb;text-align:center;">-</td></tr>
                              <tr><td style="border:1px solid #eee;">Pressure</td><td style="border:1px solid #eee;text-align:center;">{{ $t75Data['ibox']['pressure'] }}</td><td style="border:1px solid #eee;color:#bbb;text-align:center;">-</td></tr>
                              <tr><td style="border:1px solid #eee;">Temp #1</td><td style="border:1px solid #eee;text-align:center;">{{ $t75Data['ibox']['temp1'] }} {{ $t75Data['ibox']['temp1_time'] }}</td><td style="border:1px solid #eee;color:#bbb;text-align:center;">-</td></tr>

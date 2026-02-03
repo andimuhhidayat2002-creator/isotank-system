@@ -115,7 +115,25 @@ class MaintenanceJobController extends Controller
                 $updateData['completed_at'] = $validated['completed_at'] ?? now();
             }
 
+            $oldStatus = $job->status;
             $job->update($updateData);
+
+            // Record Activity
+            \App\Models\ActivityLog::create([
+                'user_id' => $request->user()->id,
+                'action' => 'maintenance_update',
+                'model_type' => MaintenanceJob::class,
+                'model_id' => $job->id,
+                'description' => "Updated maintenance status from {$oldStatus} to {$validated['status']} for {$job->isotank->iso_number}",
+                'details' => [
+                    'isotank' => $job->isotank->iso_number,
+                    'old_status' => $oldStatus,
+                    'new_status' => $validated['status'],
+                    'item' => $job->source_item
+                ],
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ]);
 
             DB::commit();
 

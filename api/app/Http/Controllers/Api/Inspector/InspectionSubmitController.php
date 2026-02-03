@@ -881,52 +881,58 @@ class InspectionSubmitController extends Controller
 
         foreach ($calibrationItems as $item => $fields) {
             $serialKey = $fields['serial'];
-            $hasSerial = isset($validated[$serialKey]);
+            $dateKey = $fields['date'];
+            $validKey = $fields['valid'];
+            $statusKey = $fields['status'] ?? null;
             
-            \Log::info("Checking calibration item: {$item}", [
-                'serial_key' => $serialKey,
-                'has_serial' => $hasSerial,
-                'serial_value' => $validated[$serialKey] ?? 'NOT SET',
-                'date_value' => $validated[$fields['date']] ?? 'NOT SET',
-            ]);
+            $serVal = $validated[$serialKey] ?? null;
+            $dateVal = $validated[$dateKey] ?? null;
+            $validVal = $validated[$validKey] ?? null;
+            $statusVal = ($statusKey && isset($validated[$statusKey])) ? $validated[$statusKey] : 'valid';
 
-            if ($hasSerial && !empty($validated[$serialKey])) {
+            if (!empty($serVal) || !empty($dateVal) || !empty($validVal)) {
                 $updateData = [
-                    'serial_number' => $validated[$serialKey],
-                    'calibration_date' => $validated[$fields['date']] ?? null,
-                    'valid_until' => $validated[$fields['valid']] ?? null,
-                    'status' => $validated[$fields['status'] ?? ''] ?? 'valid',
+                    'serial_number' => $serVal,
+                    'calibration_date' => $dateVal,
+                    'valid_until' => $validVal,
+                    'status' => $statusVal,
                 ];
 
-                \Log::info("Updating master calibration for {$item}", $updateData);
-
+                // 1. Sync to MasterIsotankCalibrationStatus (Legacy/Global View)
                 \App\Models\MasterIsotankCalibrationStatus::updateOrCreate(
-                    [
-                        'isotank_id' => $isotankId,
-                        'item_name' => $item,
-                    ],
-                    $updateData
+                    ['isotank_id' => $isotankId, 'item_name' => $item],
+                    array_filter($updateData, fn($v) => !is_null($v))
                 );
 
-                \Log::info("Successfully updated master calibration for {$item}");
+                // 2. Sync to MasterIsotankComponent (Source of Truth for Dashboard)
+                $compType = ($item === 'pressure_gauge') ? 'PG' : 'PSV';
+                $posCode = match($item) {
+                    'pressure_gauge' => 'PG-01',
+                    'psv1' => 'PSV-01', 'psv2' => 'PSV-02', 'psv3' => 'PSV-03', 'psv4' => 'PSV-04',
+                    default => strtoupper($item)
+                };
 
-                // CRITICAL: Trigger calibration activity if rejected
-                if (($validated[$fields['status'] ?? ''] ?? 'valid') === 'rejected') {
-                    \App\Models\CalibrationLog::create([
-                        'isotank_id' => $isotankId,
-                        'item_name' => $item,
-                        'description' => "Triggered by inspection rejection of serial " . $validated[$serialKey],
-                        'status' => 'planned',
-                        'created_by' => auth()->id(),
-                    ]);
-                    
-                    \Log::info("Created calibration log for rejected {$item}");
+                \App\Models\MasterIsotankComponent::updateOrCreate(
+                    ['isotank_id' => $isotankId, 'component_type' => $compType, 'position_code' => $posCode],
+                    array_filter([
+                        'serial_number' => $serVal,
+                        'last_calibration_date' => $dateVal,
+                        'expiry_date' => $validVal,
+                        'is_active' => true
+                    ], fn($v) => !is_null($v))
+                );
+
+                \Log::info("Synced calibration for {$item}", ['isotank' => $isotankId, 'serial' => $serVal]);
+                
+                // Trigger calibration log if rejected
+                if ($statusVal === 'rejected' && !empty($serVal)) {
+                    \App\Models\CalibrationLog::firstOrCreate(
+                        ['isotank_id' => $isotankId, 'item_name' => $item, 'status' => 'planned'],
+                        ['description' => "Rejected during inspection (SN: $serVal)", 'created_by' => auth()->id()]
+                    );
                 }
-            } else {
-                \Log::info("Skipping {$item} - no serial number provided");
             }
         }
-
         \Log::info("=== END UPDATE MASTER CALIBRATION STATUS ===");
     }
 
