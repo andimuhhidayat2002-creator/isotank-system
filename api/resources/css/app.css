@@ -147,7 +147,30 @@ body {
 
 /* Table Styling */
 .table {
+    --bs-table-bg: transparent;
+    --bs-table-color: var(--dark-text-main);
     color: var(--dark-text-main) !important;
+}
+
+.table> :not(caption)>*>* {
+    background-color: transparent;
+    color: var(--dark-text-main) !important;
+    border-bottom-color: var(--dark-border);
+}
+
+.table td,
+.table th {
+    color: var(--dark-text-main) !important;
+}
+
+.table-striped>tbody>tr:nth-of-type(odd)>* {
+    color: var(--dark-text-main);
+    box-shadow: inset 0 0 0 9999px rgba(255, 255, 255, 0.02);
+}
+
+.table-hover>tbody>tr:hover>* {
+    color: white !important;
+    box-shadow: inset 0 0 0 9999px rgba(255, 255, 255, 0.05);
 }
 
 .table thead th {
