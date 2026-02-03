@@ -18,7 +18,7 @@
     </div>
 </div>
 
-<div class="row">
+<div class="row align-items-start">
     <div class="col-md-4">
         <div class="card mb-4 bg-dark text-white border-secondary">
             <div class="card-header border-bottom">A. DATA OF TANK</div>

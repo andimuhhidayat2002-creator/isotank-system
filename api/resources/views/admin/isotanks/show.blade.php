@@ -35,7 +35,7 @@
     </div>
 @endif
 
-<div class="row">
+<div class="row align-items-start">
     <!-- LEFT: Overview Card -->
     <div class="col-md-4">
         <div class="card shadow-sm mb-4 bg-dark text-white border-secondary">
@@ -346,7 +346,6 @@
                                 <a href="{{ route('admin.reports.inspection.show', \App\Models\InspectionLog::where('isotank_id', $isotank->id)->latest()->first()->id ?? 0) }}" class="btn btn-primary btn-sm">View Full Last Report</a>
                             </div>
                         </div>
-                    </div>
                  @else
                     <div class="alert alert-warning">No detailed inspection data available yet.</div>
                  @endif
