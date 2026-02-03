@@ -232,16 +232,25 @@ class InspectionSubmitController extends Controller
             $request->merge(['inspection_date' => now()->toDateString()]); // YYYY-MM-DD format
         }
 
-        // FIX: Handle vacuum_check_datetime format from Flutter (ISO8601) and empty strings
-        if ($request->has('vacuum_check_datetime')) {
-            $val = $request->vacuum_check_datetime;
-            if (empty($val) || $val === 'null' || $val === 'Select Date') {
-                $request->merge(['vacuum_check_datetime' => null]);
-            } elseif (str_contains($val, 'T')) {
-                try {
-                    $formattedDate = date('Y-m-d H:i:s', strtotime($val));
-                    $request->merge(['vacuum_check_datetime' => $formattedDate]);
-                } catch (\Exception $e) {}
+        // FIX: Handle timestamps from Flutter (ISO8601) and empty strings
+        $timestampFields = [
+            'pressure_1_timestamp', 'pressure_2_timestamp',
+            'level_1_timestamp', 'level_2_timestamp',
+            'ibox_temperature_1_timestamp', 'ibox_temperature_2_timestamp',
+            'vacuum_check_datetime'
+        ];
+
+        foreach ($timestampFields as $field) {
+            if ($request->has($field)) {
+                $val = $request->input($field);
+                if (empty($val) || $val === 'null' || $val === 'Select Date') {
+                    $request->merge([$field => null]);
+                } elseif (str_contains($val, 'T')) {
+                    try {
+                        $formattedDate = date('Y-m-d H:i:s', strtotime($val));
+                        $request->merge([$field => $formattedDate]);
+                    } catch (\Exception $e) {}
+                }
             }
         }
 
