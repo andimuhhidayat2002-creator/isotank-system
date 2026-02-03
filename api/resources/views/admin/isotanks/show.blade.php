@@ -117,9 +117,9 @@
                                         <li class="list-group-item bg-dark bg-opacity-50 border-secondary d-flex justify-content-between"><span class="text-white">Level</span> <strong class="text-white">{{ $log->level_1 ? (float)$log->level_1 : '-' }}</strong></li>
                                     </ul>
                                 </div> <!-- Close col-6 -->
-                            </div> <!-- Close row -->
+                            </div> <!-- Close internal row -->
                             <div class="mt-4">
-                                <h5 class="text-white">Items Condition</h5>
+                                <h5 class="text-white border-bottom border-secondary pb-2">Items Condition</h5>
                                 <div class="table-responsive">
                                     <table class="table table-sm table-bordered">
                         <thead>
@@ -224,7 +224,7 @@
 
                                              @foreach($grouped as $categoryName => $items)
                                                 @if(($tankCat ?? 'T75') !== 'T75' || !in_array($categoryName, ['d', 'e', 'f', 'g']))
-                                                    <tr class="bg-dark bg-opacity-50"><th colspan="2" class="text-white ps-3">{{ $categoryMap[$categoryName] ?? strtoupper($categoryName) }}</th></tr>
+                                                    <tr class="table-secondary"><th colspan="2" class="text-white">{{ $categoryMap[$categoryName] ?? strtoupper($categoryName) }}</th></tr>
                                                     @foreach($items as $item)
                                                         @php 
                                                             $code = $item->code; 
@@ -289,7 +289,7 @@
 
                                             {{-- Unmapped items (Last) --}}
                                             @if(!empty($unmapped))
-                                                <tr class="bg-dark bg-opacity-50"><th colspan="2" class="text-white ps-3">ADDITIONAL ITEMS</th></tr>
+                                                <tr class="table-secondary"><th colspan="2" class="text-white">ADDITIONAL ITEMS</th></tr>
                                                 @foreach($unmapped as $k => $v)
                                                     <tr>
                                                         <td class="ps-3">{{ ucwords(str_replace('_', ' ', $k)) }}</td>
@@ -300,7 +300,7 @@
 
                                             @if($tankCat == 'T75')
                                             <!-- SECTION D: IBOX -->
-                                            <tr class="bg-dark bg-opacity-50"><th colspan="2" class="text-white ps-3">D. IBOX SYSTEM</th></tr>
+                                            <tr class="table-secondary"><th colspan="2" class="text-white">D. IBOX SYSTEM</th></tr>
                                             <tr><td class="ps-3">IBOX Condition</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->ibox_condition])</td></tr>
                                             <tr><td class="ps-3">Pressure (Digital)</td><td class="text-center">{{ $log->ibox_pressure ?? '-' }}</td></tr>
                                             <tr><td class="ps-3">Temperature</td><td class="text-center">{{ $log->ibox_temperature ?? '-' }}</td></tr>

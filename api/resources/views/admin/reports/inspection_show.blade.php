@@ -194,7 +194,7 @@
                         @endphp
                         @foreach($catSpecificItems->groupBy('category') as $categoryName => $items)
                             @if(($tankCat ?? 'T75') !== 'T75' || ($categoryName !== 'd' && $categoryName !== 'e' && $categoryName !== 'f' && $categoryName !== 'g'))
-                            <tr class="bg-dark bg-opacity-50"><th colspan="2" class="text-white ps-3">{{ $categoryMap[$categoryName] ?? strtoupper($categoryName) }}</th></tr>
+                            <tr class="table-secondary"><th colspan="2" class="text-white">{{ $categoryMap[$categoryName] ?? strtoupper($categoryName) }}</th></tr>
                             @foreach($items as $item)
                                  @php 
                                     $code = $item->code; 
@@ -257,7 +257,7 @@
 
                         {{-- Unmapped items (Last) --}}
                         @if(!empty($unmapped))
-                            <tr class="bg-dark bg-opacity-50"><th colspan="2" class="text-white ps-3">ADDITIONAL ITEMS</th></tr>
+                            <tr class="table-secondary"><th colspan="2" class="text-white">ADDITIONAL ITEMS</th></tr>
                             @foreach($unmapped as $k => $v)
                                 <tr>
                                     <td class="ps-3 text-white">{{ ucwords(str_replace('_', ' ', $k)) }}</td>
@@ -270,7 +270,7 @@
 
                         @if($tankCat == 'T75')
                         <!-- SECTION D: IBOX SYSTEM (Hardcoded Legacy) -->
-                        <tr class="bg-dark bg-opacity-50"><th colspan="2" class="text-white ps-3">D. IBOX SYSTEM</th></tr>
+                        <tr class="table-secondary"><th colspan="2" class="text-white">D. IBOX SYSTEM</th></tr>
                         <tr><td class="ps-3 text-white">IBOX Condition</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->ibox_condition])</td></tr>
                         <tr><td class="ps-3 text-white">Battery</td><td class="text-center text-white">{{ $log->ibox_battery_percent ? $log->ibox_battery_percent.'%' : '-' }}</td></tr>
                         <tr><td class="ps-3 text-white">Pressure (Digital)</td><td class="text-center text-white">{{ $log->ibox_pressure ?? '-' }}</td></tr>
@@ -297,7 +297,7 @@
                         <tr><td class="ps-3 text-white">Level (Digital)</td><td class="text-center text-white">{{ $log->ibox_level ? $log->ibox_level.' %' : '-' }}</td></tr>
 
                         <!-- SECTION E: INSTRUMENTS (Hardcoded Legacy) -->
-                        <tr class="bg-dark bg-opacity-50"><th colspan="2" class="text-white ps-3">E. INSTRUMENTS</th></tr>
+                        <tr class="table-secondary"><th colspan="2" class="text-white">E. INSTRUMENTS</th></tr>
                         <tr><td class="ps-3 text-white">Pressure Gauge Condition</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->pressure_gauge_condition])</td></tr>
                         <tr><td class="ps-3 text-white ms-3">Serial Number</td><td class="text-center text-white">{{ $log->pressure_gauge_serial_number ?? '-' }}</td></tr>
                         <tr><td class="ps-3 text-white ms-3">Calibration Date</td><td class="text-center text-white">{{ $log->pressure_gauge_calibration_date ? $log->pressure_gauge_calibration_date->format('Y-m-d') : '-' }}</td></tr>

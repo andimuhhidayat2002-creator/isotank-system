@@ -158,13 +158,14 @@ body {
     border-bottom-color: var(--dark-border);
 }
 
-table.table th,
-table.table td,
+/* Standard Table Overrides */
 .table th,
 .table td {
-    background-color: transparent !important;
-    background-image: none !important;
-    color: var(--dark-text-main) !important;
+    border-bottom: 1px solid var(--dark-border);
+}
+
+.bg-dark.bg-opacity-50 {
+    background-color: rgba(0, 0, 0, 0.4) !important;
 }
 
 .table-striped>tbody>tr:nth-of-type(odd)>* {
@@ -635,7 +636,7 @@ h6 {
 .table-secondary,
 .table-secondary th,
 .table-secondary td {
-    background-color: rgba(255, 255, 255, 0.05) !important;
+    background-color: rgba(255, 255, 255, 0.1) !important;
     color: white !important;
 }
 
