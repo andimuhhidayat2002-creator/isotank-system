@@ -4,7 +4,7 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <h2 class="mb-0">Isotank Details</h2>
-        <span class="text-muted">{{ $isotank->iso_number }}</span>
+        <span class="text-white">{{ $isotank->iso_number }}</span>
     </div>
     <a href="{{ route('admin.isotanks.index') }}" class="btn btn-secondary">Back to List</a>
 </div>
@@ -42,18 +42,18 @@
             <div class="card-header">Overview</div>
             <div class="card-body">
                 <table class="table table-sm">
-                    <tr><th>ISO Number</th><td class="fw-bold">{{ $isotank->iso_number }}</td></tr>
-                    <tr><th>Owner</th><td>{{ $isotank->owner ?? '-' }}</td></tr>
-                    <tr><th>Location</th><td>{{ $isotank->location ?? '-' }}</td></tr>
-                    <tr><th>Product</th><td>{{ $isotank->product ?? '-' }}</td></tr>
-                    <tr><th>Filling Status</th>
+                    <tr><th class="text-white">ISO Number</th><td class="fw-bold text-white">{{ $isotank->iso_number }}</td></tr>
+                    <tr><th class="text-white">Owner</th><td class="text-white">{{ $isotank->owner ?? '-' }}</td></tr>
+                    <tr><th class="text-white">Location</th><td class="text-white">{{ $isotank->location ?? '-' }}</td></tr>
+                    <tr><th class="text-white">Product</th><td class="text-white">{{ $isotank->product ?? '-' }}</td></tr>
+                    <tr><th class="text-white">Filling Status</th>
                         <td>
-                            <span class="badge {{ $isotank->filling_status_code=='filled'?'bg-success':'bg-secondary' }}">
+                            <span class="badge {{ $isotank->filling_status_code=='filled'?'bg-success':'bg-secondary' }} text-white">
                                 {{ $isotank->filling_status_desc ?? $isotank->filling_status_code ?? 'Empty' }}
                             </span>
                         </td>
                     </tr>
-                    <tr><th>Status</th><td>{{ ucfirst($isotank->status) }}</td></tr>
+                    <tr><th class="text-white">Status</th><td class="text-white">{{ ucfirst($isotank->status) }}</td></tr>
                 </table>
             </div>
         </div>
@@ -62,12 +62,12 @@
             <div class="card-header">Technical Specs</div>
             <div class="card-body">
                 <table class="table table-sm">
-                    <tr><th>Manufacturer</th><td>{{ $isotank->manufacturer ?? '-' }}</td></tr>
-                    <tr><th>Serial No</th><td>{{ $isotank->manufacturer_serial_number ?? '-' }}</td></tr>
-                    <tr><th>Model Type</th><td>{{ $isotank->model_type ?? '-' }}</td></tr>
-                    <tr><th>Capacity</th><td>{{ $isotank->capacity ? $isotank->capacity.' L' : '-' }}</td></tr>
-                    <tr><th>Tare Weight</th><td>{{ $isotank->tare_weight ? $isotank->tare_weight.' Kg' : '-' }}</td></tr>
-                    <tr><th>Max Gross</th><td>{{ $isotank->max_gross_weight ? $isotank->max_gross_weight.' Kg' : '-' }}</td></tr>
+                    <tr><th class="text-white">Manufacturer</th><td class="text-white">{{ $isotank->manufacturer ?? '-' }}</td></tr>
+                    <tr><th class="text-white">Serial No</th><td class="text-white">{{ $isotank->manufacturer_serial_number ?? '-' }}</td></tr>
+                    <tr><th class="text-white">Model Type</th><td class="text-white">{{ $isotank->model_type ?? '-' }}</td></tr>
+                    <tr><th class="text-white">Capacity</th><td class="text-white">{{ $isotank->capacity ? $isotank->capacity.' L' : '-' }}</td></tr>
+                    <tr><th class="text-white">Tare Weight</th><td class="text-white">{{ $isotank->tare_weight ? $isotank->tare_weight.' Kg' : '-' }}</td></tr>
+                    <tr><th class="text-white">Max Gross</th><td class="text-white">{{ $isotank->max_gross_weight ? $isotank->max_gross_weight.' Kg' : '-' }}</td></tr>
                 </table>
             </div>
         </div>
@@ -76,11 +76,11 @@
              <div class="card-header">Certificates & Dates</div>
              <div class="card-body">
                 <table class="table table-sm">
-                    <tr><th>Init Pressure Test</th><td>{{ $isotank->initial_pressure_test_date ? $isotank->initial_pressure_test_date->format('d/m/Y') : '-' }}</td></tr>
-                    <tr><th>CSC Init Test</th><td>{{ $isotank->csc_initial_test_date ? $isotank->csc_initial_test_date->format('d/m/Y') : '-' }}</td></tr>
+                    <tr><th class="text-white">Init Pressure Test</th><td class="text-white">{{ $isotank->initial_pressure_test_date ? $isotank->initial_pressure_test_date->format('d/m/Y') : '-' }}</td></tr>
+                    <tr><th class="text-white">CSC Init Test</th><td class="text-white">{{ $isotank->csc_initial_test_date ? $isotank->csc_initial_test_date->format('d/m/Y') : '-' }}</td></tr>
                      <tr><td colspan="2"><hr class="my-1"></td></tr>
-                    <tr><th>Class Expiry</th><td class="fw-bold {{ $isotank->class_survey_expiry_date && $isotank->class_survey_expiry_date->isPast() ? 'text-danger' : '' }}">{{ $isotank->class_survey_expiry_date ? $isotank->class_survey_expiry_date->format('d/m/Y') : '-' }}</td></tr>
-                    <tr><th>CSC Expiry</th><td class="fw-bold {{ $isotank->csc_survey_expiry_date && $isotank->csc_survey_expiry_date->isPast() ? 'text-danger' : '' }}">{{ $isotank->csc_survey_expiry_date ? $isotank->csc_survey_expiry_date->format('d/m/Y') : '-' }}</td></tr>
+                    <tr><th class="text-white">Class Expiry</th><td class="fw-bold {{ $isotank->class_survey_expiry_date && $isotank->class_survey_expiry_date->isPast() ? 'text-danger' : 'text-white' }}">{{ $isotank->class_survey_expiry_date ? $isotank->class_survey_expiry_date->format('d/m/Y') : '-' }}</td></tr>
+                    <tr><th class="text-white">CSC Expiry</th><td class="fw-bold {{ $isotank->csc_survey_expiry_date && $isotank->csc_survey_expiry_date->isPast() ? 'text-danger' : 'text-white' }}">{{ $isotank->csc_survey_expiry_date ? $isotank->csc_survey_expiry_date->format('d/m/Y') : '-' }}</td></tr>
                 </table>
              </div>
         </div>

@@ -257,10 +257,10 @@
 
                         {{-- Unmapped items (Last) --}}
                         @if(!empty($unmapped))
-                            <tr class="bg-light"><th colspan="2">ADDITIONAL ITEMS</th></tr>
+                            <tr class="bg-dark bg-opacity-50"><th colspan="2" class="text-white">ADDITIONAL ITEMS</th></tr>
                             @foreach($unmapped as $k => $v)
                                 <tr>
-                                    <td class="ps-3">{{ ucwords(str_replace('_', ' ', $k)) }}</td>
+                                    <td class="ps-3 text-white">{{ ucwords(str_replace('_', ' ', $k)) }}</td>
                                     <td class="text-center">@include('admin.reports.partials.badge', ['status' => $v])</td>
                                 </tr>
                             @endforeach
@@ -270,84 +270,84 @@
 
                         @if($tankCat == 'T75')
                         <!-- SECTION D: IBOX SYSTEM (Hardcoded Legacy) -->
-                        <tr class="bg-light"><th colspan="2">D. IBOX SYSTEM</th></tr>
-                        <tr><td class="ps-3">IBOX Condition</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->ibox_condition])</td></tr>
-                        <tr><td class="ps-3">Battery</td><td class="text-center">{{ $log->ibox_battery_percent ? $log->ibox_battery_percent.'%' : '-' }}</td></tr>
-                        <tr><td class="ps-3">Pressure (Digital)</td><td class="text-center">{{ $log->ibox_pressure ?? '-' }}</td></tr>
+                        <tr class="bg-dark bg-opacity-50"><th colspan="2" class="text-white">D. IBOX SYSTEM</th></tr>
+                        <tr><td class="ps-3 text-white">IBOX Condition</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->ibox_condition])</td></tr>
+                        <tr><td class="ps-3 text-white">Battery</td><td class="text-center text-white">{{ $log->ibox_battery_percent ? $log->ibox_battery_percent.'%' : '-' }}</td></tr>
+                        <tr><td class="ps-3 text-white">Pressure (Digital)</td><td class="text-center text-white">{{ $log->ibox_pressure ?? '-' }}</td></tr>
                         
                         <tr>
-                            <td class="ps-3">Temperature #1 (Digital)</td>
-                            <td class="text-center">
+                            <td class="ps-3 text-white">Temperature #1 (Digital)</td>
+                            <td class="text-center text-white">
                                 {{ ($log->ibox_temperature_1 ?? $log->ibox_temperature) ? ($log->ibox_temperature_1 ?? $log->ibox_temperature).' °C' : '-' }}
                                 @if($log->ibox_temperature_1_timestamp)
-                                <br><small class="text-muted">({{ $log->ibox_temperature_1_timestamp->format('H:i') }})</small>
+                                <br><small class="text-white">({{ $log->ibox_temperature_1_timestamp->format('H:i') }})</small>
                                 @endif
                             </td>
                         </tr>
                         <tr>
-                            <td class="ps-3">Temperature #2 (Digital)</td>
-                            <td class="text-center">
+                            <td class="ps-3 text-white">Temperature #2 (Digital)</td>
+                            <td class="text-center text-white">
                                 {{ $log->ibox_temperature_2 ? $log->ibox_temperature_2.' °C' : '-' }}
                                 @if($log->ibox_temperature_2_timestamp)
-                                <br><small class="text-muted">({{ $log->ibox_temperature_2_timestamp->format('H:i') }})</small>
+                                <br><small class="text-white">({{ $log->ibox_temperature_2_timestamp->format('H:i') }})</small>
                                 @endif
                             </td>
                         </tr>
 
-                        <tr><td class="ps-3">Level (Digital)</td><td class="text-center">{{ $log->ibox_level ? $log->ibox_level.' %' : '-' }}</td></tr>
+                        <tr><td class="ps-3 text-white">Level (Digital)</td><td class="text-center text-white">{{ $log->ibox_level ? $log->ibox_level.' %' : '-' }}</td></tr>
 
                         <!-- SECTION E: INSTRUMENTS (Hardcoded Legacy) -->
-                        <tr class="bg-light"><th colspan="2">E. INSTRUMENTS</th></tr>
-                        <tr><td class="ps-3">Pressure Gauge Condition</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->pressure_gauge_condition])</td></tr>
-                        <tr><td class="ps-3 text-muted ms-3">Serial Number</td><td class="text-center">{{ $log->pressure_gauge_serial_number ?? '-' }}</td></tr>
-                        <tr><td class="ps-3 text-muted ms-3">Calibration Date</td><td class="text-center">{{ $log->pressure_gauge_calibration_date ? $log->pressure_gauge_calibration_date->format('Y-m-d') : '-' }}</td></tr>
+                        <tr class="bg-dark bg-opacity-50"><th colspan="2" class="text-white">E. INSTRUMENTS</th></tr>
+                        <tr><td class="ps-3 text-white">Pressure Gauge Condition</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->pressure_gauge_condition])</td></tr>
+                        <tr><td class="ps-3 text-white ms-3">Serial Number</td><td class="text-center text-white">{{ $log->pressure_gauge_serial_number ?? '-' }}</td></tr>
+                        <tr><td class="ps-3 text-white ms-3">Calibration Date</td><td class="text-center text-white">{{ $log->pressure_gauge_calibration_date ? $log->pressure_gauge_calibration_date->format('Y-m-d') : '-' }}</td></tr>
                         
                         <tr>
-                            <td class="ps-3 text-muted ms-3">Reading (Pressure 1)</td>
-                            <td class="text-center">
+                            <td class="ps-3 text-white ms-3">Reading (Pressure 1)</td>
+                            <td class="text-center text-white">
                                 {{ $log->pressure_1 ? (float)$log->pressure_1.' MPa' : '-' }}
                                 @if($log->pressure_1_timestamp)
-                                <br><small class="text-muted">({{ $log->pressure_1_timestamp->format('H:i') }})</small>
+                                <br><small class="text-white">({{ $log->pressure_1_timestamp->format('H:i') }})</small>
                                 @endif
                             </td>
                         </tr>
                         <tr>
-                            <td class="ps-3 text-muted ms-3">Reading (Pressure 2)</td>
-                            <td class="text-center">
+                            <td class="ps-3 text-white ms-3">Reading (Pressure 2)</td>
+                            <td class="text-center text-white">
                                 {{ $log->pressure_2 ? (float)$log->pressure_2.' MPa' : '-' }}
                                 @if($log->pressure_2_timestamp)
-                                <br><small class="text-muted">({{ $log->pressure_2_timestamp->format('H:i') }})</small>
+                                <br><small class="text-white">({{ $log->pressure_2_timestamp->format('H:i') }})</small>
                                 @endif
                             </td>
                         </tr>
                         
-                        <tr><td class="ps-3">Level Gauge Condition</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->level_gauge_condition])</td></tr>
+                        <tr><td class="ps-3 text-white">Level Gauge Condition</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->level_gauge_condition])</td></tr>
                         <tr>
-                            <td class="ps-3 text-muted ms-3">Reading (Level 1)</td>
-                            <td class="text-center">
+                            <td class="ps-3 text-white ms-3">Reading (Level 1)</td>
+                            <td class="text-center text-white">
                                 {{ $log->level_1 ? (float)$log->level_1.' mmH2O' : '-' }}
                                 @if($log->level_1_timestamp)
-                                <br><small class="text-muted">({{ $log->level_1_timestamp->format('H:i') }})</small>
+                                <br><small class="text-white">({{ $log->level_1_timestamp->format('H:i') }})</small>
                                 @endif
                             </td>
                         </tr>
                         <tr>
-                            <td class="ps-3 text-muted ms-3">Reading (Level 2)</td>
-                            <td class="text-center">
+                            <td class="ps-3 text-white ms-3">Reading (Level 2)</td>
+                            <td class="text-center text-white">
                                 {{ $log->level_2 ? (float)$log->level_2.' mmH2O' : '-' }}
                                 @if($log->level_2_timestamp)
-                                <br><small class="text-muted">({{ $log->level_2_timestamp->format('H:i') }})</small>
+                                <br><small class="text-white">({{ $log->level_2_timestamp->format('H:i') }})</small>
                                 @endif
                             </td>
                         </tr>
 
                         <!-- SECTION F: VACUUM SYSTEM (Hardcoded Legacy) -->
-                        <tr class="bg-light"><th colspan="2">F. VACUUM SYSTEM</th></tr>
-                        <tr><td class="ps-3">Vacuum Gauge Condition</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->vacuum_gauge_condition])</td></tr>
-                        <tr><td class="ps-3">Port Suction Condition</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->vacuum_port_suction_condition ?? $logData['port_suction_condition'] ?? $logData['Port Suction Condition'] ?? $logData['vacuum_port_suction_condition'] ?? $logData['vacuum_port_suction'] ?? $logData['port_suction'] ?? $logData['Port_Suction_Condition'] ?? null])</td></tr>
-                        <tr><td class="ps-3">Vacuum Value</td><td class="text-center fw-bold">{{ $log->vacuum_value ? (float)$log->vacuum_value . ' mTorr' : '-' }}</td></tr>
-                        <tr><td class="ps-3">Vacuum Temperature</td><td class="text-center">{{ $log->vacuum_temperature ? $log->vacuum_temperature . ' °C' : '-' }}</td></tr>
-                        <tr><td class="ps-3">Check Datetime</td><td class="text-center">{{ $log->vacuum_check_datetime ? $log->vacuum_check_datetime->format('Y-m-d H:i') : '-' }}</td></tr>
+                        <tr class="bg-dark bg-opacity-50"><th colspan="2" class="text-white">F. VACUUM SYSTEM</th></tr>
+                        <tr><td class="ps-3 text-white">Vacuum Gauge Condition</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->vacuum_gauge_condition])</td></tr>
+                        <tr><td class="ps-3 text-white">Port Suction Condition</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->vacuum_port_suction_condition ?? $logData['port_suction_condition'] ?? $logData['Port Suction Condition'] ?? $logData['vacuum_port_suction_condition'] ?? $logData['vacuum_port_suction'] ?? $logData['port_suction'] ?? $logData['Port_Suction_Condition'] ?? null])</td></tr>
+                        <tr><td class="ps-3 text-white">Vacuum Value</td><td class="text-center fw-bold text-white">{{ $log->vacuum_value ? (float)$log->vacuum_value . ' mTorr' : '-' }}</td></tr>
+                        <tr><td class="ps-3 text-white">Vacuum Temperature</td><td class="text-center text-white">{{ $log->vacuum_temperature ? $log->vacuum_temperature . ' °C' : '-' }}</td></tr>
+                        <tr><td class="ps-3 text-white">Check Datetime</td><td class="text-center text-white">{{ $log->vacuum_check_datetime ? $log->vacuum_check_datetime->format('Y-m-d H:i') : '-' }}</td></tr>
                         @endif
 
                         @if($tankCat == 'T75')
