@@ -153,13 +153,17 @@ body {
 }
 
 .table> :not(caption)>*>* {
-    background-color: transparent;
+    background-color: transparent !important;
     color: var(--dark-text-main) !important;
     border-bottom-color: var(--dark-border);
 }
 
-.table td,
-.table th {
+table.table th,
+table.table td,
+.table th,
+.table td {
+    background-color: transparent !important;
+    background-image: none !important;
     color: var(--dark-text-main) !important;
 }
 
@@ -463,12 +467,14 @@ h6 {
     color: white !important;
 }
 
-.nav-tabs .nav-link.active {
+.nav-tabs .nav-link.active,
+.nav-tabs .nav-item.show .nav-link,
+.nav-tabs .active.nav-link {
     background-color: var(--dark-bg) !important;
     border-color: var(--dark-border) !important;
     border-bottom-color: var(--dark-bg) !important;
     color: var(--neon-blue) !important;
-    font-weight: 600;
+    font-weight: 600 !important;
 }
 
 .nav-pills .nav-link.active {
@@ -624,6 +630,17 @@ h6 {
 .bg-body {
     background-color: var(--dark-card) !important;
     color: var(--dark-text-main) !important;
+}
+
+.table-secondary,
+.table-secondary th,
+.table-secondary td {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    color: white !important;
+}
+
+.bg-dark.bg-opacity-50 {
+    background-color: rgba(0, 0, 0, 0.6) !important;
 }
 
 /* 3. Global Text Color Enforcement */
