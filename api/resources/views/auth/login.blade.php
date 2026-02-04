@@ -138,11 +138,14 @@
         <div class="card-body">
             <div class="text-center mb-4">
                 <!-- Company Logo -->
+                <!-- Company Logo -->
                 <div class="logo-container" style="margin-bottom: 20px;">
-                    <img src="{{ asset('assets/images/logo_isotank_full.jpg') }}" 
-                         alt="Isotank Management System" 
-                         class="animated-logo"
-                         style="max-width: 600px; width: 100%; height: auto;">
+                    <div style="background-color: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+                        <img src="{{ asset('images/isotank_logo_premium.jpg') }}" 
+                             alt="Isotank Management System" 
+                             class="animated-logo"
+                             style="max-width: 100%; height: auto;">
+                    </div>
                 </div>
             </div>
             

@@ -19,9 +19,11 @@
             <!-- 1. Header (Fixed) -->
             <div>
                 <div class="text-center mb-4 px-2">
-                    <img src="{{ asset('assets/images/logo_isotank_full.jpg') }}" 
-                         alt="Isotank Management System" 
-                         style="max-width: 100%; height: auto; border-radius: 8px;">
+                    <div style="background-color: white; padding: 10px; border-radius: 8px;">
+                        <img src="{{ asset('images/isotank_logo_premium.jpg') }}" 
+                             alt="Isotank Management System" 
+                             style="max-width: 100%; height: auto;">
+                    </div>
                 </div>
                 
                 <!-- Compact Profile -->
