@@ -162,15 +162,15 @@
                         <tbody>
                             @foreach($vacuumLogs as $log)
                             <tr>
-                                <td>{{ \Carbon\Carbon::parse($log->check_datetime)->format('Y-m-d H:i') }}</td>
+                                <td class="text-white">{{ \Carbon\Carbon::parse($log->check_datetime)->format('Y-m-d H:i') }}</td>
                                 <td class="fw-bold"><a href="{{ route('admin.isotanks.show', $log->isotank_id) }}" class="text-decoration-none text-primary">{{ $log->isotank->iso_number ?? '-' }}</a></td>
-                                <td>
+                                <td class="text-white">
                                     <span class="fw-bold">{{ (float)$log->vacuum_value_mtorr }}</span> mTorr
                                     @if($log->vacuum_unit_raw && $log->vacuum_unit_raw !== 'mtorr')
                                         <small class="text-muted ms-1">({{ $log->vacuum_value_raw }} {{ $log->vacuum_unit_raw }})</small>
                                     @endif
                                 </td>
-                                <td>
+                                <td class="text-white">
                                     @if($log->temperature)
                                         {{ $log->temperature }}°C
                                     @else
