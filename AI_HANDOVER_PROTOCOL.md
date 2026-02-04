@@ -171,5 +171,25 @@ We operate on **TWO SEPARATE** repositories. Always verify which one you are wor
 *   **File Modified:** `api/resources/views/pdf/inspection_report.blade.php`
 
 ---
-*Last Updated: Feb 4, 2026 13:35 - Antigravity Agent*
+### V. Login Page Animated SVG Logo (Feb 4, 2026 13:50)
+*   **Replacement:** Changed from plain text logo to custom animated SVG logo matching company branding.
+*   **Design Elements:**
+    *   **Hexagonal Frame** (green gradient) with double-layer and glow filter
+    *   **ISO Tank Illustration** (silver/gray metallic) inside hexagon with detail rings
+    *   **Top Tank Silhouette** (blue) in upper right corner
+    *   **Text "ISOTANK"** - "ISO" (navy blue #1e3a8a) + "TANK" (dark green #2d5016)
+    *   **Subtitle** "Management System" (gray)
+    *   **Decorative Lines** (orange gradient)
+    *   **Company Name** "PT. KAYAN LNG NUSANTARA" (navy blue)
+*   **Animations Implemented:**
+    *   Logo fade-in with scale on page load (1.2s)
+    *   Hexagon pulse/breathing effect with glow (3s infinite loop)
+    *   Tank metallic glow shimmer (4s infinite loop)
+    *   Top tank floating animation (2.5s infinite loop)
+*   **Result:** Premium, professional login experience matching the dark mode industrial theme
+*   **File Modified:** `api/resources/views/auth/login.blade.php`
+
+---
+*Last Updated: Feb 4, 2026 13:50 - Antigravity Agent*
+
 
