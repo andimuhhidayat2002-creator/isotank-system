@@ -1,5 +1,5 @@
 <div class="table-responsive">
-    <table id="{{ $tableId }}" class="table table-hover align-middle w-100">
+    <table id="{{ $tableId }}" class="table table-hover align-middle w-100" data-order='[[ 8, "desc" ]]'>
         <thead class="table-light">
             <tr>
                 <th>ISO Number</th>
@@ -53,7 +53,7 @@
                     {{ $job->assignee->name ?? '-' }}
                 </td>
                 <td class="text-white small">
-                    {{ $job->updated_at->format('Y-m-d') }}
+                    {{ $job->updated_at->format('Y-m-d H:i') }}
                 </td>
                 <td class="text-end">
                     <a href="{{ route('admin.reports.maintenance.show', $job->id) }}" class="btn btn-sm btn-outline-secondary">

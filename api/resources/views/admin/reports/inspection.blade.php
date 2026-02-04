@@ -22,7 +22,7 @@
 
     <div class="card mt-4">
         <div class="card-body">
-            <table id="inspectionLogTable" class="table table-hover align-middle">
+            <table id="inspectionLogTable" class="table table-hover align-middle" data-order='[[ 0, "desc" ]]'>
                 <thead>
                     <tr>
                         <th>Date</th>
@@ -36,7 +36,7 @@
                 <tbody class="border-top-0">
                     @foreach($logs as $log)
                     <tr>
-                        <td class="text-white">{{ $log->inspection_date }}</td>
+                        <td class="text-white">{{ $log->created_at->format('Y-m-d H:i') }}</td>
                         <td class="fw-bold"><a href="{{ route('admin.isotanks.show', $log->isotank_id) }}" class="text-decoration-none text-primary">{{ $log->isotank->iso_number ?? 'UNKNOWN' }}</a></td>
                         <td class="text-white">{{ str_replace('_', ' ', strtoupper($log->inspection_type)) }}</td>
                         <td class="text-white">{{ $log->inspector->name ?? '-' }}</td>
@@ -97,6 +97,10 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
+        if ($.fn.DataTable.isDataTable('#inspectionLogTable')) {
+            $('#inspectionLogTable').DataTable().clear().destroy();
+        }
+
         var table = $('#inspectionLogTable').DataTable({
             dom: 'Bfrtip',
             buttons: [
@@ -115,8 +119,21 @@ document.addEventListener('DOMContentLoaded', function() {
             ],
             pageLength: 25,
             order: [[0, 'desc']],
+            stateSave: false,
+            destroy: true,
+            ordering: true,
+            columnDefs: [
+                { orderable: true, targets: 0 },  // Only Date column is sortable
+                { orderable: false, targets: '_all' }  // Disable sorting on all other columns
+            ],
             initComplete: function() {
-                this.api().columns().every(function() {
+                var api = this.api();
+                // Force sort
+                setTimeout(function() {
+                     api.order([0, 'desc']).draw();
+                }, 50);
+
+                api.columns().every(function() {
                     var that = this;
                     $('input', this.footer()).on('keyup change clear', function() {
                         if (that.search() !== this.value) {

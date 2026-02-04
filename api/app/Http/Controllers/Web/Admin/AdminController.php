@@ -927,7 +927,8 @@ class AdminController extends Controller
             });
         }
 
-        $logs = $query->latest()->get();
+        
+        $logs = $query->latest('updated_at')->get();
         return view('admin.reports.inspection', compact('logs', 'category'));
     }
 
@@ -959,13 +960,13 @@ class AdminController extends Controller
         $activeJobs = MaintenanceJob::with(['isotank', 'assignee'])
             ->whereIn('status', ['open', 'on_progress'])
             ->tap($filter)
-            ->latest()
+            ->latest('updated_at')
             ->get();
             
         $deferredJobs = MaintenanceJob::with(['isotank', 'assignee'])
             ->where('status', 'deferred')
             ->tap($filter)
-            ->latest()
+            ->latest('updated_at')
             ->get();
             
         $closedJobs = MaintenanceJob::with(['isotank', 'assignee'])

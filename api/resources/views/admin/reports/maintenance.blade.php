@@ -95,6 +95,10 @@ document.addEventListener('DOMContentLoaded', function() {
     function initMaintenanceTables() {
         var $ = window.jQuery;
         ['#tableActive', '#tableDeferred', '#tableHistory'].forEach(function(id) {
+            if ($.fn.DataTable.isDataTable(id)) {
+                $(id).DataTable().clear().destroy();
+            }
+            
             $(id).DataTable({
                 dom: 'Bfrtip',
                 buttons: [
@@ -103,7 +107,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     { extend: 'print', className: 'btn btn-info btn-sm', text: '<i class="bi bi-printer"></i> Print' }
                 ],
                 pageLength: 25,
-                order: [[0, 'asc']]
+                order: [[8, 'desc']],
+                stateSave: false,
+                destroy: true,
+                ordering: true,
+                columnDefs: [
+                    { orderable: true, targets: 8 },  // Only Last Update column is sortable
+                    { orderable: false, targets: '_all' }  // Disable sorting on all other columns
+                ]
             });
         });
     }
