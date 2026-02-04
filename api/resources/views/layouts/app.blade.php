@@ -22,7 +22,7 @@
                     <div class="d-flex align-items-center justify-content-center" style="background-color: white; padding: 8px; border-radius: 8px;">
                         <img src="{{ asset('images/isotank_logo_premium.jpg') }}" 
                              alt="Isotank Management System" 
-                             style="height: 40px; width: auto; max-width: 100%;">
+                             style="width: 100%; height: auto;">
                     </div>
                 </div>
                 
