@@ -139,10 +139,12 @@
             <div class="text-center mb-4">
                 <!-- Company Logo -->
                 <div class="logo-container" style="margin-bottom: 20px;">
-                    <img src="{{ asset('assets/images/logo_isotank.png') }}" 
-                         alt="Isotank Management System" 
-                         class="animated-logo"
-                         style="max-width: 500px; width: 100%; height: auto;">
+                    <div style="background: white; padding: 25px 40px; border-radius: 16px; display: inline-block; box-shadow: 0 4px 20px rgba(255,255,255,0.1);">
+                        <img src="{{ asset('assets/images/logo_isotank.png') }}" 
+                             alt="Isotank Management System" 
+                             class="animated-logo"
+                             style="max-width: 650px; width: 100%; height: auto; display: block;">
+                    </div>
                 </div>
             </div>
             
