@@ -160,4 +160,16 @@ We operate on **TWO SEPARATE** repositories. Always verify which one you are wor
 *   **Tab System:** Optimized tab names (shortened) and CSS to prevents wrapping/breaking on smaller screens. Fixed a critical HTML structure bug (stray div) that was breaking the layout for the 'Vacuum' tab.
 
 ---
-*Last Updated: Feb 4, 2026 06:42 - Antigravity Agent*
+### U. T75 PDF Structure Fix (Feb 4, 2026 13:35)
+*   **Problem:** "D. IBOX SYSTEM" section appeared twice in T75 PDFs - once from dynamic items loop (showing only "IBOX Condition") and again from hardcoded section (showing Battery, Pressure, Temp, Level), breaking the ABCDEFG sequence.
+*   **Root Cause:** Dynamic items loop was rendering all categories including D, E, F, G, then hardcoded sections re-rendered D, E, F, G with detailed data.
+*   **Solution:** 
+    *   Added `@continue` filter in dynamic loop to skip categories `d`, `e`, `f`, `g` for T75 tanks.
+    *   Consolidated "IBOX Condition" into the manual D. IBOX SYSTEM section as the first item.
+    *   All T75 special sections (D. IBOX, E. INSTRUMENTS, F. VACUUM, G. PSV) now render only once with complete data.
+*   **Result:** PDF now displays correct sequence: **A. DATA → B. GENERAL CONDITION → C. VALVES & PIPING → D. IBOX SYSTEM → E. INSTRUMENTS → F. VACUUM SYSTEM → G. SAFETY VALVES (PSV)**
+*   **File Modified:** `api/resources/views/pdf/inspection_report.blade.php`
+
+---
+*Last Updated: Feb 4, 2026 13:35 - Antigravity Agent*
+
