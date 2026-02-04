@@ -139,12 +139,10 @@
             <div class="text-center mb-4">
                 <!-- Company Logo -->
                 <div class="logo-container" style="margin-bottom: 20px;">
-                    <div style="background: white; padding: 0; border-radius: 16px; display: inline-block; box-shadow: 0 4px 20px rgba(255,255,255,0.1); overflow: hidden;">
-                        <img src="{{ asset('assets/images/logo_isotank.png') }}" 
-                             alt="Isotank Management System" 
-                             class="animated-logo"
-                             style="max-width: 100%; width: 100%; height: auto; display: block;">
-                    </div>
+                    <img src="{{ asset('assets/images/logo_isotank_full.jpg') }}" 
+                         alt="Isotank Management System" 
+                         class="animated-logo"
+                         style="max-width: 600px; width: 100%; height: auto;">
                 </div>
             </div>
             

@@ -19,8 +19,9 @@
             <!-- 1. Header (Fixed) -->
             <div>
                 <div class="text-center mb-4 px-2">
-                    <h6 class="text-white fw-bold mb-0 pt-2" style="letter-spacing: 1px; line-height: 1.4; opacity: 0.9;">ISOTANK MANAGEMENT SYSTEM</h6>
-                    <div style="height: 2px; background: var(--neon-blue); width: 30px; margin: 12px auto; border-radius: 2px; opacity: 0.5;"></div>
+                    <img src="{{ asset('assets/images/logo_isotank_full.jpg') }}" 
+                         alt="Isotank Management System" 
+                         style="max-width: 100%; height: auto; border-radius: 8px;">
                 </div>
                 
                 <!-- Compact Profile -->
