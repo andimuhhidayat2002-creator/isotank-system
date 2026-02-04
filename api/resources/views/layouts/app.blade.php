@@ -19,10 +19,10 @@
             <!-- 1. Header (Fixed) -->
             <div>
                 <div class="text-center mb-4 px-2">
-                    <div class="d-flex align-items-center justify-content-center" style="background-color: white; padding: 8px; border-radius: 8px;">
+                    <div class="d-flex align-items-center justify-content-center" style="background-color: white; padding: 4px; border-radius: 8px;">
                         <img src="{{ asset('images/isotank_logo_premium.jpg') }}" 
                              alt="Isotank Management System" 
-                             style="width: 100%; height: auto;">
+                             style="width: 100%; height: auto; display: block;">
                     </div>
                 </div>
                 
