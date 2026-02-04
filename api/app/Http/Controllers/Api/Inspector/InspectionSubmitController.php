@@ -890,7 +890,7 @@ class InspectionSubmitController extends Controller
             $validVal = $validated[$validKey] ?? null;
             $statusVal = ($statusKey && isset($validated[$statusKey])) ? $validated[$statusKey] : 'valid';
 
-            if (!empty($serVal) || !empty($dateVal) || !empty($validVal)) {
+            if ($serVal || $dateVal || $validVal) { // Adjusted condition to allow partial updates
                 $updateData = [
                     'serial_number' => $serVal,
                     'calibration_date' => $dateVal,
@@ -911,18 +911,68 @@ class InspectionSubmitController extends Controller
                     'psv1' => 'PSV-01', 'psv2' => 'PSV-02', 'psv3' => 'PSV-03', 'psv4' => 'PSV-04',
                     default => strtoupper($item)
                 };
+                
+                // SMART MATCHING TO PREVENT DUPLICATES
+                $component = null;
+                
+                // A. Try matching by EXACT Standard Code
+                $component = \App\Models\MasterIsotankComponent::where('isotank_id', $isotankId)
+                    ->where('component_type', $compType)
+                    ->where('position_code', $posCode)
+                    ->first();
 
-                \App\Models\MasterIsotankComponent::updateOrCreate(
-                    ['isotank_id' => $isotankId, 'component_type' => $compType, 'position_code' => $posCode],
-                    array_filter([
-                        'serial_number' => $serVal,
-                        'last_calibration_date' => $dateVal,
-                        'expiry_date' => $validVal,
-                        'is_active' => true
-                    ], fn($v) => !is_null($v))
-                );
+                // B. If PG not found, grab ANY existing PG and standardize it
+                if (!$component && $compType === 'PG') {
+                    $component = \App\Models\MasterIsotankComponent::where('isotank_id', $isotankId)
+                        ->where('component_type', 'PG')
+                        ->first();
+                    if ($component) {
+                        $component->position_code = 'PG-01'; // Rename to standard
+                    }
+                }
+                
+                // C. If PSV not found, try matching by Serial Number (if provided)
+                if (!$component && $compType === 'PSV' && !empty($serVal)) {
+                     $component = \App\Models\MasterIsotankComponent::where('isotank_id', $isotankId)
+                        ->where('component_type', 'PSV')
+                        ->where('serial_number', $serVal)
+                        ->first();
+                     if ($component) {
+                         // Found by SN? Update its position code to current slot (Standardize)
+                         // Note: This relies on the assumption that the inspector put the right SN in the right slot field.
+                         $component->position_code = $posCode; 
+                     }
+                }
 
-                \Log::info("Synced calibration for {$item}", ['isotank' => $isotankId, 'serial' => $serVal]);
+                // D. If still not found, try matching by Legacy Position Code (e.g. '1' for PSV-01)
+                if (!$component && $compType === 'PSV') {
+                    $legacyCode = str_replace('PSV-0', '', $posCode); // PSV-01 -> 1
+                    $component = \App\Models\MasterIsotankComponent::where('isotank_id', $isotankId)
+                       ->where('component_type', 'PSV')
+                       ->where('position_code', $legacyCode)
+                       ->first();
+                    if ($component) {
+                        $component->position_code = $posCode;
+                    }
+                }
+
+                $compData = array_filter([
+                    'serial_number' => $serVal,
+                    'last_calibration_date' => $dateVal,
+                    'expiry_date' => $validVal,
+                    'is_active' => true
+                ], fn($v) => !is_null($v));
+
+                if ($component) {
+                    $component->update($compData);
+                } else {
+                    $compData['isotank_id'] = $isotankId;
+                    $compData['component_type'] = $compType;
+                    $compData['position_code'] = $posCode;
+                    \App\Models\MasterIsotankComponent::create($compData);
+                }
+
+                \Log::info("Synced calibration for {$item} -> {$posCode}", ['isotank' => $isotankId, 'serial' => $serVal]);
                 
                 // Trigger calibration log if rejected
                 if ($statusVal === 'rejected' && !empty($serVal)) {

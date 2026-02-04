@@ -51,7 +51,7 @@
             @foreach($order as $type)
                 @if(isset($grouped[$type]))
                 <div class="card shadow-sm border-0 mb-4">
-                    <div class="card-header bg-white py-3">
+                    <div class="card-header py-3">
                         <div class="d-flex justify-content-between align-items-center">
                             <h5 class="mb-0 fw-bold">
                                 {{ $type === 'PG' ? 'Pressure Gauge' : ($type === 'PSV' ? 'Safety Valves (SV)' : 'Relief Valves (PRV)') }}
@@ -65,7 +65,7 @@
                     </div>
                     <div class="table-responsive">
                         <table class="table table-bordered mb-0 align-middle">
-                            <thead class="bg-light">
+                            <thead>
                                 <tr>
                                     <th style="width: 5%">Pos</th>
                                     <th>Serial No</th>
