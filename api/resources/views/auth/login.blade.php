@@ -139,7 +139,7 @@
             <div class="text-center mb-4">
                 <!-- Company Logo -->
                 <div class="logo-container" style="margin-bottom: 20px;">
-                    <div style="background: white; padding: 15px 20px; border-radius: 16px; display: inline-block; box-shadow: 0 4px 20px rgba(255,255,255,0.1);">
+                    <div style="background: white; padding: 0; border-radius: 16px; display: inline-block; box-shadow: 0 4px 20px rgba(255,255,255,0.1); overflow: hidden;">
                         <img src="{{ asset('assets/images/logo_isotank.png') }}" 
                              alt="Isotank Management System" 
                              class="animated-logo"
