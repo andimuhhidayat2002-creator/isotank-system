@@ -189,7 +189,49 @@ We operate on **TWO SEPARATE** repositories. Always verify which one you are wor
 *   **Result:** Premium, professional login experience matching the dark mode industrial theme
 *   **File Modified:** `api/resources/views/auth/login.blade.php`
 
+
 ---
-*Last Updated: Feb 4, 2026 13:50 - Antigravity Agent*
+### W. Table Sorting & Maintenance Job Duplicate Prevention (Feb 5, 2026 06:10)
+#### 1. **Inspection & Maintenance Table Sorting Fix**
+*   **Problem:** Tables in Maintenance Center and Inspection Logs were reverting to default sorting (ISO Number ascending) after initial load, despite backend sending data sorted by `updated_at DESC`.
+*   **Root Cause:** DataTables was re-initializing and applying its own default sort order, overriding the database sort.
+*   **Solution Applied:**
+    *   **Backend:** Confirmed `AdminController` uses `latest('updated_at')` for all maintenance job queries (active, deferred, closed) and `latest('created_at')` for inspection logs.
+    *   **Frontend:** Added `columnDefs` to disable sorting on all columns except "Last Update" (Maintenance) and "Date" (Inspection), forcing tables to maintain the intended order.
+    *   **HTML Attributes:** Added `data-order='[[ 8, "desc" ]]'` to maintenance table and `data-order='[[ 0, "desc" ]]'` to inspection table as fallback.
+    *   **Time Display:** Changed format from `Y-m-d` to `Y-m-d H:i` in `maintenance_table.blade.php` to show actual time instead of "00:00".
+*   **Result:** Tables now consistently display newest entries first, with visible timestamps.
+*   **Files Modified:** 
+    *   `api/resources/views/admin/reports/maintenance.blade.php`
+    *   `api/resources/views/admin/reports/inspection.blade.php`
+    *   `api/resources/views/admin/reports/partials/maintenance_table.blade.php`
+
+#### 2. **Maintenance Job Duplicate Prevention**
+*   **Problem:** When an inspection item already had an open maintenance job (status: `not_good`), and inspector performed a new inspection without adding remark/photo, the system was creating a duplicate maintenance job.
+*   **Root Cause:** Logic in `triggerMaintenance()` was checking condition transitions (`good` → `not_good`) but not verifying if inspector added NEW evidence when item was already `not_good`.
+*   **Solution Applied:**
+    ```php
+    // If item already not_good and stays not_good:
+    if ($oldCondition === 'not_good' && $newCondition === 'not_good') {
+        $remark = $allInput["remark_{$item}"] ?? null;
+        $hasPhoto = isset($allInput["photo_{$item}"]);
+        
+        // Only create new job if inspector adds NEW evidence
+        if (!empty($remark) || $hasPhoto) {
+            $shouldTrigger = true;  // New damage documented
+        } else {
+            $shouldTrigger = false; // No new info, skip
+        }
+    }
+    ```
+*   **Behavior:**
+    *   ✅ Item `not_good` + Inspector adds remark/photo → Creates new maintenance job
+    *   ✅ Item `not_good` + Inspector ignores (no input) → Does NOT create duplicate job
+    *   ✅ Item `good` → `not_good` → Always creates job (first degradation)
+*   **Result:** Eliminates duplicate maintenance jobs when inspectors skip items that already have open tickets.
+*   **File Modified:** `api/app/Http/Controllers/Api/Inspector/InspectionSubmitController.php`
+
+---
+*Last Updated: Feb 5, 2026 06:10 - Antigravity Agent*
 
 
