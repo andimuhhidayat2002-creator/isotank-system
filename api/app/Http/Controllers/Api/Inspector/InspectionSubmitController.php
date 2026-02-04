@@ -692,8 +692,16 @@ class InspectionSubmitController extends Controller
             } elseif ($oldCondition === 'need_attention' && $newCondition === 'not_good') {
                 $shouldTrigger = true;
             } elseif ($oldCondition === 'not_good' && $newCondition === 'not_good') {
-                 // Already bad, don't re-trigger unless explicitly requested (could be handled by a "force" flag if needed)
-                 $shouldTrigger = false;
+                 // Already bad - ONLY create new job if inspector adds NEW evidence (remark or photo)
+                 $remark = $allInput["remark_{$item}"] ?? null;
+                 $hasPhoto = isset($allInput["photo_{$item}"]);
+                 
+                 // Check if there's NEW information (remark or photo)
+                 if (!empty($remark) || $hasPhoto) {
+                     $shouldTrigger = true; // Inspector is documenting additional damage
+                 } else {
+                     $shouldTrigger = false; // No new info, don't duplicate job
+                 }
             }
 
             if ($shouldTrigger) {
