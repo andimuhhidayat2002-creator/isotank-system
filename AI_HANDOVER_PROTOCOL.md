@@ -153,4 +153,11 @@ We operate on **TWO SEPARATE** repositories. Always verify which one you are wor
 *   **Result:** The system is now fully encrypted. All data transfer between users and the server is secure.
 
 ---
-*Last Updated: Feb 2, 2026 22:45 - Antigravity Agent*
+### T. Web Admin UI Refinement (Feb 4, 2026 06:40)
+*   **Dark Mode Fixes:** Applied `bg-dark`, `text-white`, and `table-dark` classes to `isotanks/show.blade.php` and `inspection_show.blade.php` to resolve white-text-on-white-background issues.
+*   **Login Redesign:** Replaced the logo image with clean text "ISOTANK MANAGEMENT SYSTEM" and subtext "PT Kayan LNG Nusantara" in `login.blade.php`.
+*   **Grid Layout Logic:** Applied `align-items-start` to row containers in detail views to prevent vertical centering gaps caused by differing column heights.
+*   **Tab System:** Optimized tab names (shortened) and CSS to prevents wrapping/breaking on smaller screens. Fixed a critical HTML structure bug (stray div) that was breaking the layout for the 'Vacuum' tab.
+
+---
+*Last Updated: Feb 4, 2026 06:42 - Antigravity Agent*

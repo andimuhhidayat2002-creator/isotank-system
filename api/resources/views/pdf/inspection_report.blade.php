@@ -248,6 +248,11 @@
                     }
                 @endphp
                 @foreach($applicableItems->groupBy('category') as $catName => $items)
+                    {{-- For T75: Skip categories d,e,f,g (IBOX, INSTRUMENTS, VACUUM, PSV) as they are rendered manually below --}}
+                    @if($tankCat === 'T75' && in_array($catName, ['d', 'e', 'f', 'g']))
+                        @continue
+                    @endif
+                    
                     <tr>
                         <td colspan="3" class="section-title" style="margin: 0; background-color: #f9f9f9; border: 1px solid #ddd; font-size: 7pt; padding: 1px 3px;">
                             {{ $categoryMap[$catName] ?? strtoupper($catName) }}
@@ -273,8 +278,6 @@
                                 $uLabel = str_replace([' ', '.', '/'], '_', strtolower($label));
                                 $val = $jsonData[$uLabel] ?? null;
                             }
-                            
-
                             
                             $isConfirmedItem = in_array($item->code, $receiverCodes);
                             $conf = $recvConfirmations[$item->code] ?? null;
@@ -311,131 +314,130 @@
                             </td>
                         </tr>
                     @endforeach
+            @endforeach
+            
+            {{-- T75 SPECIAL SECTIONS: Render D, E, F, G manually with detailed data --}}
+            @if($tankCat === 'T75')
+                {{-- D. IBOX SYSTEM --}}
+                <tr><td colspan="3" class="section-title" style="margin: 0; background-color: #f9f9f9; border: 1px solid #ddd; font-size: 7pt; padding: 1px 3px;">D. IBOX SYSTEM</td></tr>
+                <tr>
+                    <td style="border: 1px solid #eee; padding: 1px 3px; font-size: 6.8pt;">IBOX Condition</td>
+                    <td style="border: 1px solid #eee; text-align: center; padding: 1px;">{!! badge($t75Data['ibox']['condition']) !!}</td>
+                    <td style="border: 1px solid #eee; text-align: center; padding: 1px;"><span style="color: #bbb; font-size: 6pt;">-</span></td>
+                </tr>
+                <tr>
+                    <td style="border: 1px solid #eee; padding: 1px 3px; font-size: 6.8pt;">Battery</td>
+                    <td style="border: 1px solid #eee; text-align: center; padding: 1px;">{{ $t75Data['ibox']['battery'] }}</td>
+                    <td style="border: 1px solid #eee; text-align: center; padding: 1px;"><span style="color: #bbb; font-size: 6pt;">-</span></td>
+                </tr>
+                <tr>
+                    <td style="border: 1px solid #eee; padding: 1px 3px; font-size: 6.8pt;">Pressure</td>
+                    <td style="border: 1px solid #eee; text-align: center; padding: 1px;">{{ $t75Data['ibox']['pressure'] }}</td>
+                    <td style="border: 1px solid #eee; text-align: center; padding: 1px;"><span style="color: #bbb; font-size: 6pt;">-</span></td>
+                </tr>
+                <tr>
+                    <td style="border: 1px solid #eee; padding: 1px 3px; font-size: 6.8pt;">Temp #1</td>
+                    <td style="border: 1px solid #eee; text-align: center; padding: 1px;">{{ $t75Data['ibox']['temp1'] }} {{ $t75Data['ibox']['temp1_time'] }}</td>
+                    <td style="border: 1px solid #eee; text-align: center; padding: 1px;"><span style="color: #bbb; font-size: 6pt;">-</span></td>
+                </tr>
+                <tr>
+                    <td style="border: 1px solid #eee; padding: 1px 3px; font-size: 6.8pt;">Temp #2</td>
+                    <td style="border: 1px solid #eee; text-align: center; padding: 1px;">{{ $t75Data['ibox']['temp2'] }} {{ $t75Data['ibox']['temp2_time'] }}</td>
+                    <td style="border: 1px solid #eee; text-align: center; padding: 1px;"><span style="color: #bbb; font-size: 6pt;">-</span></td>
+                </tr>
+                <tr>
+                    <td style="border: 1px solid #eee; padding: 1px 3px; font-size: 6.8pt;">Level</td>
+                    <td style="border: 1px solid #eee; text-align: center; padding: 1px;">{{ $t75Data['ibox']['level'] }}</td>
+                    <td style="border: 1px solid #eee; text-align: center; padding: 1px;"><span style="color: #bbb; font-size: 6pt;">-</span></td>
+                </tr>
+                
+                {{-- E. INSTRUMENTS --}}
+                <tr><td colspan="3" class="section-title" style="margin: 0; background-color: #f9f9f9; border: 1px solid #ddd; font-size: 7pt; padding: 1px 3px;">E. INSTRUMENTS</td></tr>
+                <tr>
+                    <td style="border: 1px solid #eee; padding: 1px 3px; font-size: 6.8pt;">Pressure Gauge Condition</td>
+                    <td style="border: 1px solid #eee; text-align: center; padding: 1px;">{!! badge($t75Data['instruments']['pressure_gauge']['condition']) !!}</td>
+                    <td style="border: 1px solid #eee; text-align: center; padding: 1px;"><span style="color: #bbb; font-size: 6pt;">-</span></td>
+                </tr>
+                <tr>
+                    <td colspan="3" style="border: 1px solid #eee; padding-left: 15px; font-size: 6pt; color: #555;">
+                        SN: {{ $t75Data['instruments']['pressure_gauge']['sn'] }} | Cal. Date: {{ $t75Data['instruments']['pressure_gauge']['cal_date'] }}<br>
+                        Reading (P1): {{ $t75Data['instruments']['pressure_gauge']['p1'] }} {{ $t75Data['instruments']['pressure_gauge']['p1_time'] }}<br>
+                        Reading (P2): {{ $t75Data['instruments']['pressure_gauge']['p2'] }} {{ $t75Data['instruments']['pressure_gauge']['p2_time'] }}
+                    </td>
+                </tr>
+                <tr>
+                    <td style="border: 1px solid #eee; padding: 1px 3px; font-size: 6.8pt;">Level Gauge Condition</td>
+                    <td style="border: 1px solid #eee; text-align: center; padding: 1px;">{!! badge($t75Data['instruments']['level_gauge']['condition']) !!}</td>
+                    <td style="border: 1px solid #eee; text-align: center; padding: 1px;"><span style="color: #bbb; font-size: 6pt;">-</span></td>
+                </tr>
+                <tr>
+                    <td colspan="3" style="border: 1px solid #eee; padding-left: 15px; font-size: 6pt; color: #555;">
+                        Reading (L1): {{ $t75Data['instruments']['level_gauge']['l1'] }} {{ $t75Data['instruments']['level_gauge']['l1_time'] }}<br>
+                        Reading (L2): {{ $t75Data['instruments']['level_gauge']['l2'] }} {{ $t75Data['instruments']['level_gauge']['l2_time'] }}
+                    </td>
+                </tr>
+                
+                {{-- F. VACUUM SYSTEM --}}
+                <tr><td colspan="3" class="section-title" style="margin: 0; background-color: #f9f9f9; border: 1px solid #ddd; font-size: 7pt; padding: 1px 3px;">F. VACUUM SYSTEM</td></tr>
+                <tr>
+                    <td style="border: 1px solid #eee; padding: 1px 3px; font-size: 6.8pt;">Vacuum Gauge Condition</td>
+                    <td style="border: 1px solid #eee; text-align: center; padding: 1px;">{!! badge($t75Data['vacuum']['gauge_condition'] ?? $inspection->vacuum_gauge_condition) !!}</td>
+                    <td style="border: 1px solid #eee; text-align: center; padding: 1px;"><span style="color: #bbb; font-size: 6pt;">-</span></td>
+                </tr>
+                <tr>
+                    <td style="border: 1px solid #eee; padding: 1px 3px; font-size: 6.8pt;">Port Suction Condition</td>
+                    <td style="border: 1px solid #eee; text-align: center; padding: 1px;">
+                        @php
+                            $pscVal = $inspection->vacuum_port_suction_condition ?? null;
+                            if (!$pscVal && !empty($jsonData)) {
+                                $pscVal = $jsonData['port_suction_condition'] ?? 
+                                          $jsonData['Port Suction Condition'] ?? 
+                                          $jsonData['vacuum_port_suction_condition'] ?? 
+                                          $jsonData['vacuum_port_suction'] ?? 
+                                          $jsonData['port_suction'] ?? 
+                                          $jsonData['Port_Suction_Condition'] ?? null;
+                            }
+                            if (!$pscVal && isset($t75Data['vacuum']['port_condition'])) {
+                                $pscVal = $t75Data['vacuum']['port_condition'];
+                            }
+                        @endphp
+                        {!! badge($pscVal) !!}
+                    </td>
+                    <td style="border: 1px solid #eee; text-align: center; padding: 1px;"><span style="color: #bbb; font-size: 6pt;">-</span></td>
+                </tr>
+                <tr>
+                    <td style="border: 1px solid #eee; padding: 1px 3px; font-size: 6.8pt;">Vacuum Value</td>
+                    <td style="border: 1px solid #eee; text-align: center; padding: 1px;">{{ $t75Data['vacuum']['value'] }}</td>
+                    <td style="border: 1px solid #eee; text-align: center; padding: 1px;"><span style="color: #bbb; font-size: 6pt;">-</span></td>
+                </tr>
+                <tr>
+                    <td style="border: 1px solid #eee; padding: 1px 3px; font-size: 6.8pt;">Vacuum Temperature</td>
+                    <td style="border: 1px solid #eee; text-align: center; padding: 1px;">{{ $t75Data['vacuum']['temp'] }}</td>
+                    <td style="border: 1px solid #eee; text-align: center; padding: 1px;"><span style="color: #bbb; font-size: 6pt;">-</span></td>
+                </tr>
+                <tr>
+                    <td style="border: 1px solid #eee; padding: 1px 3px; font-size: 6.8pt;">Check Datetime</td>
+                    <td style="border: 1px solid #eee; text-align: center; padding: 1px;">{{ $t75Data['vacuum']['check_date'] }}</td>
+                    <td style="border: 1px solid #eee; text-align: center; padding: 1px;"><span style="color: #bbb; font-size: 6pt;">-</span></td>
+                </tr>
+                
+                {{-- G. SAFETY VALVES (PSV) --}}
+                <tr><td colspan="3" class="section-title" style="margin: 0; background-color: #f9f9f9; border: 1px solid #ddd; font-size: 7pt; padding: 1px 3px;">G. SAFETY VALVES (PSV)</td></tr>
+                @foreach($t75Data['psv'] as $p)
+                    <tr>
+                        <td style="border: 1px solid #eee; padding: 1px 3px; font-size: 6.8pt;">{{ $p['label'] }} Condition</td>
+                        <td style="border: 1px solid #eee; text-align: center; padding: 1px;">{!! badge($p['condition']) !!}</td>
+                        <td style="border: 1px solid #eee; text-align: center; padding: 1px;"><span style="color: #bbb; font-size: 6pt;">-</span></td>
+                    </tr>
+                    <tr>
+                        <td colspan="3" style="border: 1px solid #eee; padding-left: 15px; font-size: 6pt; color: #555;">
+                            STATUS: {{ $p['status'] }} | SN: {{ $p['sn'] }} | Cal. Date: {{ $p['cal_date'] }} | Valid Until: {{ $p['valid_until'] }}
+                        </td>
+                    </tr>
                 @endforeach
+            @endif
             </tbody>
-            {{-- INJECT SPECIAL T75 SECTIONS FOR OUTGOING & INCOMING DYNAMIC LAYOUT --}}
-            @if($tankCat == 'T75')
-                    <tbody class="special-t75-sections">
-                        {{-- 1. IBOX SYSTEM --}}
-                            <tr><td colspan="3" class="section-title" style="background:#f9f9f9;font-weight:bold;border:1px solid #ddd;padding:2px;">D. IBOX SYSTEM</td></tr>
-                            
-                            {{-- Condition removed to prevent duplication --}}
-                             <tr><td style="border:1px solid #eee;">Battery</td><td style="border:1px solid #eee;text-align:center;">{{ $t75Data['ibox']['battery'] }}</td><td style="border:1px solid #eee;color:#bbb;text-align:center;">-</td></tr>
-                             <tr><td style="border:1px solid #eee;">Pressure</td><td style="border:1px solid #eee;text-align:center;">{{ $t75Data['ibox']['pressure'] }}</td><td style="border:1px solid #eee;color:#bbb;text-align:center;">-</td></tr>
-                             <tr><td style="border:1px solid #eee;">Temp #1</td><td style="border:1px solid #eee;text-align:center;">{{ $t75Data['ibox']['temp1'] }} {{ $t75Data['ibox']['temp1_time'] }}</td><td style="border:1px solid #eee;color:#bbb;text-align:center;">-</td></tr>
-                             <tr><td style="border:1px solid #eee;">Temp #2</td><td style="border:1px solid #eee;text-align:center;">{{ $t75Data['ibox']['temp2'] }} {{ $t75Data['ibox']['temp2_time'] }}</td><td style="border:1px solid #eee;color:#bbb;text-align:center;">-</td></tr>
-                             <tr><td style="border:1px solid #eee;">Level</td><td style="border:1px solid #eee;text-align:center;">{{ $t75Data['ibox']['level'] }}</td><td style="border:1px solid #eee;color:#bbb;text-align:center;">-</td></tr>
-
-                         {{-- 2. VACUUM SYSTEM --}}
-                            <tr><td colspan="3" class="section-title" style="background:#f9f9f9;font-weight:bold;border:1px solid #ddd;padding:2px;">F. VACUUM SYSTEM</td></tr>
-                            <tr>
-                                <td style="border:1px solid #eee;">Vacuum Gauge Condition</td>
-                                <td style="border:1px solid #eee;text-align:center;">{!! badge($t75Data['vacuum']['gauge_condition'] ?? $inspection->vacuum_gauge_condition) !!}</td>
-                                <td style="border:1px solid #eee;text-align:center;color:#bbb;">-</td>
-                            </tr>
-                            <tr>
-                                <td style="border:1px solid #eee;">Port Suction Condition</td>
-                                <td style="border:1px solid #eee;text-align:center;">
-                                    @php
-                                        // DIRECT ROBUST LOOKUP (Bypassing Controller Logic to match Web Detail View)
-                                        $pscVal = $inspection->vacuum_port_suction_condition ?? null;
-                                        
-                                        // Fallback to JSON if column is empty
-                                        if (!$pscVal && !empty($jsonData)) {
-                                            $pscVal = $jsonData['port_suction_condition'] ?? 
-                                                      $jsonData['Port Suction Condition'] ?? 
-                                                      $jsonData['vacuum_port_suction_condition'] ?? 
-                                                      $jsonData['vacuum_port_suction'] ?? 
-                                                      $jsonData['port_suction'] ?? 
-                                                      $jsonData['Port_Suction_Condition'] ??
-                                                      null;
-                                        }
-                                        
-                                        // Final fallback to t75Data from controller
-                                        if (!$pscVal && isset($t75Data['vacuum']['port_condition'])) {
-                                            $pscVal = $t75Data['vacuum']['port_condition'];
-                                        }
-                                    @endphp
-                                    {!! badge($pscVal) !!}
-                                </td>
-                                <td style="border:1px solid #eee;text-align:center;color:#bbb;">-</td>
-                            </tr>
-                            <tr>
-                                <td style="border:1px solid #eee;">Vacuum Value</td>
-                                <td style="border:1px solid #eee;text-align:center;">{{ $t75Data['vacuum']['value'] }}</td>
-                                <td style="border:1px solid #eee;text-align:center;color:#bbb;">-</td>
-                            </tr>
-                            <tr>
-                                <td style="border:1px solid #eee;">Vacuum Temperature</td>
-                                <td style="border:1px solid #eee;text-align:center;">{{ $t75Data['vacuum']['temp'] }}</td>
-                                <td style="border:1px solid #eee;text-align:center;color:#bbb;">-</td>
-                            </tr>
-                            <tr>
-                                <td style="border:1px solid #eee;">Check Datetime</td>
-                                <td style="border:1px solid #eee;text-align:center;">{{ $t75Data['vacuum']['check_date'] }}</td>
-                                <td style="border:1px solid #eee;text-align:center;color:#bbb;">-</td>
-                            </tr>
-
-                         {{-- 3. INSTRUMENTS (Section E) & PSV (Section G) - Manually check if they exist --}}
-                          @php
-                             // These might not be in $groupedItems if they are columns, so we render them manually if needed
-                             // Usually they are already in groupedItems if defined as InspectionItem. 
-                             // But legacy PSV/Instruments were often hardcoded columns.
-                             // Let's check for specific hardcoded columns usually used in T75
-                          @endphp
-
-                          {{-- E. INSTRUMENTS --}}
-                         {{-- E. INSTRUMENTS --}}
-                         <tr><td colspan="3" class="section-title" style="background:#f9f9f9;font-weight:bold;border:1px solid #ddd;padding:2px;">E. INSTRUMENTS</td></tr>
-                         
-                         <!-- Pressure Gauge -->
-                         <tr>
-                            <td style="border:1px solid #eee;">Pressure Gauge Condition</td>
-                            <td style="border:1px solid #eee;text-align:center;">{!! badge($t75Data['instruments']['pressure_gauge']['condition']) !!}</td>
-                            <td style="border:1px solid #eee;text-align:center;color:#bbb;">-</td>
-                         </tr>
-                         <tr>
-                            <td colspan="3" style="border:1px solid #eee; padding-left: 15px; font-size: 6pt; color: #555;">
-                                SN: {{ $t75Data['instruments']['pressure_gauge']['sn'] }} | 
-                                Cal. Date: {{ $t75Data['instruments']['pressure_gauge']['cal_date'] }}<br>
-                                Reading (P1): {{ $t75Data['instruments']['pressure_gauge']['p1'] }} {{ $t75Data['instruments']['pressure_gauge']['p1_time'] }}<br>
-                                Reading (P2): {{ $t75Data['instruments']['pressure_gauge']['p2'] }} {{ $t75Data['instruments']['pressure_gauge']['p2_time'] }}
-                            </td>
-                         </tr>
-
-                         <!-- Level Gauge -->
-                         <tr>
-                            <td style="border:1px solid #eee;">Level Gauge Condition</td>
-                            <td style="border:1px solid #eee;text-align:center;">{!! badge($t75Data['instruments']['level_gauge']['condition']) !!}</td>
-                            <td style="border:1px solid #eee;text-align:center;color:#bbb;">-</td>
-                         </tr>
-                         <tr>
-                             <td colspan="3" style="border:1px solid #eee; padding-left: 15px; font-size: 6pt; color: #555;">
-                                Reading (L1): {{ $t75Data['instruments']['level_gauge']['l1'] }} {{ $t75Data['instruments']['level_gauge']['l1_time'] }}<br>
-                                Reading (L2): {{ $t75Data['instruments']['level_gauge']['l2'] }} {{ $t75Data['instruments']['level_gauge']['l2_time'] }}
-                             </td>
-                         </tr>
-
-                         {{-- G. SAFETY VALVES (PSV) --}}
-                         <tr><td colspan="3" class="section-title" style="background:#f9f9f9;font-weight:bold;border:1px solid #ddd;padding:2px;">G. SAFETY VALVES (PSV)</td></tr>
-                         @foreach($t75Data['psv'] as $p)
-                             <tr>
-                                 <td style="border:1px solid #eee;">{{ $p['label'] }} Condition</td>
-                                 <td style="border:1px solid #eee;text-align:center;">{!! badge($p['condition']) !!}</td>
-                                 <td style="border:1px solid #eee;text-align:center;color:#bbb;">-</td>
-                             </tr>
-                             <tr>
-                                 <td colspan="3" style="border:1px solid #eee; padding-left: 15px; font-size: 6pt; color: #555;">
-                                     STATUS: {{ $p['status'] }} | SN: {{ $p['sn'] }} | 
-                                     Cal. Date: {{ $p['cal_date'] }} |
-                                     Valid Until: {{ $p['valid_until'] }}
-                                 </td>
-                             </tr>
-                         @endforeach
-
-                    </tbody>
-                @endif
-            </table>
+        </table>
         </div>
 
         {{-- OUTGOING: RECEIVER CONFIRMATION SUMMARY --}}
