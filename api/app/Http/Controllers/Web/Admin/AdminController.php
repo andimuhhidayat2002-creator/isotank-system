@@ -113,20 +113,33 @@ class AdminController extends Controller
              ->limit(5)
              ->get();
 
-        // Filling Status Statistics (SQL Group By - No Loops)
-        $fillingRaw = MasterIsotank::where('status', 'active')
+        // Filling Status Statistics (PHP-side Normalization)
+        // Retrieve all codes first to normalize casing and whitespace
+        $allFillingCodes = MasterIsotank::where('status', 'active')
             ->tap($isotankFilter)
-            ->select('filling_status_code', DB::raw('count(*) as count'))
-            ->groupBy('filling_status_code')
-            ->pluck('count', 'filling_status_code');
+            ->pluck('filling_status_code');
+
+        $fillingCounts = [];
+        foreach ($allFillingCodes as $rawCode) {
+            // Normalize: Trim and Lowercase
+            if (empty($rawCode)) {
+                $uniqueCode = ''; // Handle as No Status later
+            } else {
+                $uniqueCode = strtolower(trim($rawCode));
+            }
+            
+            if (!isset($fillingCounts[$uniqueCode])) {
+                $fillingCounts[$uniqueCode] = 0;
+            }
+            $fillingCounts[$uniqueCode]++;
+        }
 
         $fillingStatusStats = [];
         $validStatuses = MasterIsotank::getValidFillingStatuses();
         
-        // Map raw DB results to formatted stats
-        // DYNAMICALLY Capture all statuses present in DB, even if custom (e.g. "filled m29")
-        foreach ($fillingRaw as $code => $count) {
-             // Skip empty/null codes (handled separately as No Status)
+        // Map normalized counts to formatted stats
+        foreach ($fillingCounts as $code => $count) {
+             // Skip empty/null codes (handled separately as No Status below)
              if (empty($code)) continue;
 
              $desc = $validStatuses[$code] ?? ucwords(str_replace('_', ' ', $code));
@@ -138,8 +151,8 @@ class AdminController extends Controller
              ];
         }
 
-        // Check for 'no status' (null or empty string in DB becomes '' key in array)
-        $noStatusCount = $fillingRaw[''] ?? 0;
+        // Handle No Status (empty code)
+        $noStatusCount = $fillingCounts[''] ?? 0;
         
         if ($noStatusCount > 0) {
             $fillingStatusStats[] = [
