@@ -67,6 +67,8 @@ class IsotankUploadController extends Controller
             'Serial Number',
             'Location',
             'Product',
+            'Filling Status Code', // New
+            'Filling Status Description', // New
             'Status',
             'Initial Pressure Test',
             'CSC Initial Test',
@@ -85,7 +87,9 @@ class IsotankUploadController extends Controller
             'T11', 
             'SN12345', 
             'SMGRS', 
-            'Latex', 
+            'Latex',
+            'ready_to_fill', // filling_status_code 
+            'Ready to Fill', // filling_status_desc
             'active',
             '2020-01-01', 
             '2020-01-01', 

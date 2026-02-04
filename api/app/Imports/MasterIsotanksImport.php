@@ -104,6 +104,8 @@ class MasterIsotanksImport
                         'model_type' => $getVal('model_type'),
                         'manufacturer_serial_number' => $getVal('serial_number') ?? $getVal('manufacturer_serial_number') ?? $getVal('serial_no'),
                         'location' => $getVal('location'),
+                        'filling_status_code' => strtolower($getVal('filling_status_code') ?? $getVal('filling_status') ?? 'ongoing_inspection'),
+                        'filling_status_desc' => $getVal('filling_status_description') ?? $getVal('filling_status_desc'),
                         'status' => strtolower($getVal('status') ?? 'active'),
                         'initial_pressure_test_date' => $this->parseDate($getVal('initial_pressure_test') ?? $getVal('initial_pressure_test_date') ?? $getVal('init._pres._test')),
                         'csc_initial_test_date' => $this->parseDate($getVal('csc_initial_test') ?? $getVal('csc_initial_test_date') ?? $getVal('csc_initial')),
