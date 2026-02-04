@@ -121,11 +121,14 @@ class AdminController extends Controller
 
         $fillingCounts = [];
         foreach ($allFillingCodes as $rawCode) {
-            // Normalize: Trim and Lowercase
             if (empty($rawCode)) {
-                $uniqueCode = ''; // Handle as No Status later
+                $uniqueCode = ''; 
             } else {
-                $uniqueCode = strtolower(trim($rawCode));
+                // Aggressive Normalization
+                $norm = strtolower(trim($rawCode));
+                $norm = str_replace(' ', '_', $norm); // Space to underscore
+                $norm = preg_replace('/[^a-z0-9_]/', '', $norm); // Remove hidden chars
+                $uniqueCode = $norm;
             }
             
             if (!isset($fillingCounts[$uniqueCode])) {
@@ -139,9 +142,9 @@ class AdminController extends Controller
         
         // Map normalized counts to formatted stats
         foreach ($fillingCounts as $code => $count) {
-             // Skip empty/null codes (handled separately as No Status below)
              if (empty($code)) continue;
 
+             // Try exact match first, then fallback to clean formatting
              $desc = $validStatuses[$code] ?? ucwords(str_replace('_', ' ', $code));
              
              $fillingStatusStats[] = [
@@ -301,7 +304,10 @@ class AdminController extends Controller
     // NORMALIZE: Trim and lowercase status codes to prevent duplicates
     $allIsotanks = $allIsotanks->map(function($tank) {
         if (!empty($tank->filling_status_code)) {
-            $tank->filling_status_code = strtolower(trim($tank->filling_status_code));
+            $norm = strtolower(trim($tank->filling_status_code));
+            $norm = str_replace(' ', '_', $norm);
+            $norm = preg_replace('/[^a-z0-9_]/', '', $norm);
+            $tank->filling_status_code = $norm;
         }
         return $tank;
     });
