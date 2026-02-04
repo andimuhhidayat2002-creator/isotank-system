@@ -280,26 +280,34 @@ class AdminController extends Controller
             ->get();
 
         // E. Filling Status Snapshot (Updated to use new codes)
-        $fillingStats = [];
-        
-        // Get all isotanks at this location
-        $allIsotanks = MasterIsotank::whereIn('id', $isotanks)->get();
-        
-        // DYNAMIC: Count by ANY status code present in the collection
-        $grouped = $allIsotanks->groupBy('filling_status_code');
-        $validDescriptions = MasterIsotank::getValidFillingStatuses();
-
-        foreach ($grouped as $code => $tanks) {
-            // Skip empty/null keys (handled by unspecified count below)
-            if (empty($code)) continue;
-
-            $description = $validDescriptions[$code] ?? ucwords(str_replace('_', ' ', $code));
-
-            $fillingStats[$code] = [
-                'description' => $description,
-                'count' => $tanks->count()
-            ];
+    $fillingStats = [];
+    
+    // Get all isotanks at this location
+    $allIsotanks = MasterIsotank::whereIn('id', $isotanks)->get();
+    
+    // NORMALIZE: Trim and lowercase status codes to prevent duplicates
+    $allIsotanks = $allIsotanks->map(function($tank) {
+        if (!empty($tank->filling_status_code)) {
+            $tank->filling_status_code = strtolower(trim($tank->filling_status_code));
         }
+        return $tank;
+    });
+    
+    // DYNAMIC: Count by ANY status code present in the collection
+    $grouped = $allIsotanks->groupBy('filling_status_code');
+    $validDescriptions = MasterIsotank::getValidFillingStatuses();
+
+    foreach ($grouped as $code => $tanks) {
+        // Skip empty/null keys (handled by unspecified count below)
+        if (empty($code)) continue;
+
+        $description = $validDescriptions[$code] ?? ucwords(str_replace('_', ' ', $code));
+
+        $fillingStats[$code] = [
+            'description' => $description,
+            'count' => $tanks->count()
+        ];
+    }
         
         // Count unspecified
         $unspecifiedCount = $allIsotanks->filter(function($tank) {
