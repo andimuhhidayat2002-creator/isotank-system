@@ -9,21 +9,20 @@
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2 class="mb-0 text-white">Latest Condition Master</h2>
-    <!-- Buttons handled by DataTables auto-injection -->
 </div>
 
-    <!-- Category Filter -->
-    <ul class="nav nav-pills mb-3">
-        <li class="nav-item">
-          <a class="nav-link {{ $category == 'T75' ? 'active' : '' }}" href="{{ route('admin.reports.latest', ['category' => 'T75']) }}">T75</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link {{ $category == 'T11' ? 'active' : '' }}" href="{{ route('admin.reports.latest', ['category' => 'T11']) }}">T11</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link {{ $category == 'T50' ? 'active' : '' }}" href="{{ route('admin.reports.latest', ['category' => 'T50']) }}">T50</a>
-        </li>
-    </ul>
+<!-- Category Filter -->
+<ul class="nav nav-pills mb-3">
+    <li class="nav-item">
+      <a class="nav-link {{ $category == 'T75' ? 'active' : '' }}" href="{{ route('admin.reports.latest', ['category' => 'T75']) }}">T75</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {{ $category == 'T11' ? 'active' : '' }}" href="{{ route('admin.reports.latest', ['category' => 'T11']) }}">T11</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {{ $category == 'T50' ? 'active' : '' }}" href="{{ route('admin.reports.latest', ['category' => 'T50']) }}">T50</a>
+    </li>
+</ul>
 
 <div class="card">
     <div class="card-body">
@@ -79,21 +78,22 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($isotanks as $iso)
+                    @foreach($logs as $row)
                     <tr>
                         <td class="fw-bold text-start">
-                            <a href="{{ route('admin.isotanks.show', $iso->id) }}" class="text-info text-decoration-none">
-                                {{ $iso->isotank_number }} <i class="bi bi-box-arrow-up-right small"></i>
+                            <a href="{{ route('admin.isotanks.show', $row->isotank_id) }}" class="text-info text-decoration-none">
+                                {{ $row->isotank->iso_number ?? 'UNKNOWN' }} <i class="bi bi-box-arrow-up-right small"></i>
                             </a>
                         </td>
                         <td class="small text-white">
-                            {{ $iso->latest_log_date ? $iso->latest_log_date->format('Y-m-d') : '-' }}
+                            {{ $row->inspection_date ? $row->inspection_date->format('Y-m-d') : '-' }}
                         </td>
                         
                         @foreach($groupedItems as $catName => $items)
                             @foreach($items as $item)
                                 @php
-                                    $val = $iso->inspection_data[$item->slug] ?? null;
+                                    $slug = $item->slug;
+                                    $val = $row->$slug ?? null;
                                     if ($item->type === 'photo') {
                                         $val = $val ? 'Uploaded' : 'Empty';
                                     }
@@ -104,64 +104,39 @@
 
                         @if($category === 'all' || $category === 'T75')
                             <!-- IBOX Data -->
-                            @php
-                                $ibox = $iso->ibox_data ?? [];
-                                $cond = $ibox['ibox_condition'] ?? 'N/A';
-                            @endphp
-                            <td>@include('admin.reports.partials.badge', ['status' => $cond])</td>
-                            <td class="small text-white">{{ $ibox['ibox_battery_percent'] ?? '-' }}%</td>
-                            <td class="small text-white">{{ $ibox['ibox_pressure'] ?? '-' }}</td>
-                            <td class="small text-white">{{ $ibox['ibox_temperature'] ?? '-' }}</td>
-                            <td class="small text-white">{{ $ibox['ibox_level'] ?? '-' }}</td>
+                            <td>@include('admin.reports.partials.badge', ['status' => $row->ibox_condition ?? 'N/A'])</td>
+                            <td class="small text-white">{{ $row->ibox_battery_percent ? $row->ibox_battery_percent . '%' : '-' }}</td>
+                            <td class="small text-white">{{ $row->ibox_pressure ?? '-' }}</td>
+                            <td class="small text-white">{{ $row->ibox_temperature ?? '-' }}</td>
+                            <td class="small text-white">{{ $row->ibox_level ?? '-' }}</td>
 
                             <!-- INSTRUMENT Data -->
-                            @php $inst = $iso->latest_log_data ?? []; @endphp
-                            <td>@include('admin.reports.partials.badge', ['status' => $inst['pg_condition'] ?? 'N/A'])</td>
-                            <td class="small text-white">{{ $inst['pg_serial_number'] ?? '-' }}</td>
-                            <td class="small text-white">{{ isset($inst['pg_calibration_date']) ? \Carbon\Carbon::parse($inst['pg_calibration_date'])->format('y-m-d') : '-' }}</td>
-                            <td class="small text-white">{{ $inst['pg_pressure_scale'] ?? '-' }}</td>
-                            <td>@include('admin.reports.partials.badge', ['status' => $inst['lg_condition'] ?? 'N/A'])</td>
-                            <td class="small text-white">{{ $inst['lg_level_scale'] ?? '-' }}</td>
+                            <td>@include('admin.reports.partials.badge', ['status' => $row->pressure_gauge_condition ?? 'N/A'])</td>
+                            <td class="small text-white">{{ $row->pressure_gauge_serial_number ?? '-' }}</td>
+                            <td class="small text-white">{{ $row->pressure_gauge_calibration_date ? $row->pressure_gauge_calibration_date->format('y-m-d') : '-' }}</td>
+                            <td class="small text-white">{{ $row->pressure_1 ?? '-' }}</td>
+                            <td>@include('admin.reports.partials.badge', ['status' => $row->level_gauge_condition ?? 'N/A'])</td>
+                            <td class="small text-white">{{ $row->level_1 ?? '-' }}</td>
 
                             <!-- VACUUM Data -->
-                            @php $vac = $iso->vacuum_data ?? []; @endphp
-                            <td>@include('admin.reports.partials.badge', ['status' => $vac['vacuum_condition'] ?? 'N/A'])</td>
-                            <td>@include('admin.reports.partials.badge', ['status' => $vac['vacuum_pump_condition'] ?? 'N/A'])</td>
-                            <td class="small text-white">{{ $vac['vacuum_value'] ?? '-' }}</td>
-                            <td class="small text-white">{{ $vac['vacuum_temperature'] ?? '-' }}</td>
-                            <td class="small text-white">{{ isset($vac['vacuum_check_date']) ? \Carbon\Carbon::parse($vac['vacuum_check_date'])->format('y-m-d') : '-' }}</td>
+                            <td>@include('admin.reports.partials.badge', ['status' => $row->vacuum_gauge_condition ?? 'N/A'])</td>
+                            <td>@include('admin.reports.partials.badge', ['status' => $row->vacuum_port_suction_condition ?? 'N/A'])</td>
+                            <td class="small text-white">{{ $row->vacuum_value ? $row->vacuum_value . ' ' . ($row->vacuum_unit ?? '') : '-' }}</td>
+                            <td class="small text-white">{{ $row->vacuum_temperature ?? '-' }}</td>
+                            <td class="small text-white">{{ $row->vacuum_check_datetime ? $row->vacuum_check_datetime->format('y-m-d') : '-' }}</td>
 
                             <!-- PSV Data -->
-                            @php
-                                $pLogs = $iso->psv_logs ?? collect();
-                                $getPsv = function($idx) use ($pLogs) {
-                                    $comp = $pLogs->where('component_index', $idx)->first();
-                                    $psvLogCond = $comp ? ($comp->condition ?? 'N/A') : 'N/A';
-                                    $serial = $comp ? ($comp->serial_number ?? '-') : '-';
-                                    $date = $comp && $comp->test_date 
-                                        ? $comp->test_date->format('y-m-d') 
-                                        : ($comp && $comp->last_calibration_date ? $comp->last_calibration_date->format('y-m-d') : '-');
-                                        
-                                    return [$psvLogCond, $serial, $date];
-                                };
-                                
-                                $p1 = $getPsv(1); $p2 = $getPsv(2); $p3 = $getPsv(3); $p4 = $getPsv(4);
-                            @endphp
-                            <td>@include('admin.reports.partials.badge', ['status' => $p1[0]])</td>
-                            <td class="small text-white">{{ $p1[1] }}</td>
-                            <td class="small text-white">{{ $p1[2] }}</td>
-                            
-                            <td>@include('admin.reports.partials.badge', ['status' => $p2[0]])</td>
-                            <td class="small text-white">{{ $p2[1] }}</td>
-                            <td class="small text-white">{{ $p2[2] }}</td>
-                            
-                            <td>@include('admin.reports.partials.badge', ['status' => $p3[0]])</td>
-                            <td class="small text-white">{{ $p3[1] }}</td>
-                            <td class="small text-white">{{ $p3[2] }}</td>
-                            
-                            <td>@include('admin.reports.partials.badge', ['status' => $p4[0]])</td>
-                            <td class="small text-white">{{ $p4[1] }}</td>
-                            <td class="small text-white">{{ $p4[2] }}</td>
+                            @for($i = 1; $i <= 4; $i++)
+                                @php
+                                    $cond = $row->{"psv{$i}_condition"} ?? 'N/A';
+                                    $sn = $row->{"psv{$i}_serial_number"} ?? '-';
+                                    $dt = $row->{"psv{$i}_calibration_date"};
+                                    $dtStr = $dt ? $dt->format('y-m-d') : '-';
+                                @endphp
+                                <td>@include('admin.reports.partials.badge', ['status' => $cond])</td>
+                                <td class="small text-white">{{ $sn }}</td>
+                                <td class="small text-white">{{ $dtStr }}</td>
+                            @endfor
                         @endif
                     </tr>
                     @endforeach
@@ -201,54 +176,55 @@ $(document).ready(function() {
         $(this).html('<input type="text" class="form-control form-control-sm" style="min-width: 40px;" placeholder="'+title+'" />');
     });
 
-    var table = $('#latestConditionTable').DataTable({
-        // DOM: l=length, B=buttons, f=filter, r=processing, t=table, i=info, p=pagination
-        dom: "<'row mb-3'<'col-md-4'l><'col-md-8 text-end'Bf>>" +
-             "<'row'<'col-12'tr>>" + 
-             "<'row'<'col-md-5'i><'col-md-7'p>>",
-        
-        fixedColumns: {
-            left: 2
-        },
-        scrollX: true,
-        
-        buttons: [
-            { 
-                extend: 'excelHtml5', 
-                text: '<i class="bi bi-file-earmark-excel me-1"></i> Excel',
-                className: 'btn btn-success btn-sm me-2',
-                title: 'Latest_Isotank_Condition',
-                exportOptions: { orthogonal: 'export' }
+    try {
+        var table = $('#latestConditionTable').DataTable({
+            // DOM: l=length, B=buttons, f=filter, r=processing, t=table, i=info, p=pagination
+            dom: "<'row mb-3'<'col-md-4'l><'col-md-8 text-end'Bf>>" +
+                 "<'row'<'col-12'tr>>" + 
+                 "<'row'<'col-md-5'i><'col-md-7'p>>",
+            
+            fixedColumns: {
+                left: 2
             },
-            { 
-                extend: 'pdfHtml5', 
-                text: '<i class="bi bi-file-earmark-pdf me-1"></i> PDF',
-                className: 'btn btn-danger btn-sm',
-                orientation: 'landscape', 
-                pageSize: 'A3',
-                title: 'Latest Isotank Condition',
-                exportOptions: { orthogonal: 'export' }
-            }
-        ],
-        pageLength: 50,
-        order: [[0, 'asc']],
-        initComplete: function() {
-            // Apply footer search
-            this.api().columns().every(function() {
-                var that = this;
-                $('input', this.footer()).on('keyup change clear', function() {
-                    if (that.search() !== this.value) {
-                        that.search(this.value).draw();
-                    }
+            scrollX: true,
+            
+            buttons: [
+                { 
+                    extend: 'excelHtml5', 
+                    text: '<i class="bi bi-file-earmark-excel me-1"></i> Excel',
+                    className: 'btn btn-success btn-sm me-2',
+                    title: 'Latest_Isotank_Condition',
+                    exportOptions: { orthogonal: 'export' }
+                },
+                { 
+                    extend: 'pdfHtml5', 
+                    text: '<i class="bi bi-file-earmark-pdf me-1"></i> PDF',
+                    className: 'btn btn-danger btn-sm',
+                    orientation: 'landscape', 
+                    pageSize: 'A3',
+                    title: 'Latest Isotank Condition',
+                    exportOptions: { orthogonal: 'export' }
+                }
+            ],
+            pageLength: 50,
+            order: [[0, 'asc']],
+            initComplete: function() {
+                // Apply footer search
+                this.api().columns().every(function() {
+                    var that = this;
+                    $('input', this.footer()).on('keyup change clear', function() {
+                        if (that.search() !== this.value) {
+                            that.search(this.value).draw();
+                        }
+                    });
                 });
-            });
-            console.log('DT Initialized with FixedColumns & Built-in Buttons');
-        }
-    });
+            }
+        });
+    } catch(e) {
+        console.error("DataTables Init Error:", e);
+    }
 
     // --- DRAG TO SCROLL (Compatible with FixedColumns) ---
-    // Note: FixedColumns creates complexity with drag-scroll on the whole table
-    // We target dataTables_scrollBody which is the scrollable container
     const slider = document.querySelector('.dataTables_scrollBody');
     if(slider) {
         let isDown = false;
