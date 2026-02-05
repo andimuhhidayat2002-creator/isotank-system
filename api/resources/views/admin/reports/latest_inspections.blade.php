@@ -493,24 +493,34 @@ $(document).ready(function() {
     // Set initial cursor
     tableWrapper.style.cursor = 'grab';
     
-    // Visual hint for users
+    // Visual hint for users (auto-remove after animation)
     const hint = document.createElement('div');
     hint.innerHTML = '<i class="bi bi-hand-index"></i> Click and drag to scroll';
     hint.style.cssText = `
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        background: rgba(0,0,0,0.7);
+        position: fixed;
+        top: 80px;
+        right: 20px;
+        background: rgba(139, 69, 19, 0.9);
         color: white;
         padding: 8px 12px;
         border-radius: 4px;
         font-size: 12px;
-        z-index: 100;
+        z-index: 9999;
         pointer-events: none;
-        animation: fadeOut 4s forwards;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
     `;
-    tableWrapper.style.position = 'relative';
-    tableWrapper.appendChild(hint);
+    document.body.appendChild(hint);
+    
+    // Remove hint after 4 seconds
+    setTimeout(() => {
+        hint.style.transition = 'opacity 0.5s';
+        hint.style.opacity = '0';
+        setTimeout(() => {
+            if (hint.parentNode) {
+                hint.parentNode.removeChild(hint);
+            }
+        }, 500);
+    }, 4000);
 });
 </script>
 @endpush
@@ -527,37 +537,41 @@ $(document).ready(function() {
        ======================================== */
     
     /* Sticky ISO Number Column (First Column) */
-    .sticky-col {
+    #latestConditionTable thead th:nth-child(1),
+    #latestConditionTable tbody td:nth-child(1) {
         position: sticky !important;
-        left: 0;
-        z-index: 10;
-        background-color: #1a1a1a !important; /* Dark background */
-        box-shadow: 2px 0 5px rgba(0,0,0,0.3); /* Shadow for depth */
+        left: 0 !important;
+        z-index: 15 !important;
+        background-color: #1a1a1a !important;
+        box-shadow: 2px 0 5px rgba(0,0,0,0.3) !important;
     }
 
     /* Sticky Updated At Column (Second Column) */
-    .sticky-col-2 {
+    #latestConditionTable thead th:nth-child(2),
+    #latestConditionTable tbody td:nth-child(2) {
         position: sticky !important;
-        left: 120px; /* Width of first column */
-        z-index: 10;
+        left: 120px !important;
+        z-index: 15 !important;
         background-color: #1a1a1a !important;
-        box-shadow: 2px 0 5px rgba(0,0,0,0.3);
+        box-shadow: 2px 0 5px rgba(0,0,0,0.3) !important;
     }
 
-    /* Sticky Header Row */
-    .sticky-header {
-        position: sticky !important;
-        top: 0;
-        z-index: 20; /* Higher than columns */
+    /* Sticky Header Rows - Higher z-index for headers */
+    #latestConditionTable thead th:nth-child(1) {
+        z-index: 25 !important;
         background-color: #2d2d2d !important;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    }
+    
+    #latestConditionTable thead th:nth-child(2) {
+        z-index: 25 !important;
+        background-color: #2d2d2d !important;
     }
 
-    /* Sticky corner cells (header + sticky columns) */
-    .sticky-corner {
+    /* All other headers sticky at top */
+    #latestConditionTable thead th {
         position: sticky !important;
-        top: 0;
-        z-index: 30; /* Highest priority */
+        top: 0 !important;
+        z-index: 20 !important;
         background-color: #2d2d2d !important;
     }
 
@@ -567,16 +581,19 @@ $(document).ready(function() {
     
     /* Smooth scrolling container */
     .table-responsive {
-        overflow-x: auto;
-        overflow-y: auto;
-        max-height: calc(100vh - 250px); /* Viewport height minus header/footer */
+        overflow-x: auto !important;
+        overflow-y: auto !important;
+        max-height: calc(100vh - 250px);
         scroll-behavior: smooth;
+        position: relative;
     }
 
     /* Ensure table doesn't collapse */
     #latestConditionTable {
         min-width: 100%;
         table-layout: auto;
+        border-collapse: separate !important;
+        border-spacing: 0 !important;
     }
 
     /* Scroll hint shadow on right edge */
@@ -595,12 +612,6 @@ $(document).ready(function() {
     /* Highlight row on hover for better tracking */
     #latestConditionTable tbody tr:hover {
         background-color: rgba(255, 255, 255, 0.05) !important;
-    }
-
-    /* FadeOut animation for drag hint */
-    @keyframes fadeOut {
-        0%, 70% { opacity: 1; }
-        100% { opacity: 0; display: none; }
     }
 
     /* Cursor styles for drag-to-scroll */
