@@ -33,8 +33,8 @@
             <table id="latestConditionTable" class="table table-bordered table-sm align-middle text-nowrap" style="font-size: 0.75rem;">
                 <thead class="text-white text-center">
                     <tr>
-                        <th rowspan="2" class="align-middle bg-secondary bg-opacity-75" style="width: 120px;">ISO NUMBER</th>
-                        <th rowspan="2" class="align-middle bg-secondary bg-opacity-75" style="width: 100px;">UPDATED AT</th>
+                        <th rowspan="2" class="align-middle bg-secondary bg-opacity-75 sticky-corner" style="width: 120px;">ISO NUMBER</th>
+                        <th rowspan="2" class="align-middle bg-secondary bg-opacity-75 sticky-corner" style="width: 100px; left: 120px;">UPDATED AT</th>
                         
                         {{-- DYNAMIC CATEGORY HEADERS --}}
                         @php 
@@ -70,7 +70,7 @@
                             }
                         @endphp
                         @foreach($groupedItems as $catName => $items)
-                            <th colspan="{{ $items->count() }}" class="{{ $colorToggle ? 'bg-primary' : 'bg-success bg-opacity-75' }} text-white" style="border-bottom: 2px solid white;">
+                            <th colspan="{{ $items->count() }}" class="{{ $colorToggle ? 'bg-primary' : 'bg-success bg-opacity-75' }} text-white sticky-header" style="border-bottom: 2px solid white;">
                                 {{ $categoryMap[$catName] ?? strtoupper($catName) }}
                             </th>
                             @php $colorToggle = !$colorToggle; @endphp
@@ -78,10 +78,10 @@
                         
                         {{-- HARDCODED SECTIONS (LEGACY T75) --}}
                         @if($category === 'all' || $category === 'T75')
-                            <th colspan="5" style="background-color: #F59E0B; color: white; border-bottom: 2px solid white;">IBOX</th>
-                            <th colspan="6" style="background-color: #3B82F6; color: white; border-bottom: 2px solid white;">INSTRUMENTS</th>
-                            <th colspan="5" style="background-color: #EF4444; color: white; border-bottom: 2px solid white;">VACUUM</th>
-                            <th colspan="12" class="bg-secondary bg-opacity-75 text-white" style="border-bottom: 2px solid white;">PSV</th>
+                            <th colspan="5" class="sticky-header" style="background-color: #F59E0B; color: white; border-bottom: 2px solid white;">IBOX</th>
+                            <th colspan="6" class="sticky-header" style="background-color: #3B82F6; color: white; border-bottom: 2px solid white;">INSTRUMENTS</th>
+                            <th colspan="5" class="sticky-header" style="background-color: #EF4444; color: white; border-bottom: 2px solid white;">VACUUM</th>
+                            <th colspan="12" class="bg-secondary bg-opacity-75 text-white sticky-header" style="border-bottom: 2px solid white;">PSV</th>
                         @endif
                     </tr>
                     <tr class="vertical-headers">
@@ -89,39 +89,39 @@
                         @foreach($groupedItems as $catName => $items)
                             @foreach($items as $item) 
                                 @php $displayLabel = str_replace(['FRONT: ', 'REAR: ', 'RIGHT: ', 'LEFT: ', 'TOP: '], '', $item->label); @endphp
-                                <th class="text-white"><div>{{ $displayLabel }}</div></th> 
+                                <th class="text-white sticky-header"><div>{{ $displayLabel }}</div></th> 
                             @endforeach
                         @endforeach
                         
                         {{-- HARDCODED SUB HEADERS --}}
                         @if($category === 'all' || $category === 'T75')
                             <!-- IBOX -->
-                            <th class="text-white"><div>Condition</div></th>
-                            <th class="text-white"><div>Battery</div></th>
-                            <th class="text-white"><div>Pressure</div></th>
-                            <th class="text-white"><div>Temperature</div></th>
-                            <th class="text-white"><div>Level</div></th>
+                            <th class="text-white sticky-header"><div>Condition</div></th>
+                            <th class="text-white sticky-header"><div>Battery</div></th>
+                            <th class="text-white sticky-header"><div>Pressure</div></th>
+                            <th class="text-white sticky-header"><div>Temperature</div></th>
+                            <th class="text-white sticky-header"><div>Level</div></th>
                             
                             <!-- Instruments -->
-                            <th class="text-white"><div>PG Cond.</div></th>
-                            <th class="text-white"><div>PG Serial</div></th>
-                            <th class="text-white"><div>PG Calib.</div></th>
-                            <th class="text-white"><div>Pressure</div></th>
-                            <th class="text-white"><div>LG Cond.</div></th>
-                            <th class="text-white"><div>Level</div></th>
+                            <th class="text-white sticky-header"><div>PG Cond.</div></th>
+                            <th class="text-white sticky-header"><div>PG Serial</div></th>
+                            <th class="text-white sticky-header"><div>PG Calib.</div></th>
+                            <th class="text-white sticky-header"><div>Pressure</div></th>
+                            <th class="text-white sticky-header"><div>LG Cond.</div></th>
+                            <th class="text-white sticky-header"><div>Level</div></th>
                             
                             <!-- Vacuum -->
-                            <th class="text-white"><div>VG Cond.</div></th>
-                            <th class="text-white"><div>Port Suction</div></th>
-                            <th class="text-white"><div>Value</div></th>
-                            <th class="text-white"><div>Temp</div></th>
-                            <th class="text-white"><div>Check Date</div></th>
+                            <th class="text-white sticky-header"><div>VG Cond.</div></th>
+                            <th class="text-white sticky-header"><div>Port Suction</div></th>
+                            <th class="text-white sticky-header"><div>Value</div></th>
+                            <th class="text-white sticky-header"><div>Temp</div></th>
+                            <th class="text-white sticky-header"><div>Check Date</div></th>
                             
                             <!-- PSV -->
-                            <th class="text-white"><div>PSV1 Cond</div></th><th class="text-white"><div>Serial</div></th><th class="text-white"><div>Date</div></th>
-                            <th class="text-white"><div>PSV2 Cond</div></th><th class="text-white"><div>Serial</div></th><th class="text-white"><div>Date</div></th>
-                            <th class="text-white"><div>PSV3 Cond</div></th><th class="text-white"><div>Serial</div></th><th class="text-white"><div>Date</div></th>
-                            <th class="text-white"><div>PSV4 Cond</div></th><th class="text-white"><div>Serial</div></th><th class="text-white"><div>Date</div></th>
+                            <th class="text-white sticky-header"><div>PSV1 Cond</div></th><th class="text-white sticky-header"><div>Serial</div></th><th class="text-white sticky-header"><div>Date</div></th>
+                            <th class="text-white sticky-header"><div>PSV2 Cond</div></th><th class="text-white sticky-header"><div>Serial</div></th><th class="text-white sticky-header"><div>Date</div></th>
+                            <th class="text-white sticky-header"><div>PSV3 Cond</div></th><th class="text-white sticky-header"><div>Serial</div></th><th class="text-white sticky-header"><div>Date</div></th>
+                            <th class="text-white sticky-header"><div>PSV4 Cond</div></th><th class="text-white sticky-header"><div>Serial</div></th><th class="text-white sticky-header"><div>Date</div></th>
                         @endif
                     </tr>
                 </thead>
@@ -139,7 +139,7 @@
                                 {{ $log->isotank->iso_number }} <i class="bi bi-box-arrow-up-right small"></i>
                             </a>
                         </td>
-                        <td class="small text-white">{{ $log->updated_at ? $log->updated_at->format('Y-m-d') : '-' }}</td>
+                        <td class="small text-white sticky-col-2">{{ $log->updated_at ? $log->updated_at->format('Y-m-d') : '-' }}</td>
                         
                         {{-- DYNAMIC VALUES --}}
                         @php
@@ -354,14 +354,242 @@ $(document).ready(function() {
     $('#exportPdfBtn').on('click', function() {
         table.button('.buttons-pdf').trigger();
     });
+
+    // ========================================
+    // DRAG-TO-SCROLL FUNCTIONALITY
+    // ========================================
+    const tableWrapper = document.querySelector('.table-responsive');
+    let isDown = false;
+    let startX;
+    let startY;
+    let scrollLeft;
+    let scrollTop;
+    let velocity = { x: 0, y: 0 };
+    let lastX = 0;
+    let lastY = 0;
+    let timestamp = Date.now();
+
+    // Prevent text selection while dragging
+    tableWrapper.style.userSelect = 'none';
+    tableWrapper.style.webkitUserSelect = 'none';
+
+    // Mouse down - start dragging
+    tableWrapper.addEventListener('mousedown', (e) => {
+        // Don't interfere with clicks on links, buttons, or inputs
+        if (e.target.tagName === 'A' || e.target.tagName === 'BUTTON' || 
+            e.target.tagName === 'INPUT' || e.target.closest('a') || 
+            e.target.closest('button')) {
+            return;
+        }
+
+        isDown = true;
+        tableWrapper.style.cursor = 'grabbing';
+        startX = e.pageX - tableWrapper.offsetLeft;
+        startY = e.pageY - tableWrapper.offsetTop;
+        scrollLeft = tableWrapper.scrollLeft;
+        scrollTop = tableWrapper.scrollTop;
+        lastX = e.pageX;
+        lastY = e.pageY;
+        timestamp = Date.now();
+        velocity = { x: 0, y: 0 };
+    });
+
+    // Mouse leave - stop dragging
+    tableWrapper.addEventListener('mouseleave', () => {
+        isDown = false;
+        tableWrapper.style.cursor = 'grab';
+    });
+
+    // Mouse up - stop dragging and apply momentum
+    tableWrapper.addEventListener('mouseup', () => {
+        isDown = false;
+        tableWrapper.style.cursor = 'grab';
+        
+        // Apply momentum scrolling
+        if (Math.abs(velocity.x) > 1 || Math.abs(velocity.y) > 1) {
+            applyMomentum();
+        }
+    });
+
+    // Mouse move - perform drag
+    tableWrapper.addEventListener('mousemove', (e) => {
+        if (!isDown) return;
+        e.preventDefault();
+        
+        const x = e.pageX - tableWrapper.offsetLeft;
+        const y = e.pageY - tableWrapper.offsetTop;
+        const walkX = (x - startX) * 1.5; // Multiplier for sensitivity
+        const walkY = (y - startY) * 1.5;
+        
+        tableWrapper.scrollLeft = scrollLeft - walkX;
+        tableWrapper.scrollTop = scrollTop - walkY;
+
+        // Calculate velocity for momentum
+        const now = Date.now();
+        const dt = now - timestamp;
+        if (dt > 0) {
+            velocity.x = (e.pageX - lastX) / dt * 16; // Normalize to 60fps
+            velocity.y = (e.pageY - lastY) / dt * 16;
+        }
+        lastX = e.pageX;
+        lastY = e.pageY;
+        timestamp = now;
+    });
+
+    // Momentum scrolling animation
+    function applyMomentum() {
+        const friction = 0.92; // Deceleration factor
+        
+        if (Math.abs(velocity.x) > 0.5 || Math.abs(velocity.y) > 0.5) {
+            tableWrapper.scrollLeft -= velocity.x;
+            tableWrapper.scrollTop -= velocity.y;
+            velocity.x *= friction;
+            velocity.y *= friction;
+            requestAnimationFrame(applyMomentum);
+        }
+    }
+
+    // Touch support for mobile/tablet
+    let touchStartX = 0;
+    let touchStartY = 0;
+
+    tableWrapper.addEventListener('touchstart', (e) => {
+        touchStartX = e.touches[0].pageX;
+        touchStartY = e.touches[0].pageY;
+        scrollLeft = tableWrapper.scrollLeft;
+        scrollTop = tableWrapper.scrollTop;
+    }, { passive: true });
+
+    tableWrapper.addEventListener('touchmove', (e) => {
+        const touchX = e.touches[0].pageX;
+        const touchY = e.touches[0].pageY;
+        const walkX = (touchStartX - touchX) * 1.2;
+        const walkY = (touchStartY - touchY) * 1.2;
+        
+        tableWrapper.scrollLeft = scrollLeft + walkX;
+        tableWrapper.scrollTop = scrollTop + walkY;
+    }, { passive: true });
+
+    // Set initial cursor
+    tableWrapper.style.cursor = 'grab';
+    
+    // Visual hint for users
+    const hint = document.createElement('div');
+    hint.innerHTML = '<i class="bi bi-hand-index"></i> Click and drag to scroll';
+    hint.style.cssText = `
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: rgba(0,0,0,0.7);
+        color: white;
+        padding: 8px 12px;
+        border-radius: 4px;
+        font-size: 12px;
+        z-index: 100;
+        pointer-events: none;
+        animation: fadeOut 4s forwards;
+    `;
+    tableWrapper.style.position = 'relative';
+    tableWrapper.appendChild(hint);
 });
 </script>
 @endpush
 
 <style>
+    /* Base table styles */
     th { font-size: 0.65rem; text-transform: uppercase; }
     .dataTables_wrapper .dataTables_filter { text-align: left; }
     .vertical-headers th { height: 140px; vertical-align: bottom; padding-bottom: 15px !important; position: relative; }
     .vertical-headers th div { writing-mode: vertical-rl; transform: rotate(180deg); white-space: nowrap; margin: 0 auto; width: 100%; text-align: left; }
+
+    /* ========================================
+       STICKY COLUMNS & HEADERS
+       ======================================== */
+    
+    /* Sticky ISO Number Column (First Column) */
+    .sticky-col {
+        position: sticky !important;
+        left: 0;
+        z-index: 10;
+        background-color: #1a1a1a !important; /* Dark background */
+        box-shadow: 2px 0 5px rgba(0,0,0,0.3); /* Shadow for depth */
+    }
+
+    /* Sticky Updated At Column (Second Column) */
+    .sticky-col-2 {
+        position: sticky !important;
+        left: 120px; /* Width of first column */
+        z-index: 10;
+        background-color: #1a1a1a !important;
+        box-shadow: 2px 0 5px rgba(0,0,0,0.3);
+    }
+
+    /* Sticky Header Row */
+    .sticky-header {
+        position: sticky !important;
+        top: 0;
+        z-index: 20; /* Higher than columns */
+        background-color: #2d2d2d !important;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    }
+
+    /* Sticky corner cells (header + sticky columns) */
+    .sticky-corner {
+        position: sticky !important;
+        top: 0;
+        z-index: 30; /* Highest priority */
+        background-color: #2d2d2d !important;
+    }
+
+    /* ========================================
+       DRAG-TO-SCROLL ENHANCEMENTS
+       ======================================== */
+    
+    /* Smooth scrolling container */
+    .table-responsive {
+        overflow-x: auto;
+        overflow-y: auto;
+        max-height: calc(100vh - 250px); /* Viewport height minus header/footer */
+        scroll-behavior: smooth;
+    }
+
+    /* Ensure table doesn't collapse */
+    #latestConditionTable {
+        min-width: 100%;
+        table-layout: auto;
+    }
+
+    /* Scroll hint shadow on right edge */
+    .table-responsive::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: 30px;
+        background: linear-gradient(to left, rgba(0,0,0,0.2), transparent);
+        pointer-events: none;
+        z-index: 5;
+    }
+
+    /* Highlight row on hover for better tracking */
+    #latestConditionTable tbody tr:hover {
+        background-color: rgba(255, 255, 255, 0.05) !important;
+    }
+
+    /* FadeOut animation for drag hint */
+    @keyframes fadeOut {
+        0%, 70% { opacity: 1; }
+        100% { opacity: 0; display: none; }
+    }
+
+    /* Cursor styles for drag-to-scroll */
+    .table-responsive.grabbing {
+        cursor: grabbing !important;
+    }
+
+    .table-responsive.grabbing * {
+        cursor: grabbing !important;
+    }
 </style>
 @endsection
