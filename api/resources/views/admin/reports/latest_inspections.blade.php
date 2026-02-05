@@ -315,7 +315,7 @@ $(document).ready(function() {
         buttons: [
             { 
                 extend: 'excelHtml5', 
-                className: 'btn btn-success btn-sm mb-3 d-none', // Hidden, triggered by custom button
+                className: 'btn btn-success btn-sm mb-3 d-none buttons-excel', // Added buttons-excel class
                 title: 'Latest_Isotank_Condition',
                 exportOptions: {
                     orthogonal: 'export'
@@ -323,7 +323,7 @@ $(document).ready(function() {
             },
             { 
                 extend: 'pdfHtml5', 
-                className: 'btn btn-danger btn-sm mb-3 d-none', // Hidden, triggered by custom button
+                className: 'btn btn-danger btn-sm mb-3 d-none buttons-pdf', // Added buttons-pdf class
                 orientation: 'landscape', 
                 pageSize: 'A3',
                 title: 'Latest Isotank Condition',
