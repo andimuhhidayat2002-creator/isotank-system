@@ -2,7 +2,15 @@
 
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="mb-0">Latest Condition Master</h2>
+    <h2 class="mb-0 text-white">Latest Condition Master</h2>
+    <div class="btn-group">
+        <button id="exportExcelBtn" class="btn btn-success">
+            <i class="bi bi-file-earmark-excel"></i> Download Excel
+        </button>
+        <button id="exportPdfBtn" class="btn btn-danger">
+            <i class="bi bi-file-earmark-pdf"></i> Download PDF
+        </button>
+    </div>
 </div>
 
     <!-- Category Filter -->
@@ -70,7 +78,7 @@
                         
                         {{-- HARDCODED SECTIONS (LEGACY T75) --}}
                         @if($category === 'all' || $category === 'T75')
-                            <th colspan="5" style="background-color: #F59E0B; color: black; border-bottom: 2px solid white;">IBOX</th>
+                            <th colspan="5" style="background-color: #F59E0B; color: white; border-bottom: 2px solid white;">IBOX</th>
                             <th colspan="6" style="background-color: #3B82F6; color: white; border-bottom: 2px solid white;">INSTRUMENTS</th>
                             <th colspan="5" style="background-color: #EF4444; color: white; border-bottom: 2px solid white;">VACUUM</th>
                             <th colspan="12" class="bg-secondary bg-opacity-75 text-white" style="border-bottom: 2px solid white;">PSV</th>
@@ -81,39 +89,39 @@
                         @foreach($groupedItems as $catName => $items)
                             @foreach($items as $item) 
                                 @php $displayLabel = str_replace(['FRONT: ', 'REAR: ', 'RIGHT: ', 'LEFT: ', 'TOP: '], '', $item->label); @endphp
-                                <th><div>{{ $displayLabel }}</div></th> 
+                                <th class="text-white"><div>{{ $displayLabel }}</div></th> 
                             @endforeach
                         @endforeach
                         
                         {{-- HARDCODED SUB HEADERS --}}
                         @if($category === 'all' || $category === 'T75')
                             <!-- IBOX -->
-                            <th><div>Condition</div></th>
-                            <th><div>Battery</div></th>
-                            <th><div>Pressure</div></th>
-                            <th><div>Temperature</div></th>
-                            <th><div>Level</div></th>
+                            <th class="text-white"><div>Condition</div></th>
+                            <th class="text-white"><div>Battery</div></th>
+                            <th class="text-white"><div>Pressure</div></th>
+                            <th class="text-white"><div>Temperature</div></th>
+                            <th class="text-white"><div>Level</div></th>
                             
                             <!-- Instruments -->
-                            <th><div>PG Cond.</div></th>
-                            <th><div>PG Serial</div></th>
-                            <th><div>PG Calib.</div></th>
-                            <th><div>Pressure</div></th>
-                            <th><div>LG Cond.</div></th>
-                            <th><div>Level</div></th>
+                            <th class="text-white"><div>PG Cond.</div></th>
+                            <th class="text-white"><div>PG Serial</div></th>
+                            <th class="text-white"><div>PG Calib.</div></th>
+                            <th class="text-white"><div>Pressure</div></th>
+                            <th class="text-white"><div>LG Cond.</div></th>
+                            <th class="text-white"><div>Level</div></th>
                             
                             <!-- Vacuum -->
-                            <th><div>VG Cond.</div></th>
-                            <th><div>Port Suction</div></th>
-                            <th><div>Value</div></th>
-                            <th><div>Temp</div></th>
-                            <th><div>Check Date</div></th>
+                            <th class="text-white"><div>VG Cond.</div></th>
+                            <th class="text-white"><div>Port Suction</div></th>
+                            <th class="text-white"><div>Value</div></th>
+                            <th class="text-white"><div>Temp</div></th>
+                            <th class="text-white"><div>Check Date</div></th>
                             
                             <!-- PSV -->
-                            <th><div>PSV1 Cond</div></th><th><div>Serial</div></th><th><div>Date</div></th>
-                            <th><div>PSV2 Cond</div></th><th><div>Serial</div></th><th><div>Date</div></th>
-                            <th><div>PSV3 Cond</div></th><th><div>Serial</div></th><th><div>Date</div></th>
-                            <th><div>PSV4 Cond</div></th><th><div>Serial</div></th><th><div>Date</div></th>
+                            <th class="text-white"><div>PSV1 Cond</div></th><th class="text-white"><div>Serial</div></th><th class="text-white"><div>Date</div></th>
+                            <th class="text-white"><div>PSV2 Cond</div></th><th class="text-white"><div>Serial</div></th><th class="text-white"><div>Date</div></th>
+                            <th class="text-white"><div>PSV3 Cond</div></th><th class="text-white"><div>Serial</div></th><th class="text-white"><div>Date</div></th>
+                            <th class="text-white"><div>PSV4 Cond</div></th><th class="text-white"><div>Serial</div></th><th class="text-white"><div>Date</div></th>
                         @endif
                     </tr>
                 </thead>
@@ -127,8 +135,8 @@
                     @endphp
                     <tr class="text-center">
                         <td class="fw-bold text-start sticky-col">
-                            <a href="{{ route('admin.isotanks.show', $log->isotank->id) }}" class="text-decoration-none text-primary" target="_blank">
-                                {{ $log->isotank->iso_number }} <i class="bi bi-box-arrow-up-right small text-white"></i>
+                            <a href="{{ route('admin.isotanks.show', $log->isotank->id) }}" class="text-decoration-none text-info" target="_blank">
+                                {{ $log->isotank->iso_number }} <i class="bi bi-box-arrow-up-right small"></i>
                             </a>
                         </td>
                         <td class="small text-white">{{ $log->updated_at ? $log->updated_at->format('Y-m-d') : '-' }}</td>
@@ -199,10 +207,10 @@
                         @if($category === 'all' || $category === 'T75')
                              {{-- IBOX --}}
                              <td>@include('admin.reports.partials.badge', ['status' => $log->ibox_condition])</td>
-                             <td>{{ $log->ibox_battery_percent ? $log->ibox_battery_percent.'%' : '-' }}</td>
-                             <td>{{ $log->ibox_pressure ?? '-' }}</td>
-                             <td>{{ $log->ibox_temperature_1 ?? ($log->ibox_temperature ?? '-') }}</td>
-                             <td>{{ $log->ibox_level ?? '-' }}</td>
+                             <td class="text-white">{{ $log->ibox_battery_percent ? $log->ibox_battery_percent.'%' : '-' }}</td>
+                             <td class="text-white">{{ $log->ibox_pressure ?? '-' }}</td>
+                             <td class="text-white">{{ $log->ibox_temperature_1 ?? ($log->ibox_temperature ?? '-') }}</td>
+                             <td class="text-white">{{ $log->ibox_level ?? '-' }}</td>
 
                             {{-- INSTRUMENTS --}}
                             <td>@include('admin.reports.partials.badge', ['status' => $log->pressure_gauge_condition])</td>
@@ -214,18 +222,18 @@
                                     : ($pgComp && $pgComp->last_calibration_date ? $pgComp->last_calibration_date->format('y-m-d') : '-');
                                 $pgSerial = $log->pressure_gauge_serial_number ?: ($pgComp ? $pgComp->serial_number : '-');
                             @endphp
-                            <td class="small">{{ $pgSerial }}</td>
-                            <td class="small">{{ $pgDate }}</td>
-                            <td>{{ $log->pressure_1 ? (float)$log->pressure_1 : '' }}</td>
+                            <td class="small text-white">{{ $pgSerial }}</td>
+                            <td class="small text-white">{{ $pgDate }}</td>
+                            <td class="text-white">{{ $log->pressure_1 ? (float)$log->pressure_1 : '' }}</td>
                             <td>@include('admin.reports.partials.badge', ['status' => $log->level_gauge_condition])</td>
-                            <td>{{ $log->level_1 ? (float)$log->level_1 : '' }}</td>
+                            <td class="text-white">{{ $log->level_1 ? (float)$log->level_1 : '' }}</td>
 
                             {{-- VACUUM --}}
                             <td>@include('admin.reports.partials.badge', ['status' => $log->vacuum_gauge_condition])</td>
                             <td>@include('admin.reports.partials.badge', ['status' => $log->vacuum_port_suction_condition ?? $logData['port_suction_condition'] ?? $logData['Port Suction Condition'] ?? null])</td>
-                            <td>{{ $log->vacuum_value ? (float)$log->vacuum_value : '-' }}</td>
-                            <td>{{ $log->vacuum_temperature ?? '-' }}</td>
-                            <td class="small">{{ $log->vacuum_check_datetime ? \Carbon\Carbon::parse($log->vacuum_check_datetime)->format('y-m-d') : '-' }}</td>
+                            <td class="text-white">{{ $log->vacuum_value ? (float)$log->vacuum_value : '-' }}</td>
+                            <td class="text-white">{{ $log->vacuum_temperature ?? '-' }}</td>
+                            <td class="small text-white">{{ $log->vacuum_check_datetime ? \Carbon\Carbon::parse($log->vacuum_check_datetime)->format('y-m-d') : '-' }}</td>
 
                             {{-- PSV --}}
                             @php
@@ -247,20 +255,20 @@
                                 $p1 = $getPsv(1); $p2 = $getPsv(2); $p3 = $getPsv(3); $p4 = $getPsv(4);
                             @endphp
                             <td>@include('admin.reports.partials.badge', ['status' => $p1[0]])</td>
-                            <td class="small">{{ $p1[1] }}</td>
-                            <td class="small">{{ $p1[2] }}</td>
+                            <td class="small text-white">{{ $p1[1] }}</td>
+                            <td class="small text-white">{{ $p1[2] }}</td>
                             
                             <td>@include('admin.reports.partials.badge', ['status' => $p2[0]])</td>
-                            <td class="small">{{ $p2[1] }}</td>
-                            <td class="small">{{ $p2[2] }}</td>
+                            <td class="small text-white">{{ $p2[1] }}</td>
+                            <td class="small text-white">{{ $p2[2] }}</td>
                             
                             <td>@include('admin.reports.partials.badge', ['status' => $p3[0]])</td>
-                            <td class="small">{{ $p3[1] }}</td>
-                            <td class="small">{{ $p3[2] }}</td>
+                            <td class="small text-white">{{ $p3[1] }}</td>
+                            <td class="small text-white">{{ $p3[2] }}</td>
                             
                             <td>@include('admin.reports.partials.badge', ['status' => $p4[0]])</td>
-                            <td class="small">{{ $p4[1] }}</td>
-                            <td class="small">{{ $p4[2] }}</td>
+                            <td class="small text-white">{{ $p4[1] }}</td>
+                            <td class="small text-white">{{ $p4[2] }}</td>
                         @endif
                     </tr>
                     @endforeach
@@ -302,11 +310,27 @@ $(document).ready(function() {
         $(this).html('<input type="text" class="form-control form-control-sm" style="min-width: 40px;" placeholder="" />');
     });
 
-    $('#latestConditionTable').DataTable({
+    var table = $('#latestConditionTable').DataTable({
         dom: 'Bfrtip',
         buttons: [
-            { extend: 'excelHtml5', className: 'btn btn-success btn-sm mb-3', title: 'Latest_Isotank_Condition' },
-            { extend: 'pdfHtml5', className: 'btn btn-danger btn-sm mb-3', orientation: 'landscape', pageSize: 'Legal' }
+            { 
+                extend: 'excelHtml5', 
+                className: 'btn btn-success btn-sm mb-3 d-none', // Hidden, triggered by custom button
+                title: 'Latest_Isotank_Condition',
+                exportOptions: {
+                    orthogonal: 'export'
+                }
+            },
+            { 
+                extend: 'pdfHtml5', 
+                className: 'btn btn-danger btn-sm mb-3 d-none', // Hidden, triggered by custom button
+                orientation: 'landscape', 
+                pageSize: 'A3',
+                title: 'Latest Isotank Condition',
+                exportOptions: {
+                    orthogonal: 'export'
+                }
+            }
         ],
         pageLength: 50,
         order: [[0, 'asc']],
@@ -320,6 +344,15 @@ $(document).ready(function() {
                 });
             });
         }
+    });
+
+    // Connect custom buttons to DataTables export
+    $('#exportExcelBtn').on('click', function() {
+        table.button('.buttons-excel').trigger();
+    });
+
+    $('#exportPdfBtn').on('click', function() {
+        table.button('.buttons-pdf').trigger();
     });
 });
 </script>
