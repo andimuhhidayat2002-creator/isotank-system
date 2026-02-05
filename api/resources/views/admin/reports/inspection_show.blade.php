@@ -351,10 +351,13 @@
 
                                             @if($tankCat == 'T75')
                                             <!-- SECTION F: VACUUM -->
+                                            <!-- SECTION F: VACUUM -->
                                             <tr class="bg-dark bg-opacity-50"><th colspan="2" class="text-white ps-3">F. VACUUM SYSTEM</th></tr>
                                             <tr><td class="ps-3">Vacuum Gauge</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->vacuum_gauge_condition])</td></tr>
                                             <tr><td class="ps-3">Port Suction</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->vacuum_port_suction_condition ?? $logData['port_suction_condition'] ?? $logData['Port Suction Condition'] ?? null])</td></tr>
                                             <tr><td class="ps-3">Value</td><td class="text-center fw-bold">{{ $log->vacuum_value ? (float)$log->vacuum_value . ' mTorr' : '-' }}</td></tr>
+                                            <tr><td class="ps-3">Vacuum Temperature</td><td class="text-center">{{ $log->vacuum_temperature ? $log->vacuum_temperature.' °C' : '-' }}</td></tr>
+                                            <tr><td class="ps-3">Check Datetime</td><td class="text-center">{{ $log->vacuum_check_datetime ? \Carbon\Carbon::parse($log->vacuum_check_datetime)->format('d M Y H:i') : '-' }}</td></tr>
                                             @endif
 
                                             @if($tankCat == 'T75')
@@ -366,6 +369,15 @@
                                                     <td class="ps-3">{{ strtoupper($p) }} Condition</td>
                                                     <td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->{$p.'_condition'}])</td>
                                                 </tr>
+                                                @if($log->{$p.'_serial_number'} || $log->{$p.'_calibration_date'})
+                                                <tr>
+                                                    <td colspan="2" class="ps-3 text-muted" style="font-size:0.85em; padding-left: 20px !important;">
+                                                        SN: {{ $log->{$p.'_serial_number'} ?? '-' }} | 
+                                                        Cal: {{ $log->{$p.'_calibration_date'} ?? '-' }} | 
+                                                        Valid: {{ $log->{$p.'_valid_until'} ?? '-' }}
+                                                    </td>
+                                                </tr>
+                                                @endif
                                                 @endif
                                             @endforeach
                                             @endif
