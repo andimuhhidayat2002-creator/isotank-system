@@ -275,7 +275,7 @@
                 </tbody>
                 <tfoot class="bg-light">
                     <tr>
-                        <th>ISO</th><th>Upd</th>
+                        <th class="sticky-col">ISO</th><th class="sticky-col-2">Upd</th>
                          @foreach($groupedItems as $catName => $items)
                              @foreach($items as $item) 
                                  @php $displayLabel = str_replace(['FRONT: ', 'REAR: ', 'RIGHT: ', 'LEFT: ', 'TOP: '], '', $item->label); @endphp
@@ -306,8 +306,21 @@
 @push('scripts')
 <script>
 $(document).ready(function() {
+    // DEBUG: Check Libraries
+    console.log('--- SYSTEM CHECK ---');
+    console.log('jQuery:', typeof jQuery);
+    console.log('DataTables:', typeof $.fn.dataTable);
+    console.log('Buttons:', typeof $.fn.dataTable.Buttons);
+    console.log('JSZip:', typeof window.JSZip, window.JSZip ? 'LOADED' : 'MISSING');
+    console.log('pdfMake:', typeof window.pdfMake, window.pdfMake ? 'LOADED' : 'MISSING');
+
     $('#latestConditionTable tfoot th').each(function() {
-        $(this).html('<input type="text" class="form-control form-control-sm" style="min-width: 40px;" placeholder="" />');
+        // Don't overwrite if it already has content (like sticky cols text)
+        // But here we want inputs everywhere for generic search, except maybe headers?
+        // Actually, sticky-col th has text "ISO". We keep the text but add input?
+        // Let's just make it simple: clear text, add input
+        var title = $(this).text();
+        $(this).html('<input type="text" class="form-control form-control-sm" style="min-width: 40px;" placeholder="'+title+'" />');
     });
 
     var table = $('#latestConditionTable').DataTable({
@@ -315,21 +328,17 @@ $(document).ready(function() {
         buttons: [
             { 
                 extend: 'excelHtml5', 
-                className: 'btn btn-success btn-sm mb-3 d-none buttons-excel', // Added buttons-excel class
+                className: 'btn btn-success btn-sm mb-3 d-none buttons-excel', 
                 title: 'Latest_Isotank_Condition',
-                exportOptions: {
-                    orthogonal: 'export'
-                }
+                exportOptions: { orthogonal: 'export' }
             },
             { 
                 extend: 'pdfHtml5', 
-                className: 'btn btn-danger btn-sm mb-3 d-none buttons-pdf', // Added buttons-pdf class
+                className: 'btn btn-danger btn-sm mb-3 d-none buttons-pdf', 
                 orientation: 'landscape', 
                 pageSize: 'A3',
                 title: 'Latest Isotank Condition',
-                exportOptions: {
-                    orthogonal: 'export'
-                }
+                exportOptions: { orthogonal: 'export' }
             }
         ],
         pageLength: 50,
@@ -343,35 +352,53 @@ $(document).ready(function() {
                     }
                 });
             });
+            console.log('DataTables Initialized Complete');
+            
+            // Debug: Check buttons
+            console.log('Buttons instance:', this.api().buttons());
         }
     });
 
-    // Connect custom buttons to DataTables export
+    // Connect custom buttons to DataTables export (ROBUST VERSION)
     $('#exportExcelBtn').on('click', function() {
         console.log('Excel button clicked');
         try {
-            if (table && table.button) {
-                table.button('.buttons-excel').trigger();
-                console.log('Excel export triggered');
+            var dt = $('#latestConditionTable').DataTable();
+            console.log('DT API:', dt);
+            
+            // Check if button exists in DOM
+            var btnClass = '.buttons-excel';
+            if (dt.button(btnClass).node().length > 0) {
+                 console.log('Found button via API, triggering...');
+                 dt.button(btnClass).trigger();
             } else {
-                console.error('DataTables not initialized');
+                 console.error('Button not found via API. Trying DOM trigger...');
+                 // Fallback: Click the hidden button directly
+                 $('.buttons-excel').click();
             }
         } catch (e) {
             console.error('Excel export error:', e);
+            alert('Export Error: Check Console');
         }
     });
 
     $('#exportPdfBtn').on('click', function() {
         console.log('PDF button clicked');
         try {
-            if (table && table.button) {
-                table.button('.buttons-pdf').trigger();
-                console.log('PDF export triggered');
+            var dt = $('#latestConditionTable').DataTable();
+            
+             // Check if button exists in DOM
+            var btnClass = '.buttons-pdf';
+            if (dt.button(btnClass).node().length > 0) {
+                 console.log('Found button via API, triggering...');
+                 dt.button(btnClass).trigger();
             } else {
-                console.error('DataTables not initialized');
+                 console.error('Button not found via API. Trying DOM trigger...');
+                 $('.buttons-pdf').click();
             }
         } catch (e) {
             console.error('PDF export error:', e);
+            alert('Export Error: Check Console');
         }
     });
 
@@ -498,7 +525,7 @@ $(document).ready(function() {
     hint.innerHTML = '<i class="bi bi-hand-index"></i> Click and drag to scroll';
     hint.style.cssText = `
         position: fixed;
-        top: 80px;
+        top: 15%;
         right: 20px;
         background: rgba(139, 69, 19, 0.9);
         color: white;
@@ -536,43 +563,60 @@ $(document).ready(function() {
        STICKY COLUMNS & HEADERS
        ======================================== */
     
-    /* Sticky ISO Number Column (First Column) */
-    #latestConditionTable thead th:nth-child(1),
-    #latestConditionTable tbody td:nth-child(1) {
+    /* Remove separate borders to fix alignment */
+    #latestConditionTable {
+        border-collapse: collapse !important;
+        border-spacing: 0 !important;
+    }
+
+    /* Column 1: ISO NUMBER - Sticky left: 0 */
+    .sticky-col {
         position: sticky !important;
         left: 0 !important;
-        z-index: 15 !important;
         background-color: #1a1a1a !important;
-        box-shadow: 2px 0 5px rgba(0,0,0,0.3) !important;
+        z-index: 10 !important;
+        box-shadow: 2px 0 5px rgba(0,0,0,0.5) !important;
+        border-right: 2px solid #444 !important;
     }
 
-    /* Sticky Updated At Column (Second Column) */
-    #latestConditionTable thead th:nth-child(2),
-    #latestConditionTable tbody td:nth-child(2) {
+    /* Column 2: UPDATED AT - Sticky left: 120px */
+    .sticky-col-2 {
         position: sticky !important;
         left: 120px !important;
-        z-index: 15 !important;
         background-color: #1a1a1a !important;
-        box-shadow: 2px 0 5px rgba(0,0,0,0.3) !important;
+        z-index: 10 !important;
+        box-shadow: 2px 0 5px rgba(0,0,0,0.5) !important;
+        border-right: 2px solid #444 !important;
     }
 
-    /* Sticky Header Rows - Higher z-index for headers */
-    #latestConditionTable thead th:nth-child(1) {
-        z-index: 25 !important;
-        background-color: #2d2d2d !important;
-    }
-    
-    #latestConditionTable thead th:nth-child(2) {
-        z-index: 25 !important;
-        background-color: #2d2d2d !important;
-    }
-
-    /* All other headers sticky at top */
-    #latestConditionTable thead th {
+    /* HEADER Sticky - Top: 0 */
+    .sticky-header {
         position: sticky !important;
         top: 0 !important;
-        z-index: 20 !important;
+        z-index: 20 !important; /* Higher than normal columns */
         background-color: #2d2d2d !important;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.5) !important;
+    }
+
+    /* CORNER CELLS (Header + Sticky Column) -> Highest Z-Index */
+    .sticky-corner {
+        position: sticky !important;
+        top: 0 !important;
+        /* Left is handled by .sticky-col classes attached to these elements */
+        z-index: 30 !important; /* Highest priority */
+        background-color: #2d2d2d !important;
+        box-shadow: 2px 2px 5px rgba(0,0,0,0.5) !important;
+    }
+
+    /* Footer Sticky */
+    tfoot .sticky-col, tfoot .sticky-col-2 {
+        z-index: 10 !important;
+        background-color: #1a1a1a !important;
+    }
+    
+    tfoot th {
+         background-color: #2d2d2d; 
+         color: white;
     }
 
     /* ========================================
@@ -586,14 +630,6 @@ $(document).ready(function() {
         max-height: calc(100vh - 250px);
         scroll-behavior: smooth;
         position: relative;
-    }
-
-    /* Ensure table doesn't collapse */
-    #latestConditionTable {
-        min-width: 100%;
-        table-layout: auto;
-        border-collapse: separate !important;
-        border-spacing: 0 !important;
     }
 
     /* Scroll hint shadow on right edge */
@@ -610,8 +646,14 @@ $(document).ready(function() {
     }
 
     /* Highlight row on hover for better tracking */
-    #latestConditionTable tbody tr:hover {
-        background-color: rgba(255, 255, 255, 0.05) !important;
+    #latestConditionTable tbody tr:hover td {
+        background-color: rgba(255, 255, 255, 0.1) !important;
+    }
+    
+    /* Ensure sticky cols keep their background on hover */
+    #latestConditionTable tbody tr:hover .sticky-col,
+    #latestConditionTable tbody tr:hover .sticky-col-2 {
+        background-color: #1a1a1a !important;
     }
 
     /* Cursor styles for drag-to-scroll */
