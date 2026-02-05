@@ -1,28 +1,40 @@
 @extends('layouts.app')
 
 @section('content')
-<!-- REQUIRED LIBRARIES FOR DATATABLES EXPORT & STICKY COLUMNS -->
-<!-- 1. JSZip (Required for Excel Export) -->
+<!-- ==================================================================================== -->
+<!-- FULL DEPENDENCY STACK (Ensure Correct Loading Order: jQuery -> DT Core -> Exts) -->
+<!-- ==================================================================================== -->
+<!-- 1. jQuery (Required for DataTables) -->
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+
+<!-- 2. DataTables Core -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+
+<!-- 3. Export Libraries (Must load before Buttons) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<!-- 2. pdfMake (Required for PDF Export) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
-<!-- 3. DataTables Buttons & HTML5 Export -->
+
+<!-- 4. DataTables Buttons Extension -->
 <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css">
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.bootstrap5.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
-<!-- 4. FixedColumns -->
+
+<!-- 5. DataTables FixedColumns Extension -->
 <link rel="stylesheet" href="https://cdn.datatables.net/fixedcolumns/4.3.0/css/fixedColumns.bootstrap5.min.css">
 <script src="https://cdn.datatables.net/fixedcolumns/4.3.0/js/dataTables.fixedColumns.min.js"></script>
 
 <style>
-    /* COMPACT TABLE STYLES */
+    /* COMPACT TABLE STYLES - FORCED */
     #latestConditionTable {
-        font-size: 0.72rem !important; /* Force smaller font */
+        font-size: 0.72rem !important; 
     }
     #latestConditionTable th, #latestConditionTable td {
-        padding: 4px 6px !important; /* Compact padding */
+        padding: 3px 5px !important; /* Ultra compact */
+        vertical-align: middle;
     }
     .vertical-headers th { 
         height: 140px; 
@@ -50,17 +62,20 @@
 
     /* Fixed Header Overrides */
     table.dataTable thead tr { background-color: #2d2d2d; }
+    
+    /* Ensure Buttons are hidden but present */
+    .dt-buttons { display: none !important; }
 </style>
 
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h2 class="mb-0 text-white">Latest Condition Master</h2>
     
-    <!-- MANUAL BUTTONS (Triggers hidden DataTable buttons) -->
+    <!-- MANUAL BUTTONS (Triggers DataTable Buttons API) -->
     <div class="btn-group">
-        <button type="button" class="btn btn-success" onclick="$('.buttons-excel').click()">
+        <button type="button" class="btn btn-success" id="triggerExcel">
             <i class="bi bi-file-earmark-excel me-1"></i> Download Excel
         </button>
-        <button type="button" class="btn btn-danger" onclick="$('.buttons-pdf').click()">
+        <button type="button" class="btn btn-danger" id="triggerPdf">
             <i class="bi bi-file-earmark-pdf me-1"></i> Download PDF
         </button>
     </div>
@@ -81,7 +96,7 @@
 
 <div class="card">
     <div class="card-body p-2"> <!-- Reduced padding -->
-        <div class="table-responsive" style="overflow-x: auto; overflow-y: hidden;">
+        <div class="table-responsive" style="overflow: hidden;"> <!-- Overflow Hidden to let DataTables handle scroll -->
             <table id="latestConditionTable" class="table table-striped table-bordered table-sm align-middle text-nowrap" style="width:100%">
                 <thead class="text-white text-center">
                     <tr>
@@ -274,45 +289,59 @@
 
 @push('scripts')
 <script>
-$(document).ready(function() {
+// Wait for everything to load
+window.onload = function() {
+    console.log('Window Loaded. Initializing DataTables...');
+    
+    // Explicit jQuery check
+    if (typeof jQuery === 'undefined') {
+        console.error('jQuery is MISSING!');
+        return;
+    }
+    
+    var $ = jQuery;
+    
     // Inject Footer Inputs
     $('#latestConditionTable tfoot th').each(function() {
         var title = $(this).text();
         $(this).html('<input type="text" class="form-control form-control-sm" style="min-width: 40px; font-size: 0.7rem;" placeholder="'+title+'" />');
     });
 
+    // Destroy existing if any match (to prevent double init errors)
+    if ($.fn.DataTable.isDataTable('#latestConditionTable')) {
+        $('#latestConditionTable').DataTable().destroy();
+    }
+
+    // Initialize MAIN TABLE
     var table = $('#latestConditionTable').DataTable({
-        // Minimal DOM to hide default buttons (we trigger them externally)
-        dom: "<'row mb-2'<'col-md-6'l><'col-md-6'f>>" +
-             "<'row'<'col-12'tr>>" + 
-             "<'row'<'col-md-5'i><'col-md-7'p>>",
-        
+        dom: 'Bfrtip', // Standard DOM with Buttons
         fixedColumns: {
             left: 2
         },
         scrollX: true,
-        ordering: false, // Disable ordering to boost init speed
+        ordering: false,
+        pageLength: 50,
         
-        // Define buttons but don't show them in DOM (we use custom buttons to trigger them)
+        // Define Buttons configuration
         buttons: [
             { 
                 extend: 'excelHtml5', 
-                className: 'buttons-excel d-none', // Hidden class
+                className: 'buttons-excel', // Class to target
                 title: 'Latest_Isotank_Condition',
                 exportOptions: { 
                     orthogonal: 'export',
                     format: {
                         header: function ( data, columnIdx ) {
-                            return $(data).text() || data; // Clean vertical headers
+                            return $(data).text() || data; 
                         }
                     }
                 }
             },
             { 
                 extend: 'pdfHtml5', 
-                className: 'buttons-pdf d-none', // Hidden class
+                className: 'buttons-pdf', 
                 orientation: 'landscape', 
-                pageSize: 'A2', // Larger Page for Huge Table
+                pageSize: 'A2',
                 title: 'Latest Isotank Condition',
                 exportOptions: { 
                     orthogonal: 'export',
@@ -328,8 +357,20 @@ $(document).ready(function() {
                 }
             }
         ],
-        pageLength: 50,
         initComplete: function() {
+            console.log('DataTables Initialized with Buttons & FixedColumns!');
+            
+            // CONNECT MANUAL BUTTONS TO DATATABLE BUTTONS API
+            $('#triggerExcel').on('click', function() {
+                 console.log('Triggering Excel...');
+                 table.button('.buttons-excel').trigger();
+            });
+            
+            $('#triggerPdf').on('click', function() {
+                 console.log('Triggering PDF...');
+                 table.button('.buttons-pdf').trigger();
+            });
+
             // Apply footer search
             this.api().columns().every(function() {
                 var that = this;
@@ -339,14 +380,10 @@ $(document).ready(function() {
                     }
                 });
             });
-            console.log('DT Initialized. JSZip loaded:', typeof JSZip !== 'undefined');
         }
     });
-    
-    // Explicitly initialize buttons and append to a hidden container to ensure they are active
-    table.buttons().container().appendTo('#d-none-container');
 
-    // --- DRAG TO SCROLL ---
+    // --- DRAG TO SCROLL FIX ---
     const slider = document.querySelector('.dataTables_scrollBody');
     if(slider) {
         let isDown = false;
@@ -369,8 +406,7 @@ $(document).ready(function() {
             slider.scrollLeft = scrollLeft - walk;
         });
     }
-});
+};
 </script>
-<div id="d-none-container" style="display:none;"></div>
 @endpush
 @endsection
