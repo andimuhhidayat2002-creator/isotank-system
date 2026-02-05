@@ -309,15 +309,44 @@
                                             <!-- SECTION D: IBOX -->
                                             <tr class="table-secondary"><th colspan="2" class="text-white">D. IBOX SYSTEM</th></tr>
                                             <tr><td class="ps-3">IBOX Condition</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->ibox_condition])</td></tr>
-                                            <tr><td class="ps-3">Pressure (Digital)</td><td class="text-center">{{ $log->ibox_pressure ?? '-' }}</td></tr>
-                                            <tr><td class="ps-3">Temperature #1 (Digital)</td><td class="text-center">{{ $log->ibox_temperature ?? '-' }}</td></tr>
+                                            <tr><td class="ps-3">Battery</td><td class="text-center">{{ $log->ibox_battery_percent ? $log->ibox_battery_percent.' %' : '-' }}</td></tr>
+                                            <tr><td class="ps-3">Pressure (Digital)</td><td class="text-center">{{ $log->ibox_pressure ? $log->ibox_pressure.' MPa' : '-' }}</td></tr>
+                                            <tr><td class="ps-3">Temperature #1 (Digital)</td><td class="text-center">{{ $log->ibox_temperature_1 ?? $log->ibox_temperature ?? '-' }}</td></tr>
+                                            @if($log->ibox_temperature_1_timestamp || $log->ibox_temperature_timestamp)
+                                            <tr><td class="ps-3 text-muted" style="font-size:0.85em; padding-left: 20px !important;"> — Time (Temp 1)</td><td class="text-center text-muted" style="font-size:0.85em">{{ $log->ibox_temperature_1_timestamp ?? $log->ibox_temperature_timestamp }}</td></tr>
+                                            @endif
+                                            <tr><td class="ps-3">Temperature #2 (Digital)</td><td class="text-center">{{ $log->ibox_temperature_2 ?? '-' }}</td></tr>
+                                            @if($log->ibox_temperature_2_timestamp)
+                                            <tr><td class="ps-3 text-muted" style="font-size:0.85em; padding-left: 20px !important;"> — Time (Temp 2)</td><td class="text-center text-muted" style="font-size:0.85em">{{ $log->ibox_temperature_2_timestamp }}</td></tr>
+                                            @endif
+                                            <tr><td class="ps-3">Level</td><td class="text-center">{{ $log->ibox_level ? $log->ibox_level.' %' : '-' }}</td></tr>
                                             @endif
 
                                             @if($tankCat == 'T75')
                                             <!-- SECTION E: INSTRUMENTS -->
                                             <tr class="bg-dark bg-opacity-50"><th colspan="2" class="text-white ps-3">E. INSTRUMENTS</th></tr>
-                                            <tr><td class="ps-3">Pressure Gauge</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->pressure_gauge_condition])</td></tr>
-                                            <tr><td class="ps-3">Level Gauge</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->level_gauge_condition])</td></tr>
+                                            <tr><td class="ps-3">Pressure Gauge Condition</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->pressure_gauge_condition])</td></tr>
+                                            @if($log->pressure_gauge_serial_number)
+                                            <tr><td class="ps-3 text-muted" style="font-size:0.85em; padding-left: 20px !important;"> — Serial Number</td><td class="text-center text-muted" style="font-size:0.85em">{{ $log->pressure_gauge_serial_number }}</td></tr>
+                                            @endif
+                                            <tr><td class="ps-3">Reading (Pressure 1)</td><td class="text-center">{{ $log->pressure_1 ?? '-' }}</td></tr>
+                                            @if($log->pressure_1_timestamp)
+                                            <tr><td class="ps-3 text-muted" style="font-size:0.85em; padding-left: 20px !important;"> — Time (Pressure 1)</td><td class="text-center text-muted" style="font-size:0.85em">{{ $log->pressure_1_timestamp }}</td></tr>
+                                            @endif
+                                            <tr><td class="ps-3">Reading (Pressure 2)</td><td class="text-center">{{ $log->pressure_2 ?? '-' }}</td></tr>
+                                            @if($log->pressure_2_timestamp)
+                                            <tr><td class="ps-3 text-muted" style="font-size:0.85em; padding-left: 20px !important;"> — Time (Pressure 2)</td><td class="text-center text-muted" style="font-size:0.85em">{{ $log->pressure_2_timestamp }}</td></tr>
+                                            @endif
+
+                                            <tr><td class="ps-3">Level Gauge Condition</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->level_gauge_condition])</td></tr>
+                                            <tr><td class="ps-3">Reading (Level 1)</td><td class="text-center">{{ $log->level_1 ?? '-' }}</td></tr>
+                                            @if($log->level_1_timestamp)
+                                            <tr><td class="ps-3 text-muted" style="font-size:0.85em; padding-left: 20px !important;"> — Time (Level 1)</td><td class="text-center text-muted" style="font-size:0.85em">{{ $log->level_1_timestamp }}</td></tr>
+                                            @endif
+                                            <tr><td class="ps-3">Reading (Level 2)</td><td class="text-center">{{ $log->level_2 ?? '-' }}</td></tr>
+                                            @if($log->level_2_timestamp)
+                                            <tr><td class="ps-3 text-muted" style="font-size:0.85em; padding-left: 20px !important;"> — Time (Level 2)</td><td class="text-center text-muted" style="font-size:0.85em">{{ $log->level_2_timestamp }}</td></tr>
+                                            @endif
                                             @endif
 
                                             @if($tankCat == 'T75')
