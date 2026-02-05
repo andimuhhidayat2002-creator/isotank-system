@@ -309,7 +309,7 @@
                                             <tr class="table-secondary"><th colspan="2" class="text-white">D. IBOX SYSTEM</th></tr>
                                             <tr><td class="ps-3">IBOX Condition</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->ibox_condition])</td></tr>
                                             <tr><td class="ps-3">Pressure (Digital)</td><td class="text-center">{{ $log->ibox_pressure ?? '-' }}</td></tr>
-                                            <tr><td class="ps-3">Temperature</td><td class="text-center">{{ $log->ibox_temperature ?? '-' }}</td></tr>
+                                            <tr><td class="ps-3">Temperature #1 (Digital)</td><td class="text-center">{{ $log->ibox_temperature ?? '-' }}</td></tr>
                                             @endif
 
                                             @if($tankCat == 'T75')

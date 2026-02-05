@@ -2,557 +2,490 @@
 
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>Inspection Detail: {{ $log->isotank ? $log->isotank->iso_number : 'UNKNOWN ISO' }}</h2>
     <div>
-        <div class="btn-group me-2">
-            @if($log->pdf_path)
-                <a href="{{ route('admin.reports.inspection.pdf', $log->id) }}" target="_blank" class="btn btn-outline-danger" title="View PDF">
-                    <i class="bi bi-eye"></i> View Saved
-                </a>
-            @endif
-            <a href="{{ route('admin.reports.inspection.pdf', $log->id) }}" class="btn btn-danger">
-                <i class="bi bi-file-earmark-pdf"></i> {{ $log->pdf_path ? 'Regenerate PDF' : 'Generate PDF' }}
-            </a>
-        </div>
-        <a href="{{ route('admin.reports.inspection') }}" class="btn btn-secondary">Back to Logs</a>
+        <h2 class="mb-0">Isotank Details</h2>
+        <span class="text-white">{{ $isotank->iso_number }}</span>
     </div>
+    <a href="{{ route('admin.isotanks.index') }}" class="btn btn-secondary">Back to List</a>
 </div>
+
+@php
+    $activeMaintenance = $maintenance->whereNotIn('status', ['completed', 'closed', 'deferred']);
+@endphp
+
+@if($activeMaintenance->isNotEmpty())
+    <div class="alert alert-danger d-flex align-items-center mb-4 shadow-sm border-danger" role="alert">
+        <div class="flex-shrink-0 me-3">
+            <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size: 2rem;"></i>
+        </div>
+        <div class="flex-grow-1">
+            <h5 class="alert-heading fw-bold mb-1">⚠️ MAINTENANCE REQUIRED</h5>
+            <p class="mb-2">This isotank has active maintenance orders that require attention:</p>
+            <ul class="mb-0 list-group list-group-flush bg-transparent">
+                @foreach($activeMaintenance as $job)
+                    <li class="list-group-item bg-transparent py-1 px-0 border-0 text-danger">
+                        <i class="bi bi-gear-fill me-2"></i>
+                        <strong>{{ $job->source_item ?? 'General' }}:</strong> 
+                        {{ Str::limit($job->description, 80) }} 
+                        <span class="badge bg-danger ms-1">{{ strtoupper(str_replace('_', ' ', $job->status)) }}</span>
+                    </li>
+                @endforeach
+            </ul>
+        </div>
+    </div>
+@endif
 
 <div class="row align-items-start">
+    <!-- LEFT: Overview Card -->
     <div class="col-md-4">
-        <div class="card mb-4 bg-dark text-white border-secondary">
-            <div class="card-header border-bottom">A. DATA OF TANK</div>
+        <div class="card shadow-sm mb-4 bg-dark text-white border-secondary">
+            <div class="card-header">Overview</div>
             <div class="card-body">
                 <table class="table table-sm table-dark table-borderless mb-0">
-                    <tr><th class="text-white">Inspection Type</th><td class="text-white">{{ strtoupper(str_replace('_', ' ', $log->inspection_type)) }}</td></tr>
-                    <tr><th class="text-white">Date</th><td class="text-white">{{ $log->inspection_date->format('Y-m-d') }}</td></tr>
-                    <tr><th class="text-white">Inspector</th><td class="text-white">{{ $log->inspector->name ?? '-' }}</td></tr>
-                    <tr><th class="text-white">Filling Status</th><td class="text-white"><b>{{ $log->filling_status_desc ?? 'Not Specified' }}</b></td></tr>
-                @if($log->inspection_type === 'outgoing_inspection')
-                    <tr><th class="text-white">Receiver</th><td class="text-white">{{ $log->receiver_name ?? 'Waiting...' }}</td></tr>
-                    @if($log->receiver_confirmed_at)
-                    <tr><th class="text-white">Confirmed At</th><td class="text-white">{{ $log->receiver_confirmed_at->format('Y-m-d H:i') }}</td></tr>
-                    @endif
-                @endif
+                    <tr><th class="text-white">ISO Number</th><td class="fw-bold text-white">{{ $isotank->iso_number }}</td></tr>
+                    <tr><th class="text-white">Owner</th><td class="text-white">{{ $isotank->owner ?? '-' }}</td></tr>
+                    <tr><th class="text-white">Location</th><td class="text-white">{{ $isotank->location ?? '-' }}</td></tr>
+                    <tr><th class="text-white">Product</th><td class="text-white">{{ $isotank->product ?? '-' }}</td></tr>
+                    <tr><th class="text-white">Filling Status</th>
+                        <td>
+                            <span class="badge {{ $isotank->filling_status_code=='filled'?'bg-success':'bg-secondary' }} text-white">
+                                {{ $isotank->filling_status_desc ?? $isotank->filling_status_code ?? 'Empty' }}
+                            </span>
+                        </td>
+                    </tr>
+                    <tr><th class="text-white">Status</th><td class="text-white">{{ ucfirst($isotank->status) }}</td></tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="card shadow-sm mb-4 bg-dark text-white border-secondary">
+            <div class="card-header">Technical Specs</div>
+            <div class="card-body">
+                <table class="table table-sm table-dark table-borderless mb-0">
+                    <tr><th class="text-white">Manufacturer</th><td class="text-white">{{ $isotank->manufacturer ?? '-' }}</td></tr>
+                    <tr><th class="text-white">Serial No</th><td class="text-white">{{ $isotank->manufacturer_serial_number ?? '-' }}</td></tr>
+                    <tr><th class="text-white">Model Type</th><td class="text-white">{{ $isotank->model_type ?? '-' }}</td></tr>
+                    <tr><th class="text-white">Capacity</th><td class="text-white">{{ $isotank->capacity ? $isotank->capacity.' L' : '-' }}</td></tr>
+                    <tr><th class="text-white">Tare Weight</th><td class="text-white">{{ $isotank->tare_weight ? $isotank->tare_weight.' Kg' : '-' }}</td></tr>
+                    <tr><th class="text-white">Max Gross</th><td class="text-white">{{ $isotank->max_gross_weight ? $isotank->max_gross_weight.' Kg' : '-' }}</td></tr>
                 </table>
             </div>
         </div>
         
-        <div class="card mb-4 bg-dark text-white border-secondary">
-            <div class="card-header border-bottom">Photos (Click to Enlarge)</div>
-            <div class="card-body p-2">
-                <div class="row g-2">
-                    @php
-                        $photos = ['photo_front', 'photo_back', 'photo_left', 'photo_right', 'photo_inside_valve_box', 'photo_additional'];
-                        $hasPhotos = false;
-                    @endphp
-                    @foreach($photos as $p)
-                        @if($log->$p)
-                            @php $hasPhotos = true; @endphp
-                            <div class="col-6">
-                                <a href="#" onclick="showImageModal('{{ route('admin.media', ['path' => $log->$p]) }}', '{{ ucfirst(str_replace(['photo_', '_'], ' ', $p)) }}'); return false;">
-                                    <img src="{{ route('admin.media', ['path' => $log->$p]) }}" class="img-fluid rounded border hover-shadow" alt="{{ $p }}" style="cursor: pointer; height: 120px; object-fit: cover; width: 100%;">
-                                </a>
-                                <small class="text-white d-block text-center">{{ ucfirst(str_replace(['photo_', '_'], ' ', $p)) }}</small>
-                            </div>
-                        @endif
-                    @endforeach
-                    @if(!$hasPhotos)
-                        <div class="col-12 text-center text-white p-3">No Photos Available</div>
-                    @endif
-                </div>
-            </div>
-        </div>
-        
-        @if($log->maintenance_notes)
-        <div class="card mb-4 bg-warning bg-opacity-10 border-warning">
-             <div class="card-header border-bottom text-warning">Maintenance Notes</div>
+        <div class="card shadow-sm mb-4 bg-dark text-white border-secondary">
+             <div class="card-header">Certificates & Dates</div>
              <div class="card-body">
-                 {{ $log->maintenance_notes }}
+                <table class="table table-sm table-dark table-borderless mb-0">
+                    <tr><th class="text-white">Init Pressure Test</th><td class="text-white">{{ $isotank->initial_pressure_test_date ? $isotank->initial_pressure_test_date->format('d/m/Y') : '-' }}</td></tr>
+                    <tr><th class="text-white">CSC Init Test</th><td class="text-white">{{ $isotank->csc_initial_test_date ? $isotank->csc_initial_test_date->format('d/m/Y') : '-' }}</td></tr>
+                     <tr><td colspan="2"><hr class="my-1"></td></tr>
+                    <tr><th class="text-white">Class Expiry</th><td class="fw-bold {{ $isotank->class_survey_expiry_date && $isotank->class_survey_expiry_date->isPast() ? 'text-danger' : 'text-white' }}">{{ $isotank->class_survey_expiry_date ? $isotank->class_survey_expiry_date->format('d/m/Y') : '-' }}</td></tr>
+                    <tr><th class="text-white">CSC Expiry</th><td class="fw-bold {{ $isotank->csc_survey_expiry_date && $isotank->csc_survey_expiry_date->isPast() ? 'text-danger' : 'text-white' }}">{{ $isotank->csc_survey_expiry_date ? $isotank->csc_survey_expiry_date->format('d/m/Y') : '-' }}</td></tr>
+                </table>
              </div>
         </div>
-        @endif
     </div>
 
+    <!-- RIGHT: Tabs for History -->
     <div class="col-md-8">
-        <div class="card mb-4 bg-dark text-white border-secondary">
-            <div class="card-header border-bottom">Full Inspection Checklist</div>
-            <div class="card-body p-0">
-                <table class="table table-bordered table-sm table-dark border-secondary mb-0">
+        <style>
+            .nav-tabs .nav-link { color: #aaa; border: 1px solid transparent; }
+            .nav-tabs .nav-link:hover { color: #fff; border-color: #444; }
+            .nav-tabs .nav-link.active { background-color: #343a40 !important; color: #fff !important; border-color: #6c757d #6c757d #343a40 !important; }
+            .nav-tabs { border-bottom: 1px solid #6c757d; }
+        </style>
+        <ul class="nav nav-tabs mb-3 border-secondary" id="historyTab" role="tablist">
+            <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#condition">Condition</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#inspections">Inspections</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#maintenance">Maintenance</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#calib">Calibration</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#vacuum">Vacuum</button></li>
+        </ul>
+
+        <div class="tab-content">
+            <!-- Latest Condition -->
+            <div class="tab-pane fade show active" id="condition">
+                 @if($isotank->latestInspection)
+                    <div class="card shadow-sm bg-dark text-white border-secondary">
+                        <div class="card-body">
+                            <h5 class="text-white">Last Inspection: {{ $isotank->latestInspection->updated_at->format('d M Y') }}</h5>
+                            <p class="text-white">Inspector: {{ $isotank->latestInspection->inspector->name ?? '-' }}</p>
+                            @php 
+                                // Load the ACTUAL InspectionLog (not MasterLatestInspection)
+                                // MasterLatestInspection only has hardcoded columns, no inspection_data JSON
+                                $log = $isotank->latestInspection->lastInspectionLog ?? $isotank->latestInspection; 
+                            @endphp
+                            <div class="row">
+                                <div class="col-6">
+                                    <ul class="list-group">
+                                        <li class="list-group-item bg-dark bg-opacity-50 border-secondary d-flex justify-content-between"><span class="text-white">Vacuum</span> <strong class="text-white">{{ $log->vacuum_value ? (float)$log->vacuum_value : '-' }}</strong></li>
+                                        <li class="list-group-item bg-dark bg-opacity-50 border-secondary d-flex justify-content-between"><span class="text-white">Pressure</span> <strong class="text-white">{{ $log->pressure_1 ? (float)$log->pressure_1 : '-' }}</strong></li>
+                                        <li class="list-group-item bg-dark bg-opacity-50 border-secondary d-flex justify-content-between"><span class="text-white">Level</span> <strong class="text-white">{{ $log->level_1 ? (float)$log->level_1 : '-' }}</strong></li>
+                                    </ul>
+                                </div> <!-- Close col-6 -->
+                            </div> <!-- Close internal row -->
+                            <div class="mt-4">
+                                <h5 class="text-white border-bottom border-secondary pb-2">Items Condition</h5>
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-bordered table-dark border-secondary">
                         <thead>
-                        <tr><th class="text-white">Category / Item Name</th><th class="text-center text-white" width="150">Condition/Value</th></tr>
-                    </thead>
+                                            <tr>
+                                                <th class="text-white">Category / Item Name</th>
+                                                <th class="text-center text-white">Condition/Value</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @php
+                                                $inspectionItems = \App\Models\InspectionItem::where('is_active', true)->orderBy('order')->get();
+                                                $logData = is_array($log->inspection_data) ? $log->inspection_data : json_decode($log->inspection_data, true) ?? [];
+                                                $tankCat = $isotank->tank_category ?? 'T75'; // Default to T75
+
+                                                // Legacy Map for Fallback (Synchronized with Report View)
+                                                $legacyMap = [
+                                                    'Surface Condition' => 'surface', 'Tank Surface & Paint Condition' => 'surface',
+                                                    'Frame Condition' => 'frame', 'Frame Structure' => 'frame',
+                                                    'Tank Name Plate' => 'tank_plate', 'Data Plate' => 'tank_plate',
+                                                    'Venting Pipe' => 'venting_pipe',
+                                                    'Explosion Proof Cover' => 'explosion_proof_cover',
+                                                    'Safety Label' => 'safety_label', 'DG 1972 GHS MSA_Safety_label' => 'safety_label',
+                                                    'Document Container' => 'document_container',
+                                                    'Valve Box Door' => 'valve_box_door',
+                                                    'Grounding System' => 'grounding_system',
+                                                    'Valve Condition' => 'valve_condition',
+                                                    'Valve Position' => 'valve_position',
+                                                    'Pipe Joint' => 'pipe_joint',
+                                                    'Air Source Connection' => 'air_source_connection',
+                                                    'ESDV' => 'esdv',
+                                                    'Blind Flange' => 'blind_flange',
+                                                    'PRV' => 'prv'
+                                                ];
+                                                
+                                                // Unmapped Item Logic (ROBUST & NORMALIZED)
+                                                $standardCodes = $inspectionItems->pluck('code')->toArray();
+                                                $normalizedStandardCodes = array_map(function($c) { 
+                                                    return strtolower(str_replace([' ', '-', '.'], '_', $c)); 
+                                                }, $standardCodes);
+
+                                                $unmapped = [];
+                                                foreach($logData as $k => $v) {
+                                                    $normK = strtolower(str_replace([' ', '-', '.'], '_', $k));
+                                                    
+                                                    if(!in_array($normK, $normalizedStandardCodes) && 
+                                                       !in_array($k, $standardCodes) && 
+                                                       !in_array($k, ['inspection_date', 'inspector_name', 'filling_status', 'remarks', 'signature', 'longitude', 'latitude', 'location_name']) &&
+                                                       is_string($v) && strlen($v) < 50) {
+                                                         // Also exclude hardcoded legacy fields if they appear in JSON
+                                                         if(!str_contains($normK, 'ibox') && !str_contains($normK, 'vacuum') && !str_contains($normK, 'pressure_gauge') && !str_contains($normK, 'psv')) {
+                                                             $unmapped[$k] = $v;
+                                                         }
+                                                    }
+                                                }
+                                            @endphp
+
+                                            <!-- DYNAMIC CATEGORIES LOOP -->
+                                            @php
+                                                // 1. Filter items STRICTLY by Tank Category
+                                                $catSpecificItems = $inspectionItems->filter(function($i) use ($tankCat) {
+                                                      $cats = $i->applicable_categories;
+                                                      if (is_string($cats)) $cats = json_decode($cats, true);
+                                                      if (!is_array($cats)) $cats = [];
+                                                      return in_array($tankCat, $cats);
+                                                });
+                                                
+                                                // 2. Group by Category
+                                                $grouped = $catSpecificItems->groupBy('category')->sortKeys();
+                                            @endphp
+
+                                            @php
+                                                $tCat = $tankCat;
+                                                if ($tCat === 'T11') {
+                                                    $categoryMap = [
+                                                        'a' => 'A. FRONT',
+                                                        'b' => 'B. REAR',
+                                                        'c' => 'C. RIGHT',
+                                                        'd' => 'D. LEFT',
+                                                        'e' => 'E. TOP',
+                                                        'other' => 'Other / Internal'
+                                                    ];
+                                                } elseif ($tCat === 'T50') {
+                                                    $categoryMap = [
+                                                        'a' => 'A. FRONT OUT SIDE VIEW',
+                                                        'b' => 'B. REAR OUT SIDE VIEW',
+                                                        'c' => 'C. RIGHT SIDE/VALVE BOX OBSERVATION',
+                                                        'd' => 'D. LEFT SIDE',
+                                                        'e' => 'E. TOP',
+                                                        'other' => 'Other / Internal'
+                                                    ];
+                                                } else {
+                                                    $categoryMap = [
+                                                        'b' => 'B. GENERAL CONDITION',
+                                                        'c' => 'C. VALVES & PIPING',
+                                                        'd' => 'D. IBOX SYSTEM',
+                                                        'e' => 'E. INSTRUMENTS',
+                                                        'f' => 'F. VACUUM SYSTEM',
+                                                        'g' => 'G. SAFETY VALVES (PSV)',
+                                                    ];
+                                                }
+                                            @endphp
+
+                                             @foreach($grouped as $categoryName => $items)
+                                                @if(($tankCat ?? 'T75') !== 'T75' || !in_array($categoryName, ['d', 'e', 'f', 'g']))
+                                                    <tr class="table-secondary"><th colspan="2" class="text-white">{{ $categoryMap[$categoryName] ?? strtoupper($categoryName) }}</th></tr>
+                                                    @foreach($items as $item)
+                                                        @php 
+                                                            $code = $item->code; 
+                                                            $label = $item->label;
+                                                            
+                                                            // EXACT COPY FROM inspection_show.blade.php (WORKING VERSION)
+                                                            // PRO ROBUST LOOKUP STRATEGY
+                                                            // 1. Direct Code match in JSON
+                                                            $val = $logData[$code] ?? null;
+                                                            
+                                                            // 2. Direct Column match
+                                                            if (!$val) $val = $log->$code ?? null;
+
+                                                            // FIX: Port Suction Condition Column Mismatch
+                                                            if (!$val && $code === 'port_suction_condition') {
+                                                                $val = $log->vacuum_port_suction_condition ?? null;
+                                                            }
+                                                            
+                                                            // 3. Underscore-version of Code in JSON
+                                                            if (!$val) {
+                                                                $uCode = str_replace([' ', '.', '/'], '_', $code);
+                                                                $val = $logData[$uCode] ?? null;
+                                                            }
+                                                            
+                                                            // 4. Legacy Map (By Label)
+                                                            if (!$val && isset($legacyMap[$label])) {
+                                                                $lKey = $legacyMap[$label];
+                                                                $val = $logData[$lKey] ?? ($log->$lKey ?? null);
+                                                            }
+                                                            
+                                                            // 5. Underscore-version of Label in JSON
+                                                            // FIX: Check for Legacy Label as Key (e.g. "GPS_4G_LP_LAN_Antenna")
+                                                            if (!$val) {
+                                                                $uLabel = str_replace([' ', '.', '/'], '_', $label); // Try literal label with underscores
+                                                                $val = $logData[$uLabel] ?? null;
+                                                            }
+                                                            // FIX: Try exact label too
+                                                            if (!$val) {
+                                                                 $val = $logData[$label] ?? null;
+                                                            }
+
+                                                            if (!$val) {
+                                                                $uLabelLower = str_replace([' ', '.', '/'], '_', strtolower($label));
+                                                                $val = $logData[$uLabelLower] ?? null;
+                                                            }
+
+                                                            // 6. Direct Label Match (Spaces preserved)
+                                                            if (!$val) {
+                                                                $val = $logData[$label] ?? null;
+                                                            }
+                                                        @endphp
+                                                        @php $displayLabel = str_replace(['FRONT: ', 'REAR: ', 'RIGHT: ', 'LEFT: ', 'TOP: '], '', $item->label); @endphp
+                                                        <tr>
+                                                            <td class="ps-3 text-white">{{ $displayLabel }}</td>
+                                                            <td class="text-center">
+                                                                @include('admin.reports.partials.badge', ['status' => $val ?: '-'])
+                                                            </td>
+                                                        </tr>
+                                                    @endforeach
+                                                @endif
+                                            @endforeach
+
+                                            {{-- Unmapped items (Last) --}}
+                                            @if(!empty($unmapped))
+                                                <tr class="table-secondary"><th colspan="2" class="text-white">ADDITIONAL ITEMS</th></tr>
+                                                @foreach($unmapped as $k => $v)
+                                                    <tr>
+                                                        <td class="ps-3">{{ ucwords(str_replace('_', ' ', $k)) }}</td>
+                                                        <td class="text-center">@include('admin.reports.partials.badge', ['status' => $v])</td>
+                                                    </tr>
+                                                @endforeach
+                                            @endif
+
+                                            @if($tankCat == 'T75')
+                                            <!-- SECTION D: IBOX -->
+                                            <tr class="table-secondary"><th colspan="2" class="text-white">D. IBOX SYSTEM</th></tr>
+                                            <tr><td class="ps-3">IBOX Condition</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->ibox_condition])</td></tr>
+                                            <tr><td class="ps-3">Pressure (Digital)</td><td class="text-center">{{ $log->ibox_pressure ?? '-' }}</td></tr>
+                                            <tr><td class="ps-3">Temperature</td><td class="text-center">{{ $log->ibox_temperature ?? '-' }}</td></tr>
+                                            @endif
+
+                                            @if($tankCat == 'T75')
+                                            <!-- SECTION E: INSTRUMENTS -->
+                                            <tr class="bg-dark bg-opacity-50"><th colspan="2" class="text-white ps-3">E. INSTRUMENTS</th></tr>
+                                            <tr><td class="ps-3">Pressure Gauge</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->pressure_gauge_condition])</td></tr>
+                                            <tr><td class="ps-3">Level Gauge</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->level_gauge_condition])</td></tr>
+                                            @endif
+
+                                            @if($tankCat == 'T75')
+                                            <!-- SECTION F: VACUUM -->
+                                            <tr class="bg-dark bg-opacity-50"><th colspan="2" class="text-white ps-3">F. VACUUM SYSTEM</th></tr>
+                                            <tr><td class="ps-3">Vacuum Gauge</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->vacuum_gauge_condition])</td></tr>
+                                            <tr><td class="ps-3">Port Suction</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->vacuum_port_suction_condition ?? $logData['port_suction_condition'] ?? $logData['Port Suction Condition'] ?? null])</td></tr>
+                                            <tr><td class="ps-3">Value</td><td class="text-center fw-bold">{{ $log->vacuum_value ? (float)$log->vacuum_value . ' mTorr' : '-' }}</td></tr>
+                                            @endif
+
+                                            @if($tankCat == 'T75')
+                                            <!-- SECTION G: PSV -->
+                                            <tr class="bg-dark bg-opacity-50"><th colspan="2" class="text-white ps-3">G. PSV</th></tr>
+                                            @foreach(['psv1', 'psv2', 'psv3', 'psv4'] as $p)
+                                                @if($log->{$p.'_condition'}) {{-- Only show if data exists (legacy friendly) --}}
+                                                <tr>
+                                                    <td class="ps-3">{{ strtoupper($p) }} Condition</td>
+                                                    <td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->{$p.'_condition'}])</td>
+                                                </tr>
+                                                @endif
+                                            @endforeach
+                                            @endif
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                                <a href="{{ route('admin.reports.inspection.show', \App\Models\InspectionLog::where('isotank_id', $isotank->id)->latest()->first()->id ?? 0) }}" class="btn btn-primary btn-sm">View Full Last Report</a>
+                            </div>
+                        </div>
+                 @else
+                    <div class="alert alert-warning">No detailed inspection data available yet.</div>
+                 @endif
+            </div>
+
+            <!-- Inspection History -->
+            <div class="tab-pane fade" id="inspections">
+                <div class="card shadow-sm bg-dark text-white border-secondary"><div class="card-body p-0">
+                <table class="table table-hover table-dark mb-0">
+                    <thead><tr><th>Date</th><th>Type</th><th>Inspector</th><th>Status</th><th>PDF</th></tr></thead>
                     <tbody>
-                        @php
-                            // Load Dynamic Items if not present
-                            if(!isset($inspectionItems)) {
-                                $inspectionItems = \App\Models\InspectionItem::where('is_active', true)->orderBy('order')->get();
-                            }
-                            
-                            $logData = is_array($log->inspection_data) ? $log->inspection_data : json_decode($log->inspection_data, true) ?? [];
-                            
-                            // CALCULATE UNMAPPED ITEMS HERE
-                            $standardCodes = $inspectionItems->pluck('code')->toArray();
-                            // Create a normalized lookup list (snake_case)
-                            $normalizedStandardCodes = array_map(function($c) { 
-                                return strtolower(str_replace([' ', '-', '.'], '_', $c)); 
-                            }, $standardCodes);
-                            
-                            $unmapped = [];
-                            foreach($logData as $k => $v) {
-                                // Normalize the current key
-                                $normK = strtolower(str_replace([' ', '-', '.'], '_', $k));
-                                
-                                // Exclude standard codes (check against normalized list)
-                                if(!in_array($normK, $normalizedStandardCodes) && 
-                                   !in_array($k, $standardCodes) &&
-                                   !in_array($k, ['inspection_date', 'inspector_name', 'filling_status', 'remarks', 'signature', 'longitude', 'latitude', 'location_name']) &&
-                                   is_string($v) && strlen($v) < 50) {
-                                     // Also exclude hardcoded legacy fields if they appear in JSON
-                                     if(!str_contains($normK, 'ibox') && !str_contains($normK, 'vacuum') && !str_contains($normK, 'pressure_gauge') && !str_contains($normK, 'psv')) {
-                                         $unmapped[$k] = $v;
-                                     }
-                                }
-                            }
-                        @endphp
-
-                        <!-- DYNAMIC CATEGORIES LOOP -->
-                        @php
-                            $tankCat = $log->isotank?->tank_category ?? 'T75';
-                        @endphp
-                        @if($log->isotank)
-                        @php
-                            // 1. Filter items STRICTLY by Tank Category
-                            $catSpecificItems = $inspectionItems->filter(function($i) use ($tankCat) {
-                                  // Handover Protocol: Ensure applicable_categories is treated as array
-                                  $cats = $i->applicable_categories;
-                                  if (is_string($cats)) $cats = json_decode($cats, true);
-                                  if (!is_array($cats)) $cats = [];
-                                  return in_array($tankCat, $cats);
-                            });
-                            
-                            // 2. Group by Category
-                            $grouped = $catSpecificItems->groupBy('category');
-                            
-                            // Merged Legacy Map
-                             $legacyMap = [
-                                'Surface Condition' => 'surface', 'Tank Surface & Paint Condition' => 'surface',
-                                'Frame Condition' => 'frame', 'Frame Structure' => 'frame',
-                                'Tank Name Plate' => 'tank_plate', 'Data Plate' => 'tank_plate',
-                                'Venting Pipe' => 'venting_pipe',
-                                'Explosion Proof Cover' => 'explosion_proof_cover',
-                                'Safety Label' => 'safety_label', 'DG 1972 GHS MSA_Safety_label' => 'safety_label',
-                                'Document Container' => 'document_container',
-                                'Valve Box Door' => 'valve_box_door',
-                                'Grounding System' => 'grounding_system',
-                                'Valve Condition' => 'valve_condition',
-                                'Valve Position' => 'valve_position',
-                                'Pipe Joint' => 'pipe_joint',
-                                'Air Source Connection' => 'air_source_connection',
-                                'ESDV' => 'esdv',
-                                'Blind Flange' => 'blind_flange',
-                                'PRV' => 'prv',
-                                'GPS/4G/LP LAN Antenna' => 'gps_antenna',
-                                'Port Suction Condition' => 'vacuum_port_suction_condition',
-                            ];
-                        @endphp
-
-                        {{-- ENABLE DYNAMIC ITEMS FOR ALL CATEGORIES (T75, T11, T50) --}}
-                        {{-- We used to exclude T75 Incoming, but that hid Sections B and C. Now we include them. --}}
-                        @if(true)
-                        {{-- Dynamic Items for T11/T50 or T75 Outgoing --}}
-                        @php
-                            $tankCat = $tankCat ?? 'T75';
-                            if ($tankCat === 'T11') {
-                                $categoryMap = [
-                                    'a' => 'A. FRONT',
-                                    'b' => 'B. REAR',
-                                    'c' => 'C. RIGHT',
-                                    'd' => 'D. LEFT',
-                                    'e' => 'E. TOP',
-                                    'other' => 'Other / Internal'
-                                ];
-                            } elseif ($tankCat === 'T50') {
-                                $categoryMap = [
-                                    'a' => 'A. FRONT OUT SIDE VIEW',
-                                    'b' => 'B. REAR OUT SIDE VIEW',
-                                    'c' => 'C. RIGHT SIDE/VALVE BOX OBSERVATION',
-                                    'd' => 'D. LEFT SIDE',
-                                    'e' => 'E. TOP',
-                                    'other' => 'Other / Internal'
-                                ];
-                            } else {
-                                $categoryMap = [
-                                    'b' => 'B. GENERAL CONDITION',
-                                    'c' => 'C. VALVES & PIPING',
-                                    'd' => 'D. IBOX SYSTEM',
-                                    'e' => 'E. INSTRUMENTS',
-                                    'f' => 'F. VACUUM SYSTEM',
-                                    'g' => 'G. SAFETY VALVES (PSV)',
-                                ];
-                            }
-                        @endphp
-                        @foreach($catSpecificItems->groupBy('category') as $categoryName => $items)
-                            @if(($tankCat ?? 'T75') !== 'T75' || ($categoryName !== 'd' && $categoryName !== 'e' && $categoryName !== 'f' && $categoryName !== 'g'))
-                            <tr class="table-secondary"><th colspan="2" class="text-white">{{ $categoryMap[$categoryName] ?? strtoupper($categoryName) }}</th></tr>
-                            @foreach($items as $item)
-                                 @php 
-                                    $code = $item->code; 
-                                    $label = $item->label;
-                                    
-                                    // PRO ROBUST LOOKUP STRATEGY
-                                    // 1. Direct Code match in JSON
-                                    $val = $logData[$code] ?? null;
-                                    
-                                    // 2. Direct Column match
-                                    if (!$val) $val = $log->$code ?? null;
-                                    
-                                    // 3. Underscore-version of Code in JSON
-                                    if (!$val) {
-                                        $uCode = str_replace([' ', '.', '/'], '_', $code);
-                                        $val = $logData[$uCode] ?? null;
-                                    }
-                                    
-                                    // 4. Legacy Map (By Label)
-                                    if (!$val && isset($legacyMap[$label])) {
-                                        $lKey = $legacyMap[$label];
-                                        $val = $logData[$lKey] ?? ($log->$lKey ?? null);
-                                    }
-                                    
-                                    // 5. Underscore-version of Label in JSON
-                                    // FIX: Check for Legacy Label as Key (e.g. "GPS_4G_LP_LAN_Antenna")
-                                    if (!$val) {
-                                        $uLabel = str_replace([' ', '.', '/'], '_', $label); // Try literal label with underscores
-                                        $val = $logData[$uLabel] ?? null;
-                                    }
-                                    // FIX: Try exact label too
-                                    if (!$val) {
-                                         $val = $logData[$label] ?? null;
-                                    }
-
-                                    if (!$val) {
-                                        $uLabelLower = str_replace([' ', '.', '/'], '_', strtolower($label));
-                                        $val = $logData[$uLabelLower] ?? null;
-                                    }
-
-
-
-                                    // 6. Direct Label Match (Spaces preserved)
-                                    if (!$val) {
-                                        $val = $logData[$label] ?? null;
-                                    }
-                                 @endphp
-                                  @php
-                                     $displayLabel = str_replace(['FRONT: ', 'REAR: ', 'RIGHT: ', 'LEFT: ', 'TOP: '], '', $item->label);
-                                  @endphp
-                                 <tr>
-                                    <td class="ps-3 text-white">{{ $displayLabel }}</td>
-                                    <td class="text-center">
-                                        @include('admin.reports.partials.badge', ['status' => $val ?: '-'])
-                                    </td>
-                                 </tr>
-                            @endforeach
-                            @endif
-                        @endforeach
-
-                        {{-- Unmapped items (Last) --}}
-                        @if(!empty($unmapped))
-                            <tr class="table-secondary"><th colspan="2" class="text-white">ADDITIONAL ITEMS</th></tr>
-                            @foreach($unmapped as $k => $v)
-                                <tr>
-                                    <td class="ps-3 text-white">{{ ucwords(str_replace('_', ' ', $k)) }}</td>
-                                    <td class="text-center">@include('admin.reports.partials.badge', ['status' => $v])</td>
-                                </tr>
-                            @endforeach
-                        @endif
-                        @endif {{-- Close @if($log->isotank) from line 114 --}}
-                        @endif {{-- Close dynamic items condition from line 149 --}}
-
-                        @if($tankCat == 'T75')
-                        <!-- SECTION D: IBOX SYSTEM (Hardcoded Legacy) -->
-                        <tr class="table-secondary"><th colspan="2" class="text-white">D. IBOX SYSTEM</th></tr>
-                        <tr><td class="ps-3 text-white">IBOX Condition</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->ibox_condition])</td></tr>
-                        <tr><td class="ps-3 text-white">Battery</td><td class="text-center text-white">{{ $log->ibox_battery_percent ? $log->ibox_battery_percent.'%' : '-' }}</td></tr>
-                        <tr><td class="ps-3 text-white">Pressure (Digital)</td><td class="text-center text-white">{{ $log->ibox_pressure ?? '-' }}</td></tr>
-                        
+                        @forelse($inspections as $ins)
                         <tr>
-                            <td class="ps-3 text-white">Temperature #1 (Digital)</td>
-                            <td class="text-center text-white">
-                                {{ ($log->ibox_temperature_1 ?? $log->ibox_temperature) ? ($log->ibox_temperature_1 ?? $log->ibox_temperature).' °C' : '-' }}
-                                @if($log->ibox_temperature_1_timestamp)
-                                <br><small class="text-white">({{ $log->ibox_temperature_1_timestamp->format('H:i') }})</small>
-                                @endif
+                            <td>{{ $ins->created_at->format('Y-m-d H:i') }}</td>
+                            <td>{{ strtoupper(str_replace('_',' ', $ins->inspection_type)) }}</td>
+                            <td>{{ $ins->inspector->name ?? '-' }}</td>
+                            <td>{{ $ins->filling_status_desc }}</td>
+                            <td>
+                                @if($ins->pdf_path) <a href="{{ route('admin.reports.inspection.pdf', $ins->id) }}" target="_blank" class="btn btn-xs btn-danger"><i class="bi bi-pdf"></i> PDF</a> @endif
+                                <a href="{{ route('admin.reports.inspection.show', $ins->id) }}" class="btn btn-xs btn-info"><i class="bi bi-eye"></i></a>
                             </td>
                         </tr>
-                        <tr>
-                            <td class="ps-3 text-white">Temperature #2 (Digital)</td>
-                            <td class="text-center text-white">
-                                {{ $log->ibox_temperature_2 ? $log->ibox_temperature_2.' °C' : '-' }}
-                                @if($log->ibox_temperature_2_timestamp)
-                                <br><small class="text-white">({{ $log->ibox_temperature_2_timestamp->format('H:i') }})</small>
-                                @endif
-                            </td>
-                        </tr>
-
-                        <tr><td class="ps-3 text-white">Level (Digital)</td><td class="text-center text-white">{{ $log->ibox_level ? $log->ibox_level.' %' : '-' }}</td></tr>
-
-                        <!-- SECTION E: INSTRUMENTS (Hardcoded Legacy) -->
-                        <tr class="table-secondary"><th colspan="2" class="text-white">E. INSTRUMENTS</th></tr>
-                        <tr><td class="ps-3 text-white">Pressure Gauge Condition</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->pressure_gauge_condition])</td></tr>
-                        <tr><td class="ps-3 text-white ms-3">Serial Number</td><td class="text-center text-white">{{ $log->pressure_gauge_serial_number ?? '-' }}</td></tr>
-                        <tr><td class="ps-3 text-white ms-3">Calibration Date</td><td class="text-center text-white">{{ $log->pressure_gauge_calibration_date ? $log->pressure_gauge_calibration_date->format('Y-m-d') : '-' }}</td></tr>
-                        
-                        <tr>
-                            <td class="ps-3 text-white ms-3">Reading (Pressure 1)</td>
-                            <td class="text-center text-white">
-                                {{ $log->pressure_1 ? (float)$log->pressure_1.' MPa' : '-' }}
-                                @if($log->pressure_1_timestamp)
-                                <br><small class="text-white">({{ $log->pressure_1_timestamp->format('H:i') }})</small>
-                                @endif
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="ps-3 text-white ms-3">Reading (Pressure 2)</td>
-                            <td class="text-center text-white">
-                                {{ $log->pressure_2 ? (float)$log->pressure_2.' MPa' : '-' }}
-                                @if($log->pressure_2_timestamp)
-                                <br><small class="text-white">({{ $log->pressure_2_timestamp->format('H:i') }})</small>
-                                @endif
-                            </td>
-                        </tr>
-                        
-                        <tr><td class="ps-3 text-white">Level Gauge Condition</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->level_gauge_condition])</td></tr>
-                        <tr>
-                            <td class="ps-3 text-white ms-3">Reading (Level 1)</td>
-                            <td class="text-center text-white">
-                                {{ $log->level_1 ? (float)$log->level_1.' mmH2O' : '-' }}
-                                @if($log->level_1_timestamp)
-                                <br><small class="text-white">({{ $log->level_1_timestamp->format('H:i') }})</small>
-                                @endif
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="ps-3 text-white ms-3">Reading (Level 2)</td>
-                            <td class="text-center text-white">
-                                {{ $log->level_2 ? (float)$log->level_2.' mmH2O' : '-' }}
-                                @if($log->level_2_timestamp)
-                                <br><small class="text-white">({{ $log->level_2_timestamp->format('H:i') }})</small>
-                                @endif
-                            </td>
-                        </tr>
-
-                        <!-- SECTION F: VACUUM SYSTEM (Hardcoded Legacy) -->
-                        <tr class="bg-dark bg-opacity-50"><th colspan="2" class="text-white ps-3">F. VACUUM SYSTEM</th></tr>
-                        <tr><td class="ps-3 text-white">Vacuum Gauge Condition</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->vacuum_gauge_condition])</td></tr>
-                        <tr><td class="ps-3 text-white">Port Suction Condition</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->vacuum_port_suction_condition ?? $logData['port_suction_condition'] ?? $logData['Port Suction Condition'] ?? $logData['vacuum_port_suction_condition'] ?? $logData['vacuum_port_suction'] ?? $logData['port_suction'] ?? $logData['Port_Suction_Condition'] ?? null])</td></tr>
-                        <tr><td class="ps-3 text-white">Vacuum Value</td><td class="text-center fw-bold text-white">{{ $log->vacuum_value ? (float)$log->vacuum_value . ' mTorr' : '-' }}</td></tr>
-                        <tr><td class="ps-3 text-white">Vacuum Temperature</td><td class="text-center text-white">{{ $log->vacuum_temperature ? $log->vacuum_temperature . ' °C' : '-' }}</td></tr>
-                        <tr><td class="ps-3 text-white">Check Datetime</td><td class="text-center text-white">{{ $log->vacuum_check_datetime ? $log->vacuum_check_datetime->format('Y-m-d H:i') : '-' }}</td></tr>
-                        @endif
-
-                        @if($tankCat == 'T75')
-                        <!-- SECTION G: PSV (Hardcoded Legacy) -->
-                        <tr class="bg-dark bg-opacity-50"><th colspan="2" class="text-white ps-3">G. PSV (PRESSURE SAFETY VALVES)</th></tr>
-                        @foreach(['psv1', 'psv2', 'psv3', 'psv4'] as $p)
-                            <tr>
-                                <td class="ps-3 fw-bold text-white">{{ strtoupper($p) }} Condition</td>
-                                <td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->{$p.'_condition'}])</td>
-                            </tr>
-                            <tr>
-                                <td class="ps-3 text-white small">
-                                    STATUS: {{ strtoupper($log->{$p.'_status'} ?? '-') }} | SN: {{ $log->{$p.'_serial_number'} ?? '-' }}
-                                    <br>Cal. Date: {{ $log->{$p.'_calibration_date'} ? $log->{$p.'_calibration_date'}->format('Y-m-d') : '-' }}
-                                </td>
-                                <td class="text-center small text-white">Valid Until: {{ $log->{$p.'_valid_until'} ? $log->{$p.'_valid_until'}->format('Y-m-d') : '-' }}</td>
-                            </tr>
-                        @endforeach
-                        @endif
-
-                        <!-- SIGNATURES -->
-                        <tr class="bg-dark bg-opacity-50"><th colspan="2" class="text-white ps-3">SIGNATURES</th></tr>
-                        
-                        <!-- Inspector Signature -->
-                        <tr>
-                            <td class="ps-3 fw-bold text-white">Inspector Signature</td>
-                            <td class="text-center">
-                                @php
-                                    // Inspector Signature Logic
-                                    $inspSigPath = $log->inspector->signature_path ?? null;
-                                    $inspSigUrl = null;
-                                    if ($inspSigPath && \Storage::disk('public')->exists($inspSigPath)) {
-                                        $inspSigUrl = asset('storage/' . $inspSigPath);
-                                    }
-                                @endphp
-                                
-                                @if($inspSigUrl)
-                                    <img src="{{ $inspSigUrl }}" alt="Inspector Signature" style="max-height: 80px; max-width: 200px; border: 1px solid #eee;">
-                                @else
-                                    <span class="text-white fst-italic">No Digital Signature</span>
-                                @endif
-                                <br>
-                                <small class="text-white">{{ $log->inspector->name ?? 'Unknown Inspector' }}</small>
-                            </td>
-                        </tr>
-
-                        <!-- Receiver Signature (Outgoing Only) -->
-                        @if($log->inspection_type === 'outgoing_inspection')
-                        <tr>
-                            <td class="ps-3 fw-bold text-white">Receiver Signature</td>
-                            <td class="text-center">
-                                @php
-                                    // Receiver Signature Logic (One-time event)
-                                    $recvSigPath = $log->receiver_signature_path ?? null;
-                                    $recvSigUrl = null;
-                                    if ($recvSigPath && \Storage::disk('public')->exists($recvSigPath)) {
-                                        $recvSigUrl = asset('storage/' . $recvSigPath);
-                                    }
-                                @endphp
-                                
-                                @if($recvSigUrl)
-                                    <img src="{{ $recvSigUrl }}" alt="Receiver Signature" style="max-height: 80px; max-width: 200px; border: 1px solid #eee;">
-                                @else
-                                    <span class="text-white fst-italic">{{ $log->receiver_confirmed_at ? 'Confirmed but no signature' : 'Waiting for confirmation...' }}</span>
-                                @endif
-                                <br>
-                                <small class="text-white">{{ $log->receiver_name ?? 'Unknown Receiver' }}</small>
-                            </td>
-                        </tr>
-                        @endif
-
+                        @empty
+                        <tr><td colspan="5" class="text-center text-muted">No inspections found.</td></tr>
+                        @endforelse
                     </tbody>
                 </table>
+                </div></div>
             </div>
+
+            <!-- Maintenance History -->
+            <div class="tab-pane fade" id="maintenance">
+                 <div class="card shadow-sm bg-dark text-white border-secondary"><div class="card-body p-0">
+                <table class="table table-hover table-dark mb-0">
+                    <thead><tr><th>Date</th><th>Item / Component</th><th>Status</th><th>Technician</th><th>Desc</th><th>Action</th></tr></thead>
+                    <tbody>
+                        @forelse($maintenance as $job)
+                        <tr>
+                            <td>{{ $job->created_at->format('Y-m-d') }}</td>
+                            <td>{{ $job->source_item ?? 'General' }}</td>
+                            <td>
+                                @if(in_array($job->status, ['closed', 'completed']))
+                                    <span class="badge bg-success">CLOSED</span>
+                                @elseif($job->status == 'deferred')
+                                    <span class="badge bg-secondary">DEFERRED</span>
+                                @else
+                                    <span class="badge bg-warning text-dark">{{ strtoupper(str_replace('_', ' ', $job->status)) }}</span>
+                                @endif
+                            </td>
+                            <td>{{ $job->completedBy->name ?? '-' }}</td>
+                            <td>{{ Str::limit($job->description, 50) }}</td>
+                            <td>
+                                <a href="{{ route('admin.reports.maintenance.show', $job->id) }}" class="btn btn-xs btn-info" target="_blank" title="View Detail">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr><td colspan="6" class="text-center text-muted">No maintenance history.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+                 </div></div>
+            </div>
+            
+              <div class="tab-pane fade" id="calib">
+                  <div class="card shadow-sm bg-dark text-white border-secondary"><div class="card-body">
+                      <h5>Calibration Status</h5>
+                      
+                      <!-- General Status Alert -->
+                      @if($isotank->calibrationStatuses->where('item_name','General')->first())
+                        @php $genStatus = $isotank->calibrationStatuses->where('item_name','General')->first(); @endphp
+                        <div class="alert {{ $genStatus->status=='valid' ? 'alert-success' : 'alert-danger' }} mb-3">
+                            <strong>Overall Status: {{ strtoupper($genStatus->status) }}</strong> 
+                            (Earliest Expiry: {{ $genStatus->valid_until ? $genStatus->valid_until->format('Y-m-d') : '-' }})
+                        </div>
+                      @endif
+
+                      <div class="table-responsive">
+                          <table class="table table-bordered table-striped table-dark border-secondary">
+                              <thead>
+                                  <tr>
+                                      <th>Component</th>
+                                      <th>Position</th>
+                                      <th>Serial No</th>
+                                      <th>Cert Number</th>
+                                      <th>Set Pressure</th>
+                                      <th>Cal Date</th>
+                                      <th>Expiry Date</th>
+                                  </tr>
+                              </thead>
+                              <tbody>
+                                  @forelse($isotank->components as $comp)
+                                    <tr>
+                                        <td>{{ $comp->component_type }}</td>
+                                        <td>{{ $comp->position_code }}</td>
+                                        <td>{{ $comp->serial_number ?? '-' }}</td>
+                                        <td>{{ $comp->certificate_number ?? '-' }}</td>
+                                        <td>{{ $comp->set_pressure ? $comp->set_pressure . ' MPa' : '-' }}</td>
+                                        <td>{{ $comp->last_calibration_date ? $comp->last_calibration_date->format('Y-m-d') : '-' }}</td>
+                                        <td>
+                                            @if($comp->expiry_date)
+                                                <span class="badge {{ $comp->expiry_date->isPast() ? 'bg-danger' : 'bg-success' }}">
+                                                    {{ $comp->expiry_date->format('Y-m-d') }}
+                                                </span>
+                                            @else
+                                                <span class="text-muted">-</span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                  @empty
+                                    <tr><td colspan="7" class="text-center">No components registered.</td></tr>
+                                  @endforelse
+                              </tbody>
+                          </table>
+                      </div>
+                  </div></div>
+             </div>
+             
+             <!-- Vacuum Logs -->
+             <div class="tab-pane fade" id="vacuum">
+                   <div class="card shadow-sm bg-dark text-white border-secondary"><div class="card-body p-0">
+                    <table class="table table-hover table-dark mb-0">
+                        <thead><tr><th>Check Date</th><th>Value</th><th>Temp</th><th>Remark</th></tr></thead>
+                        <tbody>
+                            @forelse($vacuumLogs as $v)
+                            <tr>
+                                <td>{{ $v->check_datetime ? $v->check_datetime->format('Y-m-d H:i') : '-' }}</td>
+                                <td>{{ $v->vacuum_value_raw ?? $v->vacuum_value_mtorr ?? '-' }} {{ $v->vacuum_unit_raw ?? 'mTorr' }}</td>
+                                <td>{{ $v->temperature }} &deg;C</td>
+                                <td>{{ $v->remarks }}</td>
+                            </tr>
+                            @empty
+                            <tr><td colspan="4" class="text-center">No vacuum logs recorded.</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                   </div></div>
+             </div>
         </div>
     </div>
 </div>
-
-<!-- Image Modal -->
-<div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-xl modal-dialog-centered">
-    <div class="modal-content bg-dark border-secondary">
-      <div class="modal-header border-secondary">
-        <h5 class="modal-title text-white" id="imageModalLabel">Photo</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body text-center p-0 overflow-auto" style="max-height: 90vh;">
-        <img src="" id="modalImage" class="img-fluid" style="max-height: 85vh; cursor: zoom-in;">
-      </div>
-      <div class="modal-footer border-secondary py-1 justify-content-center">
-          <small class="text-muted">Click image to zoom in/out</small>
-      </div>
-    </div>
-  </div>
-</div>
-
-@push('scripts')
-<script>
-    // Robust Vanilla JS Modal Implementation
-    document.addEventListener('DOMContentLoaded', function() {
-        const modal = document.getElementById('imageModal');
-        const modalImg = document.getElementById('modalImage');
-        const modalLabel = document.getElementById('imageModalLabel');
-        const closeBtn = modal.querySelector('.btn-close');
-        
-        // Global function to open modal (attached to window for inline onclick access)
-        window.showImageModal = function(src, title) {
-            modalImg.src = src;
-            modalLabel.textContent = title;
-            
-            // 1. Reset Zoom State
-            modalImg.classList.add('img-fluid');
-            modalImg.style.maxHeight = '85vh';
-            modalImg.style.width = '';
-            modalImg.style.cursor = 'zoom-in';
-
-            // 2. Show Modal (Bootstrap Class + Manual Display)
-            modal.classList.add('show');
-            modal.style.display = 'block';
-            modal.removeAttribute('aria-hidden');
-            modal.setAttribute('aria-modal', 'true');
-            
-            // 3. Add Backdrop
-            let backdrop = document.querySelector('.modal-backdrop');
-            if (!backdrop) {
-                backdrop = document.createElement('div');
-                backdrop.className = 'modal-backdrop fade show';
-                document.body.appendChild(backdrop);
-            }
-            document.body.classList.add('modal-open');
-        };
-
-        // Function to Close Modal
-        function closeModal() {
-            modal.classList.remove('show');
-            modal.style.display = 'none';
-            modal.setAttribute('aria-hidden', 'true');
-            modal.removeAttribute('aria-modal');
-            
-            // Remove Backdrop
-            const backdrop = document.querySelector('.modal-backdrop');
-            if (backdrop) backdrop.remove();
-            document.body.classList.remove('modal-open');
-            
-            // Clear Src to stop loading
-            modalImg.src = '';
-        }
-
-        // Event Listeners
-        closeBtn.addEventListener('click', closeModal);
-        
-        // Close on click outside (Backdrop area)
-        modal.addEventListener('click', function(e) {
-            if (e.target === modal) {
-                closeModal();
-            }
-        });
-
-        // Close on Escape Key
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && modal.style.display === 'block') {
-                closeModal();
-            }
-        });
-
-        // Zoom Toggle Logic
-        modalImg.addEventListener('click', function(e) {
-            e.stopPropagation(); // Prevent closing when clicking image
-            if (this.classList.contains('img-fluid')) {
-                // Zoom In
-                this.classList.remove('img-fluid');
-                this.style.maxHeight = '';
-                this.style.width = 'auto';
-                this.style.maxWidth = 'none'; // Allow full overflow
-                this.style.cursor = 'zoom-out';
-            } else {
-                // Zoom Out
-                this.classList.add('img-fluid');
-                this.style.maxHeight = '85vh';
-                this.style.width = '';
-                this.style.maxWidth = '';
-                this.style.cursor = 'zoom-in';
-            }
-        });
-    });
-</script>
-<style>
-    .hover-shadow { transition: transform .2s; }
-    .hover-shadow:hover { transform: scale(1.05); box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important; }
-    /* Hide scrollbar for cleaner look but allow scrolling */
-    .modal-body::-webkit-scrollbar {
-      width: 8px;
-      height: 8px;
-    }
-    .modal-body::-webkit-scrollbar-track {
-      background: #212529; 
-    }
-    .modal-body::-webkit-scrollbar-thumb {
-      background: #495057; 
-      border-radius: 4px;
-    }
-    .modal-body::-webkit-scrollbar-thumb:hover {
-      background: #6c757d; 
-    }
-</style>
-@endpush
-
 @endsection

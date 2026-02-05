@@ -1,5 +1,10 @@
 # ISOTANK SYSTEM - AI HANDOVER PROTOCOL
-> **IMPORTANT FOR AI AGENT:** READ THIS BEFORE DOING ANYTHING RELATED TO DEPLOYMENT.
+> **PENTING UNTUK AGEN AI:** BACA INI SEBELUM MELAKUKAN APAPUN.
+> **BAHASA KOMUNIKASI:** GUNAKAN BAHASA INDONESIA UNTUK SEMUA KOMUNIKASI DENGAN USER.
+
+## 0. PROTOKOL KOMUNIKASI
+*   **WAJIB MENGGUNAKAN BAHASA INDONESIA** dalam setiap penjelasan, laporan, dan respon kepada user.
+*   Istilah teknis (coding) boleh tetap dalam Bahasa Inggris jika diperlukan (contoh: `function`, `variable`, `database`).
 
 ## 1. System Topology (The Two Sources of Truth)
 We operate on **TWO SEPARATE** repositories. Always verify which one you are working on.
