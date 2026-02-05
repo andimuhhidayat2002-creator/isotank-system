@@ -106,8 +106,8 @@
                         @endforeach
                         
                         @if($category === 'all' || $category === 'T75')
-                            <th colspan="5" class="bg-warning text-dark">IBOX SYSTEM</th>
-                            <th colspan="6" class="bg-info text-white">INSTRUMENT CHECK</th>
+                            <th colspan="8" class="bg-warning text-dark">IBOX SYSTEM</th>
+                            <th colspan="12" class="bg-info text-white">INSTRUMENT CHECK</th>
                             <th colspan="5" class="bg-danger text-white">VACUUM TEST</th>
                             <th colspan="12" class="bg-secondary text-white">PSV CHECK</th>
                         @endif
@@ -120,9 +120,23 @@
                             @endforeach
                         @endforeach
                         @if($category === 'all' || $category === 'T75')
-                             <th>Cond</th><th>Bat</th><th>Prs</th><th>Tmp</th><th>Lvl</th>
-                             <th>PGC</th><th>SN</th><th>Cal</th><th>Prs (P1)</th><th>LGC</th><th>Lvl</th>
+                             <!-- IBOX -->
+                             <th>Cond</th><th>Bat</th><th>Prs</th>
+                             <th>Tmp 1</th><th>Ts 1</th>
+                             <th>Tmp 2</th><th>Ts 2</th>
+                             <th>Lvl</th>
+
+                             <!-- INST -->
+                             <th>PGC</th><th>SN</th><th>Cal</th>
+                             <th>Prs 1</th><th>Ts 1</th>
+                             <th>Prs 2</th><th>Ts 2</th>
+                             <th>LGC</th>
+                             <th>Lvl 1</th><th>Ts 1</th>
+                             <th>Lvl 2</th><th>Ts 2</th>
+
+                             <!-- VAC -->
                              <th>VC</th><th>VPC</th><th>Val</th><th>Tmp</th><th>Dt</th>
+                             <!-- PSV -->
                              <th>P1C</th><th>SN</th><th>Dt</th>
                              <th>P2C</th><th>SN</th><th>Dt</th>
                              <th>P3C</th><th>SN</th><th>Dt</th>
@@ -177,13 +191,24 @@
                                 $ibox_cond = $getVal(['ibox_condition']);
                                 $ibox_bat  = $getVal(['ibox_battery_percent', 'battery']);
                                 $ibox_prs  = $getVal(['ibox_pressure', 'pressure']);
-                                $ibox_tmp  = $getVal(['ibox_temperature_1', 'ibox_temperature', 'temperature']);
+                                $ibox_tmp1 = $getVal(['ibox_temperature_1', 'ibox_temperature', 'temperature']);
+                                $ibox_ts1  = $getVal(['ibox_temperature_1_timestamp', 'ibox_temperature_timestamp']);
+                                
+                                $ibox_tmp2 = $getVal(['ibox_temperature_2']);
+                                $ibox_ts2  = $getVal(['ibox_temperature_2_timestamp']);
+                                
                                 $ibox_lvl  = $getVal(['ibox_level', 'level']);
+                                
+                                // Time Format Helper
+                                $fmtTime = function($ts) { return $ts ? \Carbon\Carbon::parse($ts)->format('H:i') : '-'; };
                             @endphp
                             <td>@include('admin.reports.partials.badge', ['status' => $ibox_cond])</td>
                             <td class="small">{{ $ibox_bat ? $ibox_bat.'%' : '-' }}</td>
                             <td class="small">{{ $ibox_prs ? $ibox_prs : '-' }}</td>
-                            <td class="small">{{ $ibox_tmp ? $ibox_tmp.' °C' : '-' }}</td>
+                            <td class="small">{{ $ibox_tmp1 ? $ibox_tmp1.' °C' : '-' }}</td>
+                            <td class="small text-muted">{{ $fmtTime($ibox_ts1) }}</td>
+                            <td class="small">{{ $ibox_tmp2 ? $ibox_tmp2.' °C' : '-' }}</td>
+                            <td class="small text-muted">{{ $fmtTime($ibox_ts2) }}</td>
                             <td class="small">{{ $ibox_lvl ? $ibox_lvl.'%' : '-' }}</td>
 
                             <!-- INST -->
@@ -191,19 +216,38 @@
                                 $pgc = $getVal(['pressure_gauge_condition']);
                                 $pgsn = $getVal(['pressure_gauge_serial_number']);
                                 $pgcal = $getVal(['pressure_gauge_calibration_date']);
-                                // Try Pressure 1, then Pressure 2 as fallback
-                                $p1 = $getVal(['pressure_1', 'pressure_2']);
+                                
+                                $p1 = $getVal(['pressure_1']);
+                                $p1_ts = $getVal(['pressure_1_timestamp']);
+                                
+                                $p2 = $getVal(['pressure_2']);
+                                $p2_ts = $getVal(['pressure_2_timestamp']);
                                 
                                 $lgc = $getVal(['level_gauge_condition']);
-                                // Try Level 1, then Level 2
-                                $l1 = $getVal(['level_1', 'level_2']);
+                                
+                                $l1 = $getVal(['level_1']);
+                                $l1_ts = $getVal(['level_1_timestamp']);
+                                
+                                $l2 = $getVal(['level_2']);
+                                $l2_ts = $getVal(['level_2_timestamp']);
                             @endphp
                             <td>@include('admin.reports.partials.badge', ['status' => $pgc])</td>
                             <td class="small">{{ $pgsn ?? '-' }}</td>
                             <td class="small">{{ $pgcal ? \Carbon\Carbon::parse($pgcal)->format('y-m-d') : '-' }}</td>
+                            
                             <td class="small">{{ $p1 ? $p1 : '-' }}</td>
+                            <td class="small text-muted">{{ $fmtTime($p1_ts) }}</td>
+                            
+                            <td class="small">{{ $p2 ? $p2 : '-' }}</td>
+                            <td class="small text-muted">{{ $fmtTime($p2_ts) }}</td>
+                            
                             <td>@include('admin.reports.partials.badge', ['status' => $lgc])</td>
+                            
                             <td class="small">{{ $l1 ? $l1 : '-' }}</td>
+                            <td class="small text-muted">{{ $fmtTime($l1_ts) }}</td>
+                            
+                            <td class="small">{{ $l2 ? $l2 : '-' }}</td>
+                            <td class="small text-muted">{{ $fmtTime($l2_ts) }}</td>
 
                             <!-- VAC -->
                             @php
@@ -253,8 +297,18 @@
                              @endforeach
                          @endforeach
                          @if($category === 'all' || $category === 'T75')
-                             <th>Cond</th><th>Bat</th><th>Prs</th><th>Tmp</th><th>Lvl</th>
-                             <th>PGC</th><th>SN</th><th>Cal</th><th>Prs</th><th>LGC</th><th>Lvl</th>
+                             <th>Cond</th><th>Bat</th><th>Prs</th>
+                             <th>Tmp 1</th><th>Ts 1</th>
+                             <th>Tmp 2</th><th>Ts 2</th>
+                             <th>Lvl</th>
+
+                             <th>PGC</th><th>SN</th><th>Cal</th>
+                             <th>Prs 1</th><th>Ts 1</th>
+                             <th>Prs 2</th><th>Ts 2</th>
+                             <th>LGC</th>
+                             <th>Lvl 1</th><th>Ts 1</th>
+                             <th>Lvl 2</th><th>Ts 2</th>
+
                              <th>VC</th><th>VPC</th><th>Val</th><th>Tmp</th><th>Dt</th>
                              <th>P1C</th><th>SN</th><th>Dt</th>
                              <th>P2C</th><th>SN</th><th>Dt</th>
