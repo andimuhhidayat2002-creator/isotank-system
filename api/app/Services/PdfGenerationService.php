@@ -164,7 +164,7 @@ class PdfGenerationService
             'battery' => $get('ibox_battery_percent') ? $get('ibox_battery_percent').' %' : '-',
             'pressure' => $get('ibox_pressure') ? $get('ibox_pressure').' MPa' : '-',
             // FIX: Incoming uses 'ibox_temperature', Outgoing uses 'ibox_temperature_1'
-            'temp1' => $get('ibox_temperature_1') ?: ($get('ibox_temperature') ? $get('ibox_temperature').' °C' : '-'),
+            'temp1' => ($temp1Val = $get('ibox_temperature_1') ?: $get('ibox_temperature')) ? $temp1Val.' °C' : '-',
             'temp1_time' => $time('ibox_temperature_1_timestamp'),
             'temp2' => $get('ibox_temperature_2') ? $get('ibox_temperature_2').' °C' : '-',
             'temp2_time' => $time('ibox_temperature_2_timestamp'),

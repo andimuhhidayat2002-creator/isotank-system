@@ -348,11 +348,31 @@ $(document).ready(function() {
 
     // Connect custom buttons to DataTables export
     $('#exportExcelBtn').on('click', function() {
-        table.button('.buttons-excel').trigger();
+        console.log('Excel button clicked');
+        try {
+            if (table && table.button) {
+                table.button('.buttons-excel').trigger();
+                console.log('Excel export triggered');
+            } else {
+                console.error('DataTables not initialized');
+            }
+        } catch (e) {
+            console.error('Excel export error:', e);
+        }
     });
 
     $('#exportPdfBtn').on('click', function() {
-        table.button('.buttons-pdf').trigger();
+        console.log('PDF button clicked');
+        try {
+            if (table && table.button) {
+                table.button('.buttons-pdf').trigger();
+                console.log('PDF export triggered');
+            } else {
+                console.error('DataTables not initialized');
+            }
+        } catch (e) {
+            console.error('PDF export error:', e);
+        }
     });
 
     // ========================================
