@@ -232,6 +232,26 @@ We operate on **TWO SEPARATE** repositories. Always verify which one you are wor
 *   **File Modified:** `api/app/Http/Controllers/Api/Inspector/InspectionSubmitController.php`
 
 ---
-*Last Updated: Feb 5, 2026 06:10 - Antigravity Agent*
+### X. IBOX Temperature Data Mapping Fix (Feb 5, 2026 08:45)
+*   **Problem:** IBOX temperature values submitted by inspectors were not loading in web admin inspection detail view.
+*   **Root Cause:** Flutter app sends temperature data with key `ibox_temperature` (incoming) or `ibox_temperature_1/2` (outgoing), but backend was only looking for legacy key `temperature` which Flutter never sends.
+*   **Solution Applied:**
+    *   Added validation rule: `'ibox_temperature' => 'nullable|numeric'` (Line 107)
+    *   Updated data mapping with fallback chain: `$validated['temperature'] ?? $validated['ibox_temperature'] ?? null` (Line 415)
+    *   Maintains backward compatibility with legacy `temperature` key
+*   **Items Verified:** All other IBOX items (pressure, level, battery, multi-stage readings) confirmed working correctly
+*   **Deployment:** Successfully deployed to VPS, cache cleared, PHP-FPM restarted
+*   **Testing Required:**
+    *   ✅ Incoming inspection: Temperature should save to `ibox_temperature` column
+    *   ✅ Outgoing inspection: Stage 1 & 2 temperatures should save to `ibox_temperature_1` and `ibox_temperature_2`
+    *   ✅ Web admin should display temperature values correctly
+    *   ✅ PDF generation should include temperature data
+*   **Files Modified:** 
+    *   `api/app/Http/Controllers/Api/Inspector/InspectionSubmitController.php`
+    *   `IBOX_TEMPERATURE_FIX_ANALYSIS.md` (new analysis document)
+*   **Reference:** See `IBOX_TEMPERATURE_FIX_ANALYSIS.md` for complete analysis and testing checklist
+
+---
+*Last Updated: Feb 5, 2026 08:45 - Antigravity Agent*
 
 
