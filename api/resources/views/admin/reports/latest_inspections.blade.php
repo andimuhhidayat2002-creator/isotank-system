@@ -1,30 +1,60 @@
 @extends('layouts.app')
 
 @section('content')
-<!-- FIXED COLUMNS CSS (Only external CSS needed) -->
+<!-- FIXED COLUMNS CSS -->
 <link rel="stylesheet" href="https://cdn.datatables.net/fixedcolumns/4.3.0/css/fixedColumns.bootstrap5.min.css">
 
 <!-- Load FixedColumns JS specifically (Deferred to wait for jQuery/DT from app.js) -->
 <script src="https://cdn.datatables.net/fixedcolumns/4.3.0/js/dataTables.fixedColumns.min.js" defer></script>
 
 <style>
-    /* COMPACT STYLE ENFORCEMENT */
-    #latestConditionTable { font-size: 0.72rem !important; }
+    /* COMPACT STYLE ENFORCEMENT & DARK MODE FIXES */
+    #latestConditionTable { 
+        font-size: 0.75rem !important; 
+    }
     #latestConditionTable th, #latestConditionTable td { 
-        padding: 4px 6px !important; 
+        padding: 5px 6px !important; 
         vertical-align: middle;
+    }
+    
+    /* Force TEXT COLOR to White/Light for readability */
+    #latestConditionTable tbody td {
+        color: #f0f0f0 !important;
+    }
+    /* Muted text should be slightly darker white */
+    #latestConditionTable tbody td .text-muted {
+        color: #aaa !important;
+    }
+    /* Links */
+    #latestConditionTable tbody td a {
+        color: #0dcaf0 !important; /* Cyan */
+    }
+
+    /* Striped Rows Contrast */
+    #latestConditionTable tbody tr:nth-of-type(odd) td {
+        background-color: #2c2c2c !important;
+    }
+    #latestConditionTable tbody tr:nth-of-type(even) td {
+        background-color: #222222 !important;
+    }
+
+    /* Fixed Column Fixes (Must match row bg or be distinct) */
+    table.dataTable tbody tr td.dtfc-fixed-left {
+        background-color: #1a1a1a !important; /* Fixed cols darker */
+        color: #fff !important;
+        z-index: 10;
+        border-right: 1px solid #444;
+    }
+    table.dataTable thead tr th.dtfc-fixed-left {
+        background-color: #333 !important;
+        z-index: 20;
     }
     
     /* Layout fixes */
     .vertical-headers th { height: 140px; vertical-align: bottom; }
     .vertical-headers th div { writing-mode: vertical-rl; transform: rotate(180deg); width: 100%; }
-
-    /* Dark Mode Sticky Fixes */
-    table.dataTable tbody tr td.dtfc-fixed-left { background-color: #1a1a1a !important; color: #fff; z-index: 10; }
-    table.dataTable thead tr th.dtfc-fixed-left { background-color: #333 !important; z-index: 20; }
-    table.dataTable thead tr { background-color: #2d2d2d; }
     
-    /* Hide Default Buttons Toolbar (We use custom triggers) */
+    /* Hide Default Buttons Toolbar */
     .dt-buttons { display: none !important; }
 </style>
 
@@ -51,9 +81,8 @@
 
 <div class="card">
     <div class="card-body p-2">
-        <!-- Wrappers for FixedColumns compatibility -->
         <div class="table-responsive" style="overflow: hidden;"> 
-            <table id="latestConditionTable" class="table table-striped table-bordered table-sm align-middle text-nowrap" style="width:100%">
+            <table id="latestConditionTable" class="table table-bordered table-sm align-middle text-nowrap" style="width:100%">
                 <thead class="text-white text-center">
                     <tr>
                         <th rowspan="2" class="align-middle bg-secondary bg-opacity-75" style="width: 120px;">ISO NUMBER</th>
@@ -77,10 +106,10 @@
                         @endforeach
                         
                         @if($category === 'all' || $category === 'T75')
-                            <th colspan="5" class="bg-warning text-dark">IBOX</th>
-                            <th colspan="6" class="bg-info text-white">INST</th>
-                            <th colspan="5" class="bg-danger text-white">VACUUM</th>
-                            <th colspan="12" class="bg-secondary text-white">PSV</th>
+                            <th colspan="5" class="bg-warning text-dark">IBOX SYSTEM</th>
+                            <th colspan="6" class="bg-info text-white">INSTRUMENT CHECK</th>
+                            <th colspan="5" class="bg-danger text-white">VACUUM TEST</th>
+                            <th colspan="12" class="bg-secondary text-white">PSV CHECK</th>
                         @endif
                     </tr>
                     <tr>
@@ -92,7 +121,7 @@
                         @endforeach
                         @if($category === 'all' || $category === 'T75')
                              <th>Cond</th><th>Bat</th><th>Prs</th><th>Tmp</th><th>Lvl</th>
-                             <th>PGC</th><th>SN</th><th>Cal</th><th>Prs</th><th>LGC</th><th>Lvl</th>
+                             <th>PGC</th><th>SN</th><th>Cal</th><th>Prs (P1)</th><th>LGC</th><th>Lvl</th>
                              <th>VC</th><th>VPC</th><th>Val</th><th>Tmp</th><th>Dt</th>
                              <th>P1C</th><th>SN</th><th>Dt</th>
                              <th>P2C</th><th>SN</th><th>Dt</th>
@@ -106,58 +135,108 @@
                     @php 
                         $iLog = $log->lastInspectionLog;
                         $logData = ($iLog && $iLog->inspection_data) ? (is_array($iLog->inspection_data) ? $iLog->inspection_data : json_decode($iLog->inspection_data, true)) : [];
-                        // Logic fallback robust...
+                        
+                        // --- ROBUST DATA LOOKUP HELPER ---
+                        $getVal = function($keys) use ($log, $logData, $iLog) {
+                            if (!is_array($keys)) $keys = [$keys];
+                            foreach($keys as $k) {
+                                // 1. Check Master Cols
+                                if (isset($log->$k) && $log->$k !== null && $log->$k !== '') return $log->$k;
+                                // 2. Check InspectionLog Cols
+                                if ($iLog && isset($iLog->$k) && $iLog->$k !== null && $iLog->$k !== '') return $iLog->$k;
+                                // 3. Check JSON Data
+                                if (isset($logData[$k]) && $logData[$k] !== null && $logData[$k] !== '') return $logData[$k];
+                            }
+                            return null;
+                        };
+
                         $legacyMap = ['Surface Condition' => 'surface', 'Tank Name Plate' => 'tank_plate', 'Valve Condition' => 'valve_condition', 'PRV' => 'prv']; 
                     @endphp
                     <tr>
                         <td class="fw-bold text-start">
-                            <a href="{{ route('admin.isotanks.show', $log->isotank_id) }}" class="text-info text-decoration-none">
+                            <a href="{{ route('admin.isotanks.show', $log->isotank_id) }}" class="text-decoration-none">
                                 {{ $log->isotank->iso_number ?? 'UNKNOWN' }} <i class="bi bi-box-arrow-up-right small"></i>
                             </a>
                         </td>
-                        <td class="small text-white">{{ $log->updated_at ? $log->updated_at->format('Y-m-d') : '-' }}</td>
+                        <td class="small">{{ $log->updated_at ? $log->updated_at->format('Y-m-d') : '-' }}</td>
                          @foreach($groupedItems as $catName => $items)
                             @foreach($items as $item)
                                 @php
-                                    $code = $item->code; 
-                                    $val = $logData[$code] ?? null;
-                                    if (!$val) $val = $iLog->$code ?? ($log->$code ?? null);
-                                    if (!$val && $code === 'port_suction_condition') $val = $log->vacuum_port_suction_condition ?? null;
-                                    if (!$val) $val = $logData[str_replace([' ', '.', '/'], '_', $code)] ?? null;
+                                    $code = $item->code;
+                                    $val = $getVal([$code, str_replace([' ', '.', '/'], '_', $code)]);
+                                    if (!$val && isset($legacyMap[$item->label])) $val = $getVal($legacyMap[$item->label]);
                                     if ($item->type === 'photo') $val = $val ? 'Uploaded' : 'Empty';
                                 @endphp
                                 <td>@include('admin.reports.partials.badge', ['status' => $val])</td>
                             @endforeach
                         @endforeach
+
                         @if($category === 'all' || $category === 'T75')
-                            <!-- IBOX -->
-                            <td>@include('admin.reports.partials.badge', ['status' => $log->ibox_condition ?? 'N/A'])</td>
-                            <td class="small">{{ $log->ibox_battery_percent ? $log->ibox_battery_percent.'%' : '-' }}</td>
-                            <td class="small">{{ $log->ibox_pressure ?? '-' }}</td>
-                            <td class="small">{{ $log->ibox_temperature_1 ?? ($log->ibox_temperature ?? '-') }}</td>
-                            <td class="small">{{ $log->ibox_level ?? '-' }}</td>
+                            <!-- IBOX (With Robust Lookup) -->
+                            @php
+                                $ibox_cond = $getVal(['ibox_condition']);
+                                $ibox_bat  = $getVal(['ibox_battery_percent', 'battery']);
+                                $ibox_prs  = $getVal(['ibox_pressure', 'pressure']);
+                                $ibox_tmp  = $getVal(['ibox_temperature_1', 'ibox_temperature', 'temperature']);
+                                $ibox_lvl  = $getVal(['ibox_level', 'level']);
+                            @endphp
+                            <td>@include('admin.reports.partials.badge', ['status' => $ibox_cond])</td>
+                            <td class="small">{{ $ibox_bat ? $ibox_bat.'%' : '-' }}</td>
+                            <td class="small">{{ $ibox_prs ? $ibox_prs : '-' }}</td>
+                            <td class="small">{{ $ibox_tmp ? $ibox_tmp.' °C' : '-' }}</td>
+                            <td class="small">{{ $ibox_lvl ? $ibox_lvl.'%' : '-' }}</td>
+
                             <!-- INST -->
-                            <td>@include('admin.reports.partials.badge', ['status' => $log->pressure_gauge_condition])</td>
-                            <td class="small">{{ $log->pressure_gauge_serial_number ?? '-' }}</td>
-                            <td class="small">{{ $log->pressure_gauge_calibration_date ? \Carbon\Carbon::parse($log->pressure_gauge_calibration_date)->format('y-m-d') : '-' }}</td>
-                            <td class="small">{{ $log->pressure_1 ?? '-' }}</td>
-                            <td>@include('admin.reports.partials.badge', ['status' => $log->level_gauge_condition])</td>
-                            <td class="small">{{ $log->level_1 ?? '-' }}</td>
+                            @php
+                                $pgc = $getVal(['pressure_gauge_condition']);
+                                $pgsn = $getVal(['pressure_gauge_serial_number']);
+                                $pgcal = $getVal(['pressure_gauge_calibration_date']);
+                                // Try Pressure 1, then Pressure 2 as fallback
+                                $p1 = $getVal(['pressure_1', 'pressure_2']);
+                                
+                                $lgc = $getVal(['level_gauge_condition']);
+                                // Try Level 1, then Level 2
+                                $l1 = $getVal(['level_1', 'level_2']);
+                            @endphp
+                            <td>@include('admin.reports.partials.badge', ['status' => $pgc])</td>
+                            <td class="small">{{ $pgsn ?? '-' }}</td>
+                            <td class="small">{{ $pgcal ? \Carbon\Carbon::parse($pgcal)->format('y-m-d') : '-' }}</td>
+                            <td class="small">{{ $p1 ? $p1 : '-' }}</td>
+                            <td>@include('admin.reports.partials.badge', ['status' => $lgc])</td>
+                            <td class="small">{{ $l1 ? $l1 : '-' }}</td>
+
                             <!-- VAC -->
-                            <td>@include('admin.reports.partials.badge', ['status' => $log->vacuum_gauge_condition])</td>
-                            <td>@include('admin.reports.partials.badge', ['status' => $log->vacuum_port_suction_condition])</td>
-                            <td class="small">{{ $log->vacuum_value ? $log->vacuum_value : '-' }}</td>
-                            <td class="small">{{ $log->vacuum_temperature ?? '-' }}</td>
-                            <td class="small">{{ $log->vacuum_check_datetime ? \Carbon\Carbon::parse($log->vacuum_check_datetime)->format('y-m-d') : '-' }}</td>
+                            @php
+                                $vc = $getVal(['vacuum_gauge_condition']);
+                                $vpc = $getVal(['vacuum_port_suction_condition', 'port_suction_condition', 'Port Suction Condition']);
+                                $vval = $getVal(['vacuum_value']);
+                                $vtmp = $getVal(['vacuum_temperature']);
+                                $vdt = $getVal(['vacuum_check_datetime']);
+                            @endphp
+                            <td>@include('admin.reports.partials.badge', ['status' => $vc])</td>
+                            <td>@include('admin.reports.partials.badge', ['status' => $vpc])</td>
+                            <td class="small">{{ $vval ?? '-' }}</td>
+                            <td class="small">{{ $vtmp ?? '-' }}</td>
+                            <td class="small">{{ $vdt ? \Carbon\Carbon::parse($vdt)->format('y-m-d') : '-' }}</td>
+
                             <!-- PSV -->
                             @for($i=1; $i<=4; $i++)
                                 @php 
-                                    $sn = $log->{"psv{$i}_serial_number"}; 
-                                    $dt = $log->{"psv{$i}_calibration_date"};
-                                    $dtStr = $dt ? \Carbon\Carbon::parse($dt)->format('y-m-d') : '-';
+                                    $pcond = $getVal(["psv{$i}_condition"]);
+                                    $psn   = $getVal(["psv{$i}_serial_number"]); 
+                                    $pdt   = $getVal(["psv{$i}_calibration_date"]);
+                                    // Fallback to Components if needed
+                                    if (!$psn && $log->isotank) {
+                                         $comp = $log->isotank->components->where('component_type', 'PSV')->where('position_code', $i)->first();
+                                         if ($comp) {
+                                            $psn = $comp->serial_number;
+                                            if (!$pdt) $pdt = $comp->last_calibration_date;
+                                         }
+                                    }
+                                    $dtStr = $pdt ? \Carbon\Carbon::parse($pdt)->format('y-m-d') : '-';
                                 @endphp
-                                <td>@include('admin.reports.partials.badge', ['status' => $log->{"psv{$i}_condition"}])</td>
-                                <td class="small">{{ $sn ?? '-' }}</td>
+                                <td>@include('admin.reports.partials.badge', ['status' => $pcond])</td>
+                                <td class="small">{{ $psn ?? '-' }}</td>
                                 <td class="small">{{ $dtStr }}</td>
                             @endfor
                         @endif
@@ -193,8 +272,6 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM Ready. Waiting for Global Dependencies...');
-
-    // Wait for window load to ensure app.js has exposed $ and DataTable
     var checkInterval = setInterval(function() {
         if (window.$ && window.DataTable) {
             clearInterval(checkInterval);
@@ -203,15 +280,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 100);
 
     function initTable($) {
-        console.log('JQuery found. Initializing DataTable...');
-        
-        // Destory previous
         if ($.fn.DataTable.isDataTable('#latestConditionTable')) {
             $('#latestConditionTable').DataTable().destroy();
         }
 
         var table = $('#latestConditionTable').DataTable({
-            // DataTables 2.0 Layout Config (The new standard)
             layout: {
                 topStart: {
                     buttons: [
@@ -228,25 +301,18 @@ document.addEventListener('DOMContentLoaded', function() {
                             pageSize: 'A2', 
                             title: 'Latest Isotank Condition',
                             exportOptions: { orthogonal: 'export' },
-                            customize: function(doc) { 
-                                doc.defaultStyle.fontSize = 6; 
-                            }
+                            customize: function(doc) { doc.defaultStyle.fontSize = 6; }
                         }
                     ]
                 }
             },
-            // Legacy dom fallback (just in case)
             dom: 'Bfrtip',
-            
             fixedColumns: { left: 2 },
             scrollX: true,
             ordering: false,
-            pageLength: 50,
+            pageLength: 20, /* Reduced Length */
             
             initComplete: function() {
-                console.log('DT Init Complete. Buttons:', this.api().buttons().count());
-                
-                // Footer search
                 this.api().columns().every(function() {
                     var that = this;
                     var title = $(this.footer()).text();
@@ -258,11 +324,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        // Trigger Logic
         $('#btnExportExcel').on('click', function() { table.button('.buttons-excel').trigger(); });
         $('#btnExportPdf').on('click', function() { table.button('.buttons-pdf').trigger(); });
         
-        // Drag to scroll
         const slider = document.querySelector('.dataTables_scrollBody');
         if(slider) {
             let isDown=false, startX, scrollLeft;
