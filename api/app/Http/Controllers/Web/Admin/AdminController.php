@@ -1434,8 +1434,9 @@ class AdminController extends Controller
             'condition' => $get('ibox_condition'),
             'battery' => $get('ibox_battery_percent') ? $get('ibox_battery_percent').' %' : '-',
             'pressure' => $get('ibox_pressure') ? $get('ibox_pressure').' MPa' : '-',
-            'temp1' => $get('ibox_temperature_1') ? $get('ibox_temperature_1').' °C' : '-',
-            'temp1_time' => $time('ibox_temperature_1_timestamp'),
+            // Fallback to generic ibox_temperature if _1 is missing
+            'temp1' => ($get('ibox_temperature_1') ?? $get('ibox_temperature')) ? ($get('ibox_temperature_1') ?? $get('ibox_temperature')).' °C' : '-',
+            'temp1_time' => $time('ibox_temperature_1_timestamp') ?: $time('ibox_temperature_timestamp'),
             'temp2' => $get('ibox_temperature_2') ? $get('ibox_temperature_2').' °C' : '-',
             'temp2_time' => $time('ibox_temperature_2_timestamp'),
             'level' => $get('ibox_level') ? $get('ibox_level').' %' : '-',
