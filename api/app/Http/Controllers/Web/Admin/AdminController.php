@@ -933,9 +933,26 @@ class AdminController extends Controller
     }
 
     public function showInspectionLog($id) {
-        $log = InspectionLog::with(['isotank', 'inspector'])->findOrFail($id);
+        $log = InspectionLog::with(['isotank.latestInspection', 'inspector'])->findOrFail($id);
+        $isotank = $log->isotank;
+        
+        // Fetch related history for the view
+        $inspections = \App\Models\InspectionLog::with('inspector')
+            ->where('isotank_id', $isotank->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $maintenance = \App\Models\MaintenanceJob::with('completedBy')
+            ->where('isotank_id', $isotank->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+            
+        $vacuumLogs = \App\Models\VacuumLog::where('isotank_id', $isotank->id)
+            ->orderBy('check_datetime', 'desc')
+            ->get();
+            
         $inspectionItems = \App\Models\InspectionItem::where('is_active', true)->orderBy('order')->get();
-        return view('admin.reports.inspection_show', compact('log', 'inspectionItems'));
+        return view('admin.reports.inspection_show', compact('log', 'isotank', 'inspections', 'maintenance', 'vacuumLogs', 'inspectionItems'));
     }
     
     public function maintenanceJobs(Request $request) {

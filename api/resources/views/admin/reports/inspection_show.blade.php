@@ -105,16 +105,17 @@
         <div class="tab-content">
             <!-- Latest Condition -->
             <div class="tab-pane fade show active" id="condition">
-                 @if($isotank->latestInspection)
+                 @if(isset($log) || $isotank->latestInspection)
                     <div class="card shadow-sm bg-dark text-white border-secondary">
                         <div class="card-body">
-                            <h5 class="text-white">Last Inspection: {{ $isotank->latestInspection->updated_at->format('d M Y') }}</h5>
-                            <p class="text-white">Inspector: {{ $isotank->latestInspection->inspector->name ?? '-' }}</p>
                             @php 
-                                // Load the ACTUAL InspectionLog (not MasterLatestInspection)
-                                // MasterLatestInspection only has hardcoded columns, no inspection_data JSON
-                                $log = $isotank->latestInspection->lastInspectionLog ?? $isotank->latestInspection; 
+                                // Priority: Passed $log > Latest Inspection Log
+                                if (!isset($log)) {
+                                     $log = $isotank->latestInspection->lastInspectionLog ?? $isotank->latestInspection;
+                                }
                             @endphp
+                            <h5 class="text-white">Inspection Date: {{ $log->created_at->format('d M Y') }}</h5>
+                            <p class="text-white">Inspector: {{ $log->inspector->name ?? $log->inspector_name ?? '-' }}</p>
                             <div class="row">
                                 <div class="col-6">
                                     <ul class="list-group">
@@ -309,7 +310,7 @@
                                             <tr class="table-secondary"><th colspan="2" class="text-white">D. IBOX SYSTEM</th></tr>
                                             <tr><td class="ps-3">IBOX Condition</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->ibox_condition])</td></tr>
                                             <tr><td class="ps-3">Pressure (Digital)</td><td class="text-center">{{ $log->ibox_pressure ?? '-' }}</td></tr>
-                                            <tr><td class="ps-3">Temperature</td><td class="text-center">{{ $log->ibox_temperature ?? '-' }}</td></tr>
+                                            <tr><td class="ps-3">Temperature #1 (Digital)</td><td class="text-center">{{ $log->ibox_temperature ?? '-' }}</td></tr>
                                             @endif
 
                                             @if($tankCat == 'T75')
@@ -343,7 +344,7 @@
                                     </table>
                                 </div>
                             </div>
-                                <a href="{{ route('admin.reports.inspection.show', \App\Models\InspectionLog::where('isotank_id', $isotank->id)->latest()->first()->id ?? 0) }}" class="btn btn-primary btn-sm">View Full Last Report</a>
+                                <a href="{{ route('admin.reports.inspection.pdf', $log->id) }}" class="btn btn-danger btn-sm" target="_blank"><i class="bi bi-file-pdf"></i> Download PDF</a>
                             </div>
                         </div>
                  @else
