@@ -103,7 +103,8 @@ class InspectionSubmitController extends Controller
             // D. IBOX SYSTEM
             'ibox_condition' => $t75Rule('in:good,not_good,need_attention,na'),
             'pressure' => 'nullable|numeric',
-            'temperature' => 'nullable|numeric',
+            'temperature' => 'nullable|numeric', // Legacy key
+            'ibox_temperature' => 'nullable|numeric', // Flutter incoming inspection key
             'level' => 'nullable|numeric',
             'battery_percent' => 'nullable|integer|min:0|max:100',
             
@@ -409,7 +410,9 @@ class InspectionSubmitController extends Controller
                 
                 'ibox_condition' => $clean($validated['ibox_condition'] ?? null),
                 'ibox_pressure' => $clean($validated['pressure'] ?? null),
-                'ibox_temperature' => $clean($validated['temperature'] ?? null),
+                // FIX: Flutter sends 'ibox_temperature' for incoming, 'ibox_temperature_1' for outgoing stage 1
+                // Backend legacy expects 'temperature' but Flutter never sends that key
+                'ibox_temperature' => $clean($validated['temperature'] ?? $validated['ibox_temperature'] ?? null),
                 'ibox_level' => $clean($validated['level'] ?? null),
                 'ibox_battery_percent' => $clean($validated['battery_percent'] ?? null),
                 
