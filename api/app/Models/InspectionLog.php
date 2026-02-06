@@ -144,4 +144,49 @@ class InspectionLog extends Model
     {
         return $this->belongsTo(User::class, 'inspector_id');
     }
+    // Accessor for aggregating photos
+    public function getInspectionPhotosAttribute()
+    {
+        $photos = [];
+        $standardPhotos = [
+            'photo_front' => 'Front', 
+            'photo_back' => 'Rear', 
+            'photo_left' => 'Left', 
+            'photo_right' => 'Right', 
+            'photo_inside_valve_box' => 'Valve Box', 
+            'photo_additional' => 'Additional', 
+            'photo_extra' => 'Extra'
+        ];
+
+        foreach ($standardPhotos as $field => $label) {
+            if (!empty($this->attributes[$field])) {
+                $photos[$field] = $this->attributes[$field];
+            }
+        }
+
+        // Merge dynamic photos from additional_details if exists
+        if (!empty($this->additional_details) && is_array($this->additional_details)) {
+             foreach ($this->additional_details as $key => $val) {
+                 if (str_starts_with($key, 'photo_') && is_string($val)) {
+                     // Check if not already added
+                     if (!array_key_exists($key, $photos)) {
+                         $photos[$key] = $val;
+                     }
+                 }
+             }
+        }
+
+        // Also check inspection_data for photos (legacy/dynamic items)
+        if (!empty($this->inspection_data) && is_array($this->inspection_data)) {
+             foreach ($this->inspection_data as $key => $val) {
+                 if (str_starts_with($key, 'photo_') && is_string($val)) {
+                      if (!array_key_exists($key, $photos)) {
+                         $photos[$key] = $val;
+                     }
+                 }
+             }
+        }
+
+        return count($photos) > 0 ? $photos : null;
+    }
 }

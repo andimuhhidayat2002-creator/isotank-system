@@ -84,8 +84,38 @@
                 </table>
              </div>
         </div>
+        <div class="card shadow-sm mb-4 bg-dark text-white border-secondary">
+             <div class="card-header">Inspection Photos</div>
+             <div class="card-body">
+                @if($log->inspection_photos)
+                    @php
+                       $photosC = is_string($log->inspection_photos) ? json_decode($log->inspection_photos, true) : $log->inspection_photos;
+                    @endphp
+                    @if(is_array($photosC) && count($photosC) > 0)
+                        <div class="row">
+                            @foreach($photosC as $key => $path)
+                                <div class="col-6 mb-3">
+                                    <div class="card bg-black border-secondary h-100">
+                                         <a href="{{ route('admin.media.show', ['path' => 'inspections/' . basename($path)]) }}" target="_blank">
+                                             <img src="{{ route('admin.media.show', ['path' => 'inspections/' . basename($path)]) }}" class="card-img-top" style="height: 100px; object-fit: cover;" alt="{{ $key }}">
+                                         </a>
+                                         <div class="card-body p-1 text-center">
+                                             <small class="text-white text-uppercase" style="font-size: 0.65rem;">{{ str_replace(['photo_', '_'], ['',' '], $key) }}</small>
+                                         </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <p class="text-muted small mb-0">No photos available.</p>
+                    @endif
+                @else
+                    <p class="text-muted small mb-0">No photos available.</p>
+                @endif
+             </div>
+        </div>
     </div>
-
+    
     <!-- RIGHT: Tabs for History -->
     <div class="col-md-8">
         <style>
@@ -100,7 +130,6 @@
             <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#maintenance">Maintenance</button></li>
             <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#calib">Calibration</button></li>
             <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#vacuum">Vacuum</button></li>
-            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#photos">Photos</button></li>
         </ul>
 
         <div class="tab-content">
@@ -388,31 +417,6 @@
                             </div>
                                 <a href="{{ route('admin.reports.inspection.pdf', $log->id) }}" class="btn btn-danger btn-sm" target="_blank"><i class="bi bi-file-pdf"></i> Download PDF</a>
                                 
-                                <hr class="border-secondary my-4">
-                                <h5 class="text-white mb-3">Inspection Photos</h5>
-                                @if($log->inspection_photos)
-                                    @php
-                                       $photosC = is_string($log->inspection_photos) ? json_decode($log->inspection_photos, true) : $log->inspection_photos;
-                                    @endphp
-                                    @if(is_array($photosC) && count($photosC) > 0)
-                                        <div class="row">
-                                            @foreach($photosC as $key => $path)
-                                                <div class="col-md-3 col-6 mb-3">
-                                                    <div class="card bg-black border-secondary h-100">
-                                                         <a href="{{ route('admin.media.show', ['path' => 'inspections/' . basename($path)]) }}" target="_blank">
-                                                             <img src="{{ route('admin.media.show', ['path' => 'inspections/' . basename($path)]) }}" class="card-img-top" style="height: 150px; object-fit: cover;" alt="{{ $key }}">
-                                                         </a>
-                                                         <div class="card-body p-1 text-center">
-                                                             <small class="text-white text-uppercase" style="font-size: 0.7rem;">{{ str_replace(['photo_', '_'], ['',' '], $key) }}</small>
-                                                         </div>
-                                                    </div>
-                                                </div>
-                                            @endforeach
-                                        </div>
-                                    @else
-                                        <p class="text-muted">No photos available.</p>
-                                    @endif
-                                @endif
                             </div>
                         </div>
                  @else
@@ -553,39 +557,6 @@
                         </tbody>
                     </table>
                    </div></div>
-             </div>
-             <!-- Photos Tab -->
-             <div class="tab-pane fade" id="photos">
-                  <div class="card shadow-sm bg-dark text-white border-secondary">
-                      <div class="card-body">
-                          @if($log->inspection_photos)
-                             @php
-                                $photos = is_string($log->inspection_photos) ? json_decode($log->inspection_photos, true) : $log->inspection_photos;
-                             @endphp
-                             
-                             @if(is_array($photos) && count($photos) > 0)
-                                 <div class="row">
-                                     @foreach($photos as $key => $path)
-                                         <div class="col-md-4 col-sm-6 mb-4">
-                                             <div class="card bg-black border-secondary h-100">
-                                                 <a href="{{ route('admin.media.show', ['path' => 'inspections/' . basename($path)]) }}" target="_blank">
-                                                     <img src="{{ route('admin.media.show', ['path' => 'inspections/' . basename($path)]) }}" class="card-img-top" style="height: 200px; object-fit: cover;" alt="{{ $key }}">
-                                                 </a>
-                                                 <div class="card-body p-2 text-center">
-                                                     <small class="text-white text-uppercase fw-bold">{{ str_replace(['photo_', '_'], ['',' '], $key) }}</small>
-                                                 </div>
-                                             </div>
-                                         </div>
-                                     @endforeach
-                                 </div>
-                             @else
-                                 <div class="alert alert-info">No photos attached to this inspection.</div>
-                             @endif
-                          @else
-                              <div class="alert alert-info">No photos available.</div>
-                          @endif
-                      </div>
-                  </div>
              </div>
 
         </div>

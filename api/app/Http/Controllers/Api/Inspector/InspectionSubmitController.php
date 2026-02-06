@@ -479,13 +479,13 @@ class InspectionSubmitController extends Controller
                 'destination' => $validated['destination'] ?? null,
                 'receiver_name' => $job->receiver_name,
                 
-                'photo_front' => $validated['photo_front'] ?? null,
-                'photo_back' => $validated['photo_back'] ?? null,
-                'photo_left' => $validated['photo_left'] ?? null,
-                'photo_right' => $validated['photo_right'] ?? null,
-                'photo_inside_valve_box' => $validated['photo_inside_valve_box'] ?? null,
-                'photo_additional' => $validated['photo_additional'] ?? null,
-                'photo_extra' => $validated['photo_extra'] ?? null,
+                'photo_front' => $validated['photo_front'] ?? $inspectionLog?->photo_front ?? null,
+                'photo_back' => $validated['photo_back'] ?? $inspectionLog?->photo_back ?? null,
+                'photo_left' => $validated['photo_left'] ?? $inspectionLog?->photo_left ?? null,
+                'photo_right' => $validated['photo_right'] ?? $inspectionLog?->photo_right ?? null,
+                'photo_inside_valve_box' => $validated['photo_inside_valve_box'] ?? $inspectionLog?->photo_inside_valve_box ?? null,
+                'photo_additional' => $validated['photo_additional'] ?? $inspectionLog?->photo_additional ?? null,
+                'photo_extra' => $validated['photo_extra'] ?? $inspectionLog?->photo_extra ?? null,
                 'additional_details' => collect($allInput)->filter(function($v, $k) {
                     return str_starts_with($k, 'remark_') || 
                            str_starts_with($k, 'part_damage_') || 
