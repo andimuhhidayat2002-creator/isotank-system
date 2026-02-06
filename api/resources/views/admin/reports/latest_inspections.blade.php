@@ -7,6 +7,18 @@
 <!-- Load FixedColumns JS specifically (Deferred to wait for jQuery/DT from app.js) -->
 <script src="https://cdn.datatables.net/fixedcolumns/4.3.0/js/dataTables.fixedColumns.min.js" defer></script>
 
+<!-- EXTERNAL DEPENDENCIES FOR DATATABLES BUTTONS (EXCEL/PDF) -->
+<!-- JSZip (Required for Excel) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" defer></script>
+<!-- PDFMake (Required for PDF) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js" defer></script>
+<!-- DataTables Buttons -->
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js" defer></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js" defer></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js" defer></script>
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.min.css">
+
 <style>
     /* COMPACT STYLE ENFORCEMENT & DARK MODE FIXES */
     #latestConditionTable { 
