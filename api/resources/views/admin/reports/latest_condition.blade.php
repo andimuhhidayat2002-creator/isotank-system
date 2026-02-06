@@ -105,16 +105,14 @@
         <div class="tab-content">
             <!-- Latest Condition -->
             <div class="tab-pane fade show active" id="condition">
-                 @if($isotank->latestInspection)
+                 @php
+                    $log = \App\Models\InspectionLog::where('isotank_id', $isotank->id)->latest('created_at')->first();
+                 @endphp
+                 @if($log)
                     <div class="card shadow-sm bg-dark text-white border-secondary">
                         <div class="card-body">
-                            <h5 class="text-white">Last Inspection: {{ $isotank->latestInspection->updated_at->format('d M Y') }}</h5>
-                            <p class="text-white">Inspector: {{ $isotank->latestInspection->inspector->name ?? '-' }}</p>
-                            @php 
-                                // Load the ACTUAL InspectionLog (not MasterLatestInspection)
-                                // MasterLatestInspection only has hardcoded columns, no inspection_data JSON
-                                $log = $isotank->latestInspection->lastInspectionLog ?? $isotank->latestInspection; 
-                            @endphp
+                            <h5 class="text-white">Last Inspection: {{ $log->created_at->format('d M Y') }}</h5>
+                            <p class="text-white">Inspector: {{ $log->inspector->name ?? '-' }}</p>
                             <div class="row">
                                 <div class="col-6">
                                     <ul class="list-group">
