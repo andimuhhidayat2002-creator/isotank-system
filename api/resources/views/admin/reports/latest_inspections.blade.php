@@ -22,22 +22,6 @@
     
     /* Layout & Alignment Fixes */
     /* #latestConditionTable { width: auto !important; } */
-    th.vertical-headers { 
-        height: 140px; 
-        vertical-align: bottom; 
-        padding-bottom: 10px !important;
-        width: 35px !important;
-        min-width: 35px !important;
-        max-width: 35px !important;
-    }
-    th.vertical-headers div { 
-        writing-mode: vertical-rl; 
-        transform: rotate(180deg); 
-        width: 100%; 
-        white-space: nowrap;
-        display: flex;
-        align-items: center; /* Center horizontally after rotation */
-    }
     
     /* Hide Default Buttons Interface (We use custom buttons) */
     .dt-buttons { display: none !important; } 
@@ -106,7 +90,7 @@
                             @if(($tCat === 'T75' || $tCat === 'all') && in_array(strtolower($catName), ['d', 'e', 'f', 'g'])) @continue @endif
                             @foreach($items as $item) 
                                 @php $displayLabel = str_replace(['FRONT: ', 'REAR: ', 'RIGHT: ', 'LEFT: ', 'TOP: '], '', $item->label); @endphp
-                                <th class="vertical-headers"><div>{{ substr($displayLabel,0,25) }}</div></th> 
+                                <th class="text-center" style="min-width: 100px;">{{ substr($displayLabel,0,25) }}</th> 
                             @endforeach
                         @endforeach
                         @if($category === 'all' || $category === 'T75')
@@ -395,21 +379,15 @@ window.addEventListener('load', function() {
                 } 
             }
         ],
-        columnDefs: [
-            { targets: 0, width: "120px" },
-            { targets: 1, width: "100px" }
-        ],
         fixedColumns: { left: 2 },
         scrollX: true,
-        scrollCollapse: true,
         ordering: false,
         pageLength: 20,
         searching: true,
-        autoWidth: false,
+        autoWidth: true,
         initComplete: function() {
             var api = this.api();
             setTimeout(function() { api.columns.adjust(); }, 300);
-            setTimeout(function() { api.columns.adjust(); }, 1000);
         }
     });
 
