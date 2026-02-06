@@ -1276,57 +1276,53 @@ class InspectionSubmitController extends Controller
             // ALWAYS mark job as done (The process is finished, result is either Accepted or Rejected)
             $job->update(['status' => 'done']);
             
-            // FILLING / CONTENT STATUS RULE (FINAL – LOCKED)
-            // If ALL items = ACCEPT: Update location AND Confirm filling
-            // If ANY item = REJECT: Do NOT update location, Do NOT update filling
-            if ($rejectCount === 0) {
-                $updates = [];
-                
-                if ($job->destination) {
-                    $updates['location'] = $job->destination;
-                }
-                
-                // FIX: Use Inspection Log data (Inspector's Input) instead of Job data
-                if ($inspectionLog->filling_status_code) {
-                    $updates['filling_status_code'] = $inspectionLog->filling_status_code;
-                    $updates['filling_status_desc'] = $inspectionLog->filling_status_desc;
-                } elseif ($job->filling_status_code) {
-                     // Fallback to job if log is empty (rare)
-                    $updates['filling_status_code'] = $job->filling_status_code;
-                    $updates['filling_status_desc'] = $job->filling_status_desc;
-                }
-                
-                if (!empty($updates)) {
-                    $job->isotank->update($updates);
-                }
-    
-                // CRITICAL: CLEAR YARD POSITION
-                // 5. UPDATE ISOTANK LOCATION (OFFICIAL OUT)
-                // Use destination from Log (Inspector input) OR Job (Admin plan)
-                $destination = $inspectionLog->destination;
-                if (empty($destination)) {
-                     $destination = $job->destination;
-                }
-    
-                if (!empty($destination)) {
-                    $job->isotank->update([
-                        'location' => $destination,
-                        'status' => 'active', // Ensure it remains active
-                    ]);
-                } else {
-                    // If no destination is set anywhere, we cannot move it, but we don't block confirmation.
-                    // Just log it.
-                    \Log::warning("Receiver Confirmation: No destination found for Isotank {$job->isotank_id} (Job {$job->id}). Location not updated.");
-                }
+            // 1. FILLING STATUS UPDATE (Always update, rejections are non-blocking)
+            $updates = [];
+            
+            if ($job->destination) {
+                $updates['location'] = $job->destination;
+            }
+            
+            // FIX: Use Inspection Log data (Inspector's Input) instead of Job data
+            if ($inspectionLog->filling_status_code) {
+                $updates['filling_status_code'] = $inspectionLog->filling_status_code;
+                $updates['filling_status_desc'] = $inspectionLog->filling_status_desc;
+            } elseif ($job->filling_status_code) {
+                    // Fallback to job if log is empty (rare)
+                $updates['filling_status_code'] = $job->filling_status_code;
+                $updates['filling_status_desc'] = $job->filling_status_desc;
+            }
+            
+            if (!empty($updates)) {
+                $job->isotank->update($updates);
+            }
+
+            // CRITICAL: CLEAR YARD POSITION
+            // 5. UPDATE ISOTANK LOCATION (OFFICIAL OUT)
+            // Use destination from Log (Inspector input) OR Job (Admin plan)
+            $destination = $inspectionLog->destination;
+            if (empty($destination)) {
+                    $destination = $job->destination;
+            }
+
+            if (!empty($destination)) {
+                $job->isotank->update([
+                    'location' => $destination,
+                    'status' => 'active', // Ensure it remains active
+                ]);
+            } else {
+                // If no destination is set anywhere, we cannot move it, but we don't block confirmation.
+                // Just log it.
+                \Log::warning("Receiver Confirmation: No destination found for Isotank {$job->isotank_id} (Job {$job->id}). Location not updated.");
+            }
 
             // 6. GENERATE PDF (NOW IT'S TIME)
-                try {
-                    $pdfService = new PdfGenerationService();
-                    $pdfPath = $pdfService->generateOutgoingPdf($inspectionLog);
-                } catch (\Exception $pdfError) {
-                    // Log error but don't fail the confirmation
-                    \Log::error('Outgoing PDF generation failed: ' . $pdfError->getMessage());
-                }
+            try {
+                $pdfService = new PdfGenerationService();
+                $pdfPath = $pdfService->generateOutgoingPdf($inspectionLog);
+            } catch (\Exception $pdfError) {
+                // Log error but don't fail the confirmation
+                \Log::error('Outgoing PDF generation failed: ' . $pdfError->getMessage());
             }
 
             DB::commit();
