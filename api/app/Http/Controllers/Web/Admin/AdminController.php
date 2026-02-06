@@ -893,6 +893,19 @@ class AdminController extends Controller
         return back()->with('success', 'Inspection job removed.');
     }
 
+    public function deleteInspectionJobsBulk(Request $request) {
+        $request->validate(['ids' => 'required|array']);
+        
+        $count = InspectionJob::whereIn('id', $request->ids)
+            ->where('status', 'open')
+            ->delete();
+            
+        return response()->json([
+            'success' => true,
+            'message' => "$count inspection jobs removed successfully."
+        ]);
+    }
+
     public function deleteMaintenanceJob($id) {
         $job = MaintenanceJob::findOrFail($id);
         if ($job->status !== 'open') return back()->with('error', 'Only open jobs can be deleted.');

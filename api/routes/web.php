@@ -77,6 +77,7 @@ Route::middleware(['auth:web', 'role:admin,management,yard_operator', 'log.activ
         Route::post('/activities/manual', [AdminController::class, 'storeManualActivity'])->name('activities.manual');
         Route::post('/activities/upload', [App\Http\Controllers\Web\Admin\ActivityUploadController::class, 'upload'])->name('activities.upload');
         Route::delete('/activities/inspection/{id}', [AdminController::class, 'deleteInspectionJob'])->name('activities.inspection.delete');
+        Route::delete('/activities/inspection', [AdminController::class, 'deleteInspectionJobsBulk'])->name('activities.inspection.bulk_delete');
         Route::delete('/activities/maintenance/{id}', [AdminController::class, 'deleteMaintenanceJob'])->name('activities.maintenance.delete');
         Route::delete('/activities/calibration/{id}', [AdminController::class, 'deleteCalibrationJob'])->name('activities.calibration.delete');
         

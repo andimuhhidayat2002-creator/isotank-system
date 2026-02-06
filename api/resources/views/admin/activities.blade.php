@@ -545,13 +545,19 @@
         <div class="col-md-12 mb-4">
             <div class="card border-0">
                 <div class="card-header border-bottom d-flex justify-content-between align-items-center">
-                    <span><i class="bi bi-search me-2"></i>Pending Inspections</span>
+                    <div class="d-flex align-items-center">
+                        <span class="me-3"><i class="bi bi-search me-2"></i>Pending Inspections</span>
+                        <button id="bulkDeleteBtn" class="btn btn-sm btn-danger d-none" onclick="confirmBulkDelete()">
+                            <i class="bi bi-trash"></i> Delete Selected (<span id="selectedCount">0</span>)
+                        </button>
+                    </div>
                     <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle">{{ count($pendingInspections) }} Open</span>
                 </div>
                 <div class="card-body">
                     <table id="pendingInspectionsTable" class="table table-hover mb-0 align-middle">
                         <thead>
                             <tr>
+                                <th style="width: 30px;"><input type="checkbox" id="selectAllRaw" class="form-check-input"></th>
                                 <th>ISO Number</th>
                                 <th>Type</th>
                                 <th>Planned Date</th>
@@ -562,7 +568,8 @@
                         </thead>
                         <tbody class="border-top-0">
                             @foreach($pendingInspections as $job)
-                            <tr>
+                            <tr data-id="{{ $job->id }}">
+                                <td><input type="checkbox" class="form-check-input row-select" value="{{ $job->id }}"></td>
                                 <td class="fw-bold"><a href="{{ route('admin.isotanks.show', $job->isotank_id) }}" class="text-decoration-none text-primary">{{ optional($job->isotank)->iso_number ?? 'UNKNOWN' }}</a></td>
                                 <td class="text-white">{{ strtoupper(str_replace('_', ' ', $job->activity_type)) }}</td>
                                 <td class="text-white">{{ $job->planned_date ? $job->planned_date->format('Y-m-d') : '-' }}</td>
@@ -576,10 +583,10 @@
                                 </td>
                             </tr>
                             @endforeach
-
                         </tbody>
                         <tfoot>
                             <tr>
+                                <th>-</th>
                                 <th>ISO Number</th>
                                 <th>Type</th>
                                 <th>Date</th>
@@ -591,6 +598,79 @@
                     </table>
                 </div>
             </div>
+            
+            <script>
+            function updateBulkDeleteBtn() {
+                const count = document.querySelectorAll('.row-select:checked').length;
+                const btn = document.getElementById('bulkDeleteBtn');
+                document.getElementById('selectedCount').innerText = count;
+                if(count > 0) btn.classList.remove('d-none');
+                else btn.classList.add('d-none');
+            }
+
+            document.addEventListener('DOMContentLoaded', function() {
+                // Select All Handler
+                document.getElementById('selectAllRaw').addEventListener('change', function() {
+                    const checked = this.checked;
+                    document.querySelectorAll('.row-select').forEach(cb => cb.checked = checked);
+                    updateBulkDeleteBtn();
+                });
+
+                // Individual Checkbox Handler
+                document.addEventListener('change', function(e) {
+                    if(e.target.classList.contains('row-select')) {
+                        updateBulkDeleteBtn();
+                    }
+                });
+            });
+
+            function confirmBulkDelete() {
+                const selected = Array.from(document.querySelectorAll('.row-select:checked')).map(cb => cb.value);
+                if (selected.length === 0) return;
+
+                Swal.fire({
+                    title: 'Delete ' + selected.length + ' Items?',
+                    text: "You won't be able to revert this!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Yes, delete them!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        Swal.showLoading();
+                        
+                        $.ajax({
+                            url: "{{ route('admin.activities.inspection.bulk_delete') }}",
+                            type: "POST",
+                            data: {
+                                _method: 'DELETE',
+                                _token: "{{ csrf_token() }}",
+                                ids: selected
+                            },
+                            success: function(response) {
+                                Swal.fire('Deleted!', response.message, 'success');
+                                // Remove rows from DataTable if exists
+                                const table = $('#pendingInspectionsTable').DataTable();
+                                selected.forEach(id => {
+                                    const row = document.querySelector(`tr[data-id="${id}"]`);
+                                    if(row) {
+                                        table.row(row).remove();
+                                    }
+                                });
+                                table.draw(false);
+                                updateBulkDeleteBtn();
+                                // Uncheck select all
+                                document.getElementById('selectAllRaw').checked = false;
+                            },
+                            error: function(xhr) {
+                                Swal.fire('Error', 'Something went wrong.', 'error');
+                            }
+                        });
+                    }
+                })
+            }
+            </script>
         </div>
 
         <!-- Pending Maintenance & Calibration -->
