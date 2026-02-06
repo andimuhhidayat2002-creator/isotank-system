@@ -70,7 +70,7 @@
 <div class="card">
     <div class="card-body p-2">
         <div class="table-responsive"> 
-            <table id="latestConditionTable" class="table table-bordered table-sm align-middle text-nowrap" style="width: 100% !important;">
+            <table id="latestConditionTable" class="table table-bordered table-sm align-middle text-nowrap" style="width: auto !important;">
                 <thead class="text-white text-center">
                     <tr>
                         <th rowspan="2" class="align-middle bg-secondary bg-opacity-75" style="width: 120px;">ISO NUMBER</th>
@@ -395,6 +395,10 @@ window.addEventListener('load', function() {
                 } 
             }
         ],
+        columnDefs: [
+            { targets: 0, width: "120px" },
+            { targets: 1, width: "100px" }
+        ],
         fixedColumns: { left: 2 },
         scrollX: true,
         scrollCollapse: true,
@@ -404,10 +408,8 @@ window.addEventListener('load', function() {
         autoWidth: false,
         initComplete: function() {
             var api = this.api();
-            setTimeout(function() {
-                api.columns.adjust();
-                console.log('Columns adjusted for alignment');
-            }, 300);
+            setTimeout(function() { api.columns.adjust(); }, 300);
+            setTimeout(function() { api.columns.adjust(); }, 1000);
         }
     });
 
