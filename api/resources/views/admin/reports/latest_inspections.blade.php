@@ -321,8 +321,18 @@
 @push('scripts')
 <!-- All dependencies (jQuery, DataTables, JSZip, pdfMake) are loaded via app.js -->
 <script>
-$(document).ready(function() {
-    console.log('Initializing DataTable with CDN dependencies...');
+// Wait for app.js (ES6 module) to finish loading
+window.addEventListener('load', function() {
+    console.log('Window loaded, initializing DataTable...');
+    
+    // Verify jQuery is available
+    if (typeof $ === 'undefined' || typeof $.fn.DataTable === 'undefined') {
+        console.error('jQuery or DataTables not loaded!');
+        return;
+    }
+    
+    console.log('jQuery version:', $.fn.jquery);
+    console.log('DataTables available:', typeof $.fn.DataTable);
 
     // Destroy existing if any
     if ($.fn.DataTable.isDataTable('#latestConditionTable')) {
