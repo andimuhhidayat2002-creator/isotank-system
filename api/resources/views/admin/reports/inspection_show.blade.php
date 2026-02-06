@@ -96,8 +96,8 @@
                             @foreach($photosC as $key => $path)
                                 <div class="col-6 mb-3">
                                     <div class="card bg-black border-secondary h-100">
-                                         <a href="{{ route('admin.media.show', ['path' => 'inspections/' . basename($path)]) }}" target="_blank">
-                                             <img src="{{ route('admin.media.show', ['path' => 'inspections/' . basename($path)]) }}" class="card-img-top" style="height: 100px; object-fit: cover;" alt="{{ $key }}">
+                                         <a href="{{ route('admin.media', ['path' => 'inspections/' . basename($path)]) }}" target="_blank">
+                                             <img src="{{ route('admin.media', ['path' => 'inspections/' . basename($path)]) }}" class="card-img-top" style="height: 100px; object-fit: cover;" alt="{{ $key }}">
                                          </a>
                                          <div class="card-body p-1 text-center">
                                              <small class="text-white text-uppercase" style="font-size: 0.65rem;">{{ str_replace(['photo_', '_'], ['',' '], $key) }}</small>
