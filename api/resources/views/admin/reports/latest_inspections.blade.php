@@ -3,11 +3,22 @@
 @section('content')
 <!-- FIXED COLUMNS CSS -->
 <link rel="stylesheet" href="https://cdn.datatables.net/fixedcolumns/4.3.0/css/fixedColumns.bootstrap5.min.css">
+<!-- BUTTONS CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css">
 
-<!-- Load FixedColumns JS specifically (Deferred to wait for jQuery/DT from app.js) -->
+<!-- Load DataTables Extensions (Deferred to wait for jQuery from app.js) -->
+<!-- JSZip for Excel -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" defer></script>
+<!-- PDFMake for PDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js" defer></script>
+<!-- Buttons Core & HTML5 -->
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js" defer></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js" defer></script>
+<!-- FixedColumns -->
 <script src="https://cdn.datatables.net/fixedcolumns/4.3.0/js/dataTables.fixedColumns.min.js" defer></script>
 
-<!-- FixedColumns CSS is fine here -->
+<!-- CSS overrides remain here -->
 
 <style>
     /* 1. VISIBILITY FIX: Force White Text on Dark Background */
@@ -326,68 +337,100 @@
 @push('scripts')
 <script>
 $(document).ready(function() {
-    var table;
-    try {
-        // 3. JS FIX - Robust Init
-        table = $('#latestConditionTable').DataTable({
-            // Ensure Buttons are initialized but hidden initially
-            dom: 'Brtip', 
-            buttons: [
-                { extend: 'excelHtml5', className: 'buttons-excel', title: 'Latest_Isotank_Condition', exportOptions: { orthogonal: 'export' } },
-                { extend: 'pdfHtml5', className: 'buttons-pdf', orientation: 'landscape', pageSize: 'A2', title: 'Latest Isotank Condition', exportOptions: { orthogonal: 'export' }, customize: function(doc) { doc.defaultStyle.fontSize = 6; } }
-            ],
-            fixedColumns: { left: 2 },
-            scrollX: true,
-            ordering: false,
-            pageLength: 20
-        });
-
-        // Hide Default Buttons (We use Custom)
-        $('.dt-buttons').hide();
-
-        // Bind Custom Buttons
-        $('#btnExportExcel').on('click', function() { table.button('.buttons-excel').trigger(); });
-        $('#btnExportPdf').on('click', function() { table.button('.buttons-pdf').trigger(); });
-
-        // Bind Custom Search
-        $('#customSearch').on('keyup change', function() { 
-            table.search(this.value).draw(); 
-        });
-
-        console.log('DataTable initialized successfully');
-
-    } catch (error) {
-        console.error('DataTable Buttons failed to load. Fallback to basic.', error);
-        // Fallback if Buttons extension is missing
-        if ($.fn.DataTable.isDataTable('#latestConditionTable')) {
-             $('#latestConditionTable').DataTable().destroy();
-        }
-        table = $('#latestConditionTable').DataTable({
-            dom: 'rtip', // No buttons
-            fixedColumns: { left: 2 },
-            scrollX: true,
-            ordering: false,
-            pageLength: 20
-        });
-        
-        // Manual Search Fallback
-         $('#customSearch').on('keyup change', function() { 
-            table.search(this.value).draw(); 
-        });
-        
-        // Alert user
-        $('#btnExportExcel, #btnExportPdf').prop('disabled', true).attr('title', 'Export unavailable (Dependency missing)');
+    // Ensure DataTable is not already initialized
+    if ($.fn.DataTable.isDataTable('#latestConditionTable')) {
+        $('#latestConditionTable').DataTable().destroy();
     }
 
-    // Drag Scroll
+    // Initialize DataTable with Buttons and FixedColumns
+    var table = $('#latestConditionTable').DataTable({
+        dom: 'Brtip', // B=Buttons, r=processing, t=table, i=info, p=pagination
+        buttons: [
+            { 
+                extend: 'excelHtml5', 
+                className: 'buttons-excel', 
+                title: 'Latest_Isotank_Condition_' + new Date().toISOString().split('T')[0], 
+                exportOptions: { 
+                    orthogonal: 'export',
+                    format: {
+                        body: function ( data, row, column, node ) {
+                            // Strip HTML tags (like badges) for clean Excel export
+                            return data ? String(data).replace(/<[^>]+>/g, "").trim() : "";
+                        }
+                    }
+                } 
+            },
+            { 
+                extend: 'pdfHtml5', 
+                className: 'buttons-pdf', 
+                orientation: 'landscape', 
+                pageSize: 'A1', // Use A1 safely for wide tables
+                title: 'Latest Isotank Condition', 
+                exportOptions: { 
+                    orthogonal: 'export',
+                    format: {
+                        body: function ( data, row, column, node ) {
+                            return data ? String(data).replace(/<[^>]+>/g, "").trim() : "";
+                        }
+                    }
+                }, 
+                customize: function(doc) { 
+                    // Make font smaller to fit
+                    doc.defaultStyle.fontSize = 5; 
+                    doc.styles.tableHeader.fontSize = 6;
+                    // Center align table
+                    doc.content[1].table.widths = Array(doc.content[1].table.body[0].length + 1).join('*').split('');
+                } 
+            }
+        ],
+        fixedColumns: { left: 2 },
+        scrollX: true,
+        ordering: false, // Disable sorting as requested in previous tasks
+        pageLength: 20,
+        searching: true, // Must be true for API search() to work
+        autoWidth: false
+    });
+
+    // Hide the default DataTables buttons container (we trigger them via custom buttons)
+    $('.dt-buttons').hide();
+
+    // Bind Custom Export Buttons
+    $('#btnExportExcel').on('click', function() { 
+        table.button('.buttons-excel').trigger(); 
+    });
+    
+    $('#btnExportPdf').on('click', function() { 
+        table.button('.buttons-pdf').trigger(); 
+    });
+
+    // Bind Custom Search Input
+    $('#customSearch').on('keyup change', function() { 
+        table.search(this.value).draw(); 
+    });
+
+    // Verify initialization
+    console.log('DataTable initialized with Buttons:', $.fn.DataTable.Buttons ? 'YES' : 'NO');
+
+    // Drag Scroll Implementation (Mouse Drag)
     const slider = document.querySelector('.dataTables_scrollBody');
     if(slider) {
-        let isDown=false, startX, scrollLeft;
-        slider.style.cursor='grab';
-        slider.addEventListener('mousedown', (e)=>{isDown=true; slider.style.cursor='grabbing'; startX=e.pageX-slider.offsetLeft; scrollLeft=slider.scrollLeft;});
-        slider.addEventListener('mouseleave',()=>{isDown=false;slider.style.cursor='grab';});
-        slider.addEventListener('mouseup',()=>{isDown=false;slider.style.cursor='grab';});
-        slider.addEventListener('mousemove',(e)=>{if(!isDown)return;e.preventDefault();const x=e.pageX-slider.offsetLeft;const walk=(x-startX)*2;slider.scrollLeft=scrollLeft-walk;});
+        let isDown = false, startX, scrollLeft;
+        slider.style.cursor = 'grab';
+        slider.addEventListener('mousedown', (e) => {
+            isDown = true; 
+            slider.style.cursor = 'grabbing'; 
+            startX = e.pageX - slider.offsetLeft; 
+            scrollLeft = slider.scrollLeft;
+        });
+        slider.addEventListener('mouseleave', () => { isDown = false; slider.style.cursor = 'grab'; });
+        slider.addEventListener('mouseup', () => { isDown = false; slider.style.cursor = 'grab'; });
+        slider.addEventListener('mousemove', (e) => {
+            if(!isDown) return;
+            e.preventDefault();
+            const x = e.pageX - slider.offsetLeft;
+            const walk = (x - startX) * 2; // Scroll-fast
+            slider.scrollLeft = scrollLeft - walk;
+        });
     }
 });
 </script>
