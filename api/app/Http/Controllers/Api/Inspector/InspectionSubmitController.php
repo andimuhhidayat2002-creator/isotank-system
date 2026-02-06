@@ -533,16 +533,60 @@ class InspectionSubmitController extends Controller
                 $inspectionLog = InspectionLog::create($logData);
             }
 
-            // CRITICAL: Draft does NOT update master tables, maintenance, or calibration
+            // 8. MARK JOB AS DONE
+            // Only incoming_inspection is done immediately.
+            // Outgoing remains 'open' for receiver confirmation.
+            if (!$isDraft && $job->activity_type === 'incoming_inspection') {
+                $job->update(['status' => 'done']);
+                
+                // UPDATE MASTER ISOTANK FILLING STATUS (for incoming)
+                $isotankUpdates = [];
+                if (!empty($validated['filling_status_code'])) {
+                    $newStatus = $validated['filling_status_code'];
+                    $currentStatus = $job->isotank->filling_status_code;
+
+                    // RULE: If Admin set a specific "filled ..." status (e.g. "filled m29"), 
+                    // and Inspector selects generic "filled", WE KEEP THE SPECIFIC ONE.
+                    // But if Inspector selects something else (e.g. "empty"), we update it.
+                    $isGenericFilled = ($newStatus === 'filled');
+                    $isSpecificFilled = (str_starts_with($currentStatus, 'filled ') || $currentStatus === 'filled_m29'); // catch spaces or other variants
+
+                    if ($isGenericFilled && $isSpecificFilled) {
+                            // Do NOT update status. Keep the valuable info (e.g. m29).
+                    } else {
+                            $isotankUpdates['filling_status_code'] = $newStatus;
+                            if (!empty($validated['filling_status_desc'])) {
+                                $isotankUpdates['filling_status_desc'] = $validated['filling_status_desc'];
+                            }
+                    }
+                }
+                
+                if (!empty($isotankUpdates)) {
+                    $job->isotank->update($isotankUpdates);
+                }
+            }
+
+            // [MOVED OUTSIDE isDraft CHECK] 
+            // Update Master Tables (Snapshot & Status) even for Drafts
+            // This ensures the "Latest Condition" view reflects the work-in-progress draft
+            
+            // 9. UPDATE MASTER LATEST INSPECTION (SNAPSHOT)
+            $this->updateMasterLatestInspection($job->isotank_id, $inspectionLog);
+            
+            // 9b. UPDATE MASTER ITEM STATUSES (SYNC WITH INSPECTION LOG)
+            $this->updateMasterItemStatuses($job->isotank_id, $validated, $inspectionLog);
+
+            // 4. UPDATE MASTER MEASUREMENT STATUS
+            $this->updateMasterMeasurementStatus($job->isotank_id, $validated);
+
+
+            // CRITICAL: Maintenance & Calibration Triggered ONLY on FINAL Submit
             if (!$isDraft) {
                 // 2. TRIGGER MAINTENANCE (ONLY if condition meaning changed)
                 $this->triggerMaintenance($job->isotank_id, $validated, $inspectionLog, $allInput);
 
-                // 3. UPDATE MASTER ITEM STATUS (Backend logic only)
+                // 3. UPDATE MASTER ITEM STATUS (Backend logic only - Legacy/Redundant but kept for safety)
                 $this->updateMasterItemStatus($job->isotank_id, $validated, $inspectionLog->id);
-
-                // 4. UPDATE MASTER MEASUREMENT STATUS
-                $this->updateMasterMeasurementStatus($job->isotank_id, $validated);
 
                 // 5. UPDATE MASTER CALIBRATION STATUS
                 $this->updateMasterCalibrationStatus($job->isotank_id, $validated);
@@ -572,48 +616,7 @@ class InspectionSubmitController extends Controller
                     }
                 }
 
-                // 8. MARK JOB AS DONE
-                // Only incoming_inspection is done immediately.
-                // Outgoing remains 'open' for receiver confirmation.
-                if ($job->activity_type === 'incoming_inspection') {
-                    $job->update(['status' => 'done']);
-                    
-                    // UPDATE MASTER ISOTANK FILLING STATUS (for incoming)
-                    $isotankUpdates = [];
-                    if (!empty($validated['filling_status_code'])) {
-                        $newStatus = $validated['filling_status_code'];
-                        $currentStatus = $job->isotank->filling_status_code;
-
-                        // RULE: If Admin set a specific "filled ..." status (e.g. "filled m29"), 
-                        // and Inspector selects generic "filled", WE KEEP THE SPECIFIC ONE.
-                        // But if Inspector selects something else (e.g. "empty"), we update it.
-                        $isGenericFilled = ($newStatus === 'filled');
-                        $isSpecificFilled = (str_starts_with($currentStatus, 'filled ') || $currentStatus === 'filled_m29'); // catch spaces or other variants
-
-                        if ($isGenericFilled && $isSpecificFilled) {
-                             // Do NOT update status. Keep the valuable info (e.g. m29).
-                        } else {
-                             $isotankUpdates['filling_status_code'] = $newStatus;
-                             if (!empty($validated['filling_status_desc'])) {
-                                 $isotankUpdates['filling_status_desc'] = $validated['filling_status_desc'];
-                             }
-                        }
-                    }
-                    
-                    if (!empty($isotankUpdates)) {
-                        $job->isotank->update($isotankUpdates);
-                    }
-                }
-
-                // 9. UPDATE MASTER LATEST INSPECTION (SNAPSHOT)
-                $this->updateMasterLatestInspection($job->isotank_id, $inspectionLog);
-                
-                // 9b. UPDATE MASTER ITEM STATUSES (SYNC WITH INSPECTION LOG)
-                $this->updateMasterItemStatuses($job->isotank_id, $validated, $inspectionLog);
-                
                 // 10. AUTO-GENERATE PDF
-                // For INCOMING: Generate immediately.
-                // For OUTGOING: Generate ONLY after Receiver Confirmation (to include receiver notes).
                 try {
                     // ONLY generate PDF immediately for incoming inspections.
                     // Outgoing inspections must wait for receiver confirmation.
