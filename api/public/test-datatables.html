@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>DataTables CDN Test</title>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body class="p-4">
+    <h1>DataTables CDN Test</h1>
+    
+    <div class="mb-3">
+        <input type="text" id="searchBox" class="form-control" placeholder="Search..." style="width: 300px;">
+        <button id="btnExcel" class="btn btn-success mt-2">Export Excel</button>
+        <button id="btnPDF" class="btn btn-danger mt-2">Export PDF</button>
+    </div>
+    
+    <table id="testTable" class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Position</th>
+                <th>Office</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td>Tiger Nixon</td><td>System Architect</td><td>Edinburgh</td></tr>
+            <tr><td>Garrett Winters</td><td>Accountant</td><td>Tokyo</td></tr>
+            <tr><td>Ashton Cox</td><td>Junior Technical Author</td><td>San Francisco</td></tr>
+        </tbody>
+    </table>
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <!-- DataTables -->
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+    <!-- Buttons -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            console.log('jQuery loaded:', typeof $ !== 'undefined');
+            console.log('DataTables loaded:', typeof $.fn.DataTable !== 'undefined');
+            console.log('JSZip loaded:', typeof JSZip !== 'undefined');
+            console.log('pdfMake loaded:', typeof pdfMake !== 'undefined');
+            
+            var table = $('#testTable').DataTable({
+                dom: 'Brtip',
+                buttons: [
+                    { extend: 'excelHtml5', className: 'btn-excel' },
+                    { extend: 'pdfHtml5', className: 'btn-pdf' }
+                ]
+            });
+            
+            $('#btnExcel').on('click', function() {
+                console.log('Excel button clicked');
+                table.button('.btn-excel').trigger();
+            });
+            
+            $('#btnPDF').on('click', function() {
+                console.log('PDF button clicked');
+                table.button('.btn-pdf').trigger();
+            });
+            
+            $('#searchBox').on('keyup', function() {
+                table.search(this.value).draw();
+            });
+            
+            console.log('DataTable initialized successfully!');
+        });
+    </script>
+</body>
+</html>
