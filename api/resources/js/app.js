@@ -10,6 +10,9 @@ window.DataTable = DataTable;
 import 'datatables.net-buttons-bs5';
 import 'datatables.net-buttons';
 
+// Import FixedColumns
+import 'datatables.net-fixedcolumns-bs5';
+
 // Import Button Modules
 import 'datatables.net-buttons/js/buttons.html5.mjs';
 import 'datatables.net-buttons/js/buttons.print.mjs';

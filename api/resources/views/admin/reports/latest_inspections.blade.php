@@ -1,10 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<!-- DATA TABLES & EXTENSIONS CSS -->
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/fixedcolumns/4.3.0/css/fixedColumns.bootstrap5.min.css">
+<!-- DataTables CSS is loaded via app.js -->
 
 <style>
     /* 1. VISIBILITY FIX: Force White Text on Dark Background */
@@ -322,19 +319,7 @@
 @endsection
 
 @push('scripts')
-<!-- DEPENDENCIES (CDN) - jQuery already loaded by app.js -->
-<!-- DataTables Core -->
-<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
-<!-- Fixed Columns -->
-<script src="https://cdn.datatables.net/fixedcolumns/4.3.0/js/dataTables.fixedColumns.min.js"></script>
-<!-- Buttons & Export -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
-
+<!-- All dependencies (jQuery, DataTables, JSZip, pdfMake) are loaded via app.js -->
 <script>
 $(document).ready(function() {
     console.log('Initializing DataTable with CDN dependencies...');
