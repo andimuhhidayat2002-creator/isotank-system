@@ -20,9 +20,17 @@
     table.dataTable tbody tr td.dtfc-fixed-left { background-color: #1a1a1a !important; color: #fff !important; z-index: 10; border-right: 1px solid #444; }
     table.dataTable thead tr th.dtfc-fixed-left { background-color: #333 !important; z-index: 20; }
     
-    /* Layout */
-    .vertical-headers th { height: 140px; vertical-align: bottom; }
-    .vertical-headers th div { writing-mode: vertical-rl; transform: rotate(180deg); width: 100%; }
+    /* Layout & Alignment Fixes */
+    #latestConditionTable { border-collapse: separate !important; border-spacing: 0; }
+    th.vertical-headers { height: 140px; vertical-align: bottom; padding-bottom: 10px !important; }
+    th.vertical-headers div { 
+        writing-mode: vertical-rl; 
+        transform: rotate(180deg); 
+        width: 100%; 
+        white-space: nowrap;
+        display: flex;
+        align-items: center; /* Center horizontally after rotation */
+    }
     
     /* Hide Default Buttons Interface (We use custom buttons) */
     .dt-buttons { display: none !important; } 
