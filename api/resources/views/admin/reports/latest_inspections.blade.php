@@ -21,7 +21,7 @@
     table.dataTable thead tr th.dtfc-fixed-left { background-color: #333 !important; z-index: 20; }
     
     /* Layout & Alignment Fixes */
-    #latestConditionTable { border-collapse: separate !important; border-spacing: 0; }
+    /* #latestConditionTable { width: auto !important; } */
     th.vertical-headers { height: 140px; vertical-align: bottom; padding-bottom: 10px !important; }
     th.vertical-headers div { 
         writing-mode: vertical-rl; 
@@ -63,7 +63,7 @@
 <div class="card">
     <div class="card-body p-2">
         <div class="table-responsive"> 
-            <table id="latestConditionTable" class="table table-bordered table-sm align-middle text-nowrap" style="width:100%">
+            <table id="latestConditionTable" class="table table-bordered table-sm align-middle text-nowrap" style="width: auto !important;">
                 <thead class="text-white text-center">
                     <tr>
                         <th rowspan="2" class="align-middle bg-secondary bg-opacity-75" style="width: 120px;">ISO NUMBER</th>
