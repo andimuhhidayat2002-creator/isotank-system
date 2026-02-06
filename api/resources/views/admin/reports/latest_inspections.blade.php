@@ -382,10 +382,18 @@ window.addEventListener('load', function() {
         ],
         fixedColumns: { left: 2 },
         scrollX: true,
+        scrollCollapse: true,
         ordering: false,
         pageLength: 20,
         searching: true,
-        autoWidth: false
+        autoWidth: false,
+        initComplete: function() {
+            var api = this.api();
+            setTimeout(function() {
+                api.columns.adjust();
+                console.log('Columns adjusted for alignment');
+            }, 300);
+        }
     });
 
     // Custom Button Bindings

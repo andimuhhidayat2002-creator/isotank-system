@@ -257,6 +257,16 @@ We operate on **TWO SEPARATE** repositories. Always verify which one you are wor
 *   **Reference:** See `IBOX_TEMPERATURE_FIX_ANALYSIS.md` for complete analysis and testing checklist
 
 ---
-*Last Updated: Feb 5, 2026 08:45 - Antigravity Agent*
+### Y. Latest Condition Master Buttons Fix (Feb 6, 2026)
+*   **Problem:** "Excel", "PDF", and "Search" buttons on Latest Condition Master were unresponsive. T75 tab crashed DataTables initialization.
+*   **Root Causes & Fixes:**
+    1.  **jQuery Version Conflict:** Downgraded jQuery from `^4.0.0` (beta) to `^3.7.1` (stable) in `package.json` to resolve `sClass is undefined` error in DataTables.
+    2.  **Timing Issue (Race Condition):** Enclosed DataTable initialization in `window.addEventListener('load', ...)` to ensure `app.js` (loaded as ES6 module via Vite) finishes loading jQuery/DataTables before the page script tries to use them.
+    3.  **T75 Footer Mismatch:** Fixed `latest_inspections.blade.php` footer loop. Added `@continue` logic to skip categories D-G (IBOX, Vacuum, etc.) in the footer, matching the Header/Body structure. This mismatch (Footer having more columns than Header) caused DataTables to crash on T75 tab.
+    4.  **pdfMake Configuration:** Updated `app.js` to use a robust assignment logic for `pdfMake.vfs` to handle different export structures from the library.
+*   **Results:** Buttons now work correctly across all tabs (T75, T11, T50, All). PDF and Excel export function as expected.
+
+---
+*Last Updated: Feb 6, 2026 - Antigravity Agent*
 
 
