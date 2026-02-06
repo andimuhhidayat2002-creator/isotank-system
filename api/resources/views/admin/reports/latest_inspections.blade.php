@@ -346,14 +346,58 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Wait for the main app.js to load jQuery and DataTables
+    // 1. Wait for Core Dependencies (jQuery + DataTables) from app.js
     var checkInterval = setInterval(function() {
-        if (window.$ && window.DataTable && window.JSZip && window.pdfMake) {
+        if (window.$ && window.DataTable) {
             clearInterval(checkInterval);
-            console.log('Global Dependencies (jQuery, DT, JSZip, PDFMake) Found. Initializing...');
-            initTable(window.$);
+            console.log('Core Dependencies Found. Checking Export Libs...');
+            ensureExportLibsAndInit();
         }
     }, 100);
+
+    // 2. Helper to Load Script if Missing
+    function loadScript(src) {
+        return new Promise((resolve, reject) => {
+            var s = document.createElement('script');
+            s.src = src;
+            s.onload = resolve;
+            s.onerror = reject;
+            document.head.appendChild(s);
+        });
+    }
+
+    // 3. Conditional Loader
+    function ensureExportLibsAndInit() {
+        var promises = [];
+
+        // Check JSZip (Excel)
+        if (typeof window.JSZip === 'undefined') {
+            console.warn('JSZip missing in bundle. Loading from CDN...');
+            promises.push(loadScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js'));
+        }
+
+        // Check PDFMake
+        if (typeof window.pdfMake === 'undefined') {
+            console.warn('PDFMake missing in bundle. Loading from CDN...');
+            promises.push(loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js').then(() => {
+                return loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js');
+            }));
+        }
+
+        // Check Buttons (Sometimes bundled validation fails)
+        // We assume valid if $.fn.DataTable.Buttons exists, but let's be safe.
+        // If the bundle has partial buttons, we might overwrite. 
+        // Safer to Trust Bundle for Buttons logic if Table is there, as loading duplicate Buttons extension is risky.
+        
+        Promise.all(promises).then(() => {
+            console.log('Export Libs Ready. Initializing Table...');
+            initTable(window.$);
+        }).catch(err => {
+            console.error('Failed to load export fallbacks', err);
+            // Init anyway so at least Search/Sort works
+            initTable(window.$);
+        });
+    }
 
     function initTable($) {
         if ($.fn.DataTable.isDataTable('#latestConditionTable')) {
@@ -361,26 +405,22 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         var table = $('#latestConditionTable').DataTable({
-            // Explicitly define DOM to ensure Buttons (B) are rendered
             dom: 'Brtip', 
             buttons: [
                 { 
                     extend: 'excelHtml5', 
-                    className: 'buttons-excel', // Used for manual trigger
+                    className: 'buttons-excel', 
                     title: 'Latest_Isotank_Condition',
                     exportOptions: { orthogonal: 'export' }
                 },
                 { 
                     extend: 'pdfHtml5', 
-                    className: 'buttons-pdf', // Used for manual trigger
+                    className: 'buttons-pdf', 
                     orientation: 'landscape', 
                     pageSize: 'A2', 
                     title: 'Latest Isotank Condition',
                     exportOptions: { orthogonal: 'export' },
-                    customize: function(doc) { 
-                        // Fix for PDFMake 0.2+ font compatibility if needed
-                         doc.defaultStyle.fontSize = 6; 
-                    }
+                    customize: function(doc) { doc.defaultStyle.fontSize = 6; }
                 }
             ],
             fixedColumns: { left: 2 },
@@ -389,7 +429,6 @@ document.addEventListener('DOMContentLoaded', function() {
             pageLength: 20,
             
             initComplete: function() {
-                // Search Logic
                 this.api().columns().every(function() {
                      var that = this;
                      if($(this.footer()).length) {
@@ -403,10 +442,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        // Hide default DataTables buttons because we use our own custom buttons
         $('.dt-buttons').hide();
 
-        // Bind Custom Buttons
         $('#btnExportExcel').off('click').on('click', function() { 
             table.button('.buttons-excel').trigger(); 
         });
@@ -415,12 +452,10 @@ document.addEventListener('DOMContentLoaded', function() {
             table.button('.buttons-pdf').trigger(); 
         });
         
-        // Bind Custom Search
         $('#customSearch').off('keyup change').on('keyup change', function() { 
             table.search(this.value).draw(); 
         });
         
-        // Manual Drag Scroll
         const slider = document.querySelector('.dataTables_scrollBody');
         if(slider) {
             let isDown=false, startX, scrollLeft;
