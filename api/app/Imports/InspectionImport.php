@@ -90,16 +90,20 @@ class InspectionImport
                         }
                     }
 
-                    InspectionJob::create([
-                        'isotank_id' => $isotank->id,
-                        'activity_type' => $this->type,
-                        'planned_date' => $plannedDate,
-                        'destination' => $destination,
-                        'receiver_name' => $receiverName, // Should use the column from excel
-                        'filling_status_code' => $fillingStatusCode,
-                        'filling_status_desc' => $fillingStatusDesc,
-                        'status' => 'open'
-                    ]);
+                    InspectionJob::updateOrCreate(
+                        [
+                            'isotank_id' => $isotank->id,
+                            'status' => 'open'
+                        ],
+                        [
+                            'activity_type' => $this->type,
+                            'planned_date' => $plannedDate,
+                            'destination' => $destination,
+                            'receiver_name' => $receiverName,
+                            'filling_status_code' => $fillingStatusCode,
+                            'filling_status_desc' => $fillingStatusDesc,
+                        ]
+                    );
 
                     $this->successCount++;
                 } catch (\Exception $e) {
