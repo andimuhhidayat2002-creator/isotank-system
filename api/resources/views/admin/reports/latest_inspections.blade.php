@@ -62,13 +62,16 @@
     <h2 class="mb-0 text-white">Latest Condition Master</h2>
     
     <!-- MANUAL BUTTONS -->
-    <div class="btn-group">
-        <button type="button" class="btn btn-success" id="btnExportExcel">
-            <i class="bi bi-file-earmark-excel me-1"></i> Excel
-        </button>
-        <button type="button" class="btn btn-danger" id="btnExportPdf">
-            <i class="bi bi-file-earmark-pdf me-1"></i> PDF
-        </button>
+    <div class="d-flex gap-2">
+        <input type="text" id="customSearch" class="form-control" placeholder="Search data..." style="width: 250px;">
+        <div class="btn-group">
+            <button type="button" class="btn btn-success" id="btnExportExcel">
+                <i class="bi bi-file-earmark-excel me-1"></i> Excel
+            </button>
+            <button type="button" class="btn btn-danger" id="btnExportPdf">
+                <i class="bi bi-file-earmark-pdf me-1"></i> PDF
+            </button>
+        </div>
     </div>
 </div>
 
@@ -81,7 +84,7 @@
 
 <div class="card">
     <div class="card-body p-2">
-        <div class="table-responsive" style="overflow: hidden;"> 
+        <div class="table-responsive"> 
             <table id="latestConditionTable" class="table table-bordered table-sm align-middle text-nowrap" style="width:100%">
                 <thead class="text-white text-center">
                     <tr>
@@ -376,7 +379,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     ]
                 }
             },
-            dom: 'Bfrtip',
+            dom: 'Brtip',
             fixedColumns: { left: 2 },
             scrollX: true,
             ordering: false,
@@ -396,6 +399,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         $('#btnExportExcel').on('click', function() { table.button('.buttons-excel').trigger(); });
         $('#btnExportPdf').on('click', function() { table.button('.buttons-pdf').trigger(); });
+        $('#customSearch').on('keyup', function() { table.search(this.value).draw(); });
         
         const slider = document.querySelector('.dataTables_scrollBody');
         if(slider) {
