@@ -262,9 +262,10 @@ We operate on **TWO SEPARATE** repositories. Always verify which one you are wor
 *   **Root Causes & Fixes:**
     1.  **jQuery Version Conflict:** Downgraded jQuery from `^4.0.0` (beta) to `^3.7.1` (stable) in `package.json` to resolve `sClass is undefined` error in DataTables.
     2.  **Timing Issue (Race Condition):** Enclosed DataTable initialization in `window.addEventListener('load', ...)` to ensure `app.js` (loaded as ES6 module via Vite) finishes loading jQuery/DataTables before the page script tries to use them.
-    3.  **T75 Footer Mismatch:** Fixed `latest_inspections.blade.php` footer loop. Added `@continue` logic to skip categories D-G (IBOX, Vacuum, etc.) in the footer, matching the Header/Body structure. This mismatch (Footer having more columns than Header) caused DataTables to crash on T75 tab.
-    4.  **pdfMake Configuration:** Updated `app.js` to use a robust assignment logic for `pdfMake.vfs` to handle different export structures from the library.
-*   **Results:** Buttons now work correctly across all tabs (T75, T11, T50, All). PDF and Excel export function as expected.
+    3.  **T75 Footer Mismatch:** Fixed `latest_inspections.blade.php` footer loop. Added `@continue` logic to skip categories D-G (IBOX, Vacuum, etc.) in the footer, matching the Header/Body structure.
+    4.  **pdfMake Configuration:** Updated `app.js` to use a robust assignment logic for `pdfMake.vfs`.
+    5.  **Table Layout Standard:** Replaced problematic **Vertical Headers** with standard **Horizontal Headers**. Vertical text caused severe misalignment with DataTables FixedColumns due to browser rendering inconsistencies. The table is now wider but perfectly aligned.
+*   **Results:** Buttons work, T75 loads without crash, and grid lines are perfectly straight.
 
 ---
 *Last Updated: Feb 6, 2026 - Antigravity Agent*
