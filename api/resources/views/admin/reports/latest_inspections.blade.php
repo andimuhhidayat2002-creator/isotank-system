@@ -22,7 +22,14 @@
     
     /* Layout & Alignment Fixes */
     /* #latestConditionTable { width: auto !important; } */
-    th.vertical-headers { height: 140px; vertical-align: bottom; padding-bottom: 10px !important; }
+    th.vertical-headers { 
+        height: 140px; 
+        vertical-align: bottom; 
+        padding-bottom: 10px !important;
+        width: 35px !important;
+        min-width: 35px !important;
+        max-width: 35px !important;
+    }
     th.vertical-headers div { 
         writing-mode: vertical-rl; 
         transform: rotate(180deg); 
@@ -63,7 +70,7 @@
 <div class="card">
     <div class="card-body p-2">
         <div class="table-responsive"> 
-            <table id="latestConditionTable" class="table table-bordered table-sm align-middle text-nowrap" style="width: auto !important;">
+            <table id="latestConditionTable" class="table table-bordered table-sm align-middle text-nowrap" style="width: 100% !important;">
                 <thead class="text-white text-center">
                     <tr>
                         <th rowspan="2" class="align-middle bg-secondary bg-opacity-75" style="width: 120px;">ISO NUMBER</th>
