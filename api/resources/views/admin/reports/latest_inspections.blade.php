@@ -286,6 +286,7 @@
                      <tr>
                         <th>ISO</th><th>Upd</th>
                          @foreach($groupedItems as $catName => $items)
+                             @if(($tCat === 'T75' || $tCat === 'all') && in_array(strtolower($catName), ['d', 'e', 'f', 'g'])) @continue @endif
                              @foreach($items as $item) 
                                  @php $displayLabel = str_replace(['FRONT: ', 'REAR: ', 'RIGHT: ', 'LEFT: ', 'TOP: '], '', $item->label); @endphp
                                  <th>{{ substr($displayLabel,0,4) }}</th> 
