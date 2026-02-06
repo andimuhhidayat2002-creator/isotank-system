@@ -3,114 +3,7 @@
 @section('content')
 <!-- FIXED COLUMNS CSS -->
 <link rel="stylesheet" href="https://cdn.datatables.net/fixedcolumns/4.3.0/css/fixedColumns.bootstrap5.min.css">
-<!-- Buttons CSS is already imported in app.js SCSS usually, but we keep FixedColumns CSS as it might be missing -->
-
-<!-- CSS overrides remain here -->
-
-<style>
-/* ... existing styles ... */
-</style>
-
-<!-- ... HTML Content ... -->
-
-@push('scripts')
-<script>
-// Polling function to wait for Vite bundle (jQuery + Dependencies)
-function waitForDependencies(callback) {
-    if (window.jQuery && $.fn.DataTable && window.JSZip && window.pdfMake) {
-        callback();
-    } else {
-        console.log('Waiting for libraries...');
-        setTimeout(() => waitForDependencies(callback), 100);
-    }
-}
-
-waitForDependencies(function() {
-    console.log('Dependencies loaded. Initializing Table...');
-    
-    // Ensure DataTable is not already initialized
-    if ($.fn.DataTable.isDataTable('#latestConditionTable')) {
-        $('#latestConditionTable').DataTable().destroy();
-    }
-
-    // Initialize DataTable
-    var table = $('#latestConditionTable').DataTable({
-        dom: 'Brtip', 
-        buttons: [
-            { 
-                extend: 'excelHtml5', 
-                className: 'buttons-excel', 
-                title: 'Latest_Isotank_Condition_' + new Date().toISOString().split('T')[0], 
-                exportOptions: { 
-                    orthogonal: 'export',
-                    format: {
-                        body: function ( data, row, column, node ) {
-                            return data ? String(data).replace(/<[^>]+>/g, "").trim() : "";
-                        }
-                    }
-                } 
-            },
-            { 
-                extend: 'pdfHtml5', 
-                className: 'buttons-pdf', 
-                orientation: 'landscape', 
-                pageSize: 'A1', 
-                title: 'Latest Isotank Condition', 
-                exportOptions: { 
-                    orthogonal: 'export',
-                    format: {
-                        body: function ( data, row, column, node ) {
-                            return data ? String(data).replace(/<[^>]+>/g, "").trim() : "";
-                        }
-                    }
-                }, 
-                customize: function(doc) { 
-                    doc.defaultStyle.fontSize = 5; 
-                    doc.styles.tableHeader.fontSize = 6;
-                    // Auto-width adjustment for strict alignment
-                    var colCount = doc.content[1].table.body[0].length;
-                    doc.content[1].table.widths = Array(colCount).fill('*');
-                } 
-            }
-        ],
-        fixedColumns: { left: 2 },
-        scrollX: true,
-        ordering: false,
-        pageLength: 20,
-        searching: true,
-        autoWidth: false
-    });
-
-    // Hide default buttons container
-    $('.dt-buttons').hide();
-
-    // Bind Custom Inputs
-    $('#btnExportExcel').off('click').on('click', function() { 
-        table.button('.buttons-excel').trigger(); 
-    });
-    
-    $('#btnExportPdf').off('click').on('click', function() { 
-        table.button('.buttons-pdf').trigger(); 
-    });
-
-    $('#customSearch').off('keyup change').on('keyup change', function() { 
-        table.search(this.value).draw(); 
-    });
-
-    // Drag Scroll
-    const slider = document.querySelector('.dataTables_scrollBody');
-    if(slider) {
-        let isDown = false, startX, scrollLeft;
-        slider.style.cursor = 'grab';
-        slider.addEventListener('mousedown', (e) => { isDown=true; slider.style.cursor='grabbing'; startX=e.pageX-slider.offsetLeft; scrollLeft=slider.scrollLeft; });
-        slider.addEventListener('mouseleave', () => { isDown=false; slider.style.cursor='grab'; });
-        slider.addEventListener('mouseup', () => { isDown=false; slider.style.cursor='grab'; });
-        slider.addEventListener('mousemove', (e) => { if(!isDown) return; e.preventDefault(); const x=e.pageX-slider.offsetLeft; const walk=(x-startX)*2; slider.scrollLeft=scrollLeft-walk; });
-    }
-});
-</script>
-@endpush
-@endsection
+<!-- Buttons CSS is imported via app.js bundled dependencies -->
 
 <style>
     /* 1. VISIBILITY FIX: Force White Text on Dark Background */
@@ -425,8 +318,8 @@ waitForDependencies(function() {
         </div>
     </div>
 </div>
+@endsection
 
-@push('scripts')
 @push('scripts')
 <script>
 // Polling function to wait for Vite bundle (jQuery + Dependencies)
@@ -524,4 +417,3 @@ waitForDependencies(function() {
 });
 </script>
 @endpush
-@endsection
