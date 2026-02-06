@@ -10,53 +10,9 @@
 <!-- FixedColumns CSS is fine here -->
 
 <style>
-    /* COMPACT STYLE ENFORCEMENT & DARK MODE FIXES */
-    #latestConditionTable { 
-        font-size: 0.75rem !important; 
-    }
-    #latestConditionTable th, #latestConditionTable td { 
-        padding: 5px 6px !important; 
-        vertical-align: middle;
-    }
-    
-    /* Force TEXT COLOR to White/Light for readability */
-    #latestConditionTable tbody td {
-        color: #f0f0f0 !important;
-    }
-    /* Muted text should be slightly darker white */
-    #latestConditionTable tbody td .text-muted {
-        color: #aaa !important;
-    }
-    /* Links */
-    #latestConditionTable tbody td a {
-        color: #0dcaf0 !important; /* Cyan */
-    }
-
-    /* Striped Rows Contrast */
-    #latestConditionTable tbody tr:nth-of-type(odd) td {
-        background-color: #2c2c2c !important;
-    }
-    #latestConditionTable tbody tr:nth-of-type(even) td {
-        background-color: #222222 !important;
-    }
-
-    /* Fixed Column Fixes (Must match row bg or be distinct) */
-    table.dataTable tbody tr td.dtfc-fixed-left {
-        background-color: #1a1a1a !important; /* Fixed cols darker */
-        color: #fff !important;
-        z-index: 10;
-        border-right: 1px solid #444;
-    }
-    table.dataTable thead tr th.dtfc-fixed-left {
-        background-color: #333 !important;
-        z-index: 20;
-    }
-    
-    /* Layout fixes */
+    /* Minimal Layout Fixes Only */
     .vertical-headers th { height: 140px; vertical-align: bottom; }
     .vertical-headers th div { writing-mode: vertical-rl; transform: rotate(180deg); width: 100%; }
-    
-    /* Hide Default Buttons Toolbar */
     .dt-buttons { display: none !important; }
 </style>
 
@@ -345,126 +301,64 @@
 
 @push('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // 1. Wait for Core Dependencies (jQuery + DataTables) from app.js
-    var checkInterval = setInterval(function() {
-        if (window.$ && window.DataTable) {
-            clearInterval(checkInterval);
-            console.log('Core Dependencies Found. Checking Export Libs...');
-            ensureExportLibsAndInit();
-        }
-    }, 100);
-
-    // 2. Helper to Load Script if Missing
-    function loadScript(src) {
-        return new Promise((resolve, reject) => {
-            var s = document.createElement('script');
-            s.src = src;
-            s.onload = resolve;
-            s.onerror = reject;
-            document.head.appendChild(s);
-        });
-    }
-
-    // 3. Conditional Loader
-    function ensureExportLibsAndInit() {
-        var promises = [];
-
-        // Check JSZip (Excel)
-        if (typeof window.JSZip === 'undefined') {
-            console.warn('JSZip missing in bundle. Loading from CDN...');
-            promises.push(loadScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js'));
-        }
-
-        // Check PDFMake
-        if (typeof window.pdfMake === 'undefined') {
-            console.warn('PDFMake missing in bundle. Loading from CDN...');
-            promises.push(loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js').then(() => {
-                return loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js');
-            }));
-        }
-
-        // Check Buttons (Sometimes bundled validation fails)
-        // We assume valid if $.fn.DataTable.Buttons exists, but let's be safe.
-        // If the bundle has partial buttons, we might overwrite. 
-        // Safer to Trust Bundle for Buttons logic if Table is there, as loading duplicate Buttons extension is risky.
-        
-        Promise.all(promises).then(() => {
-            console.log('Export Libs Ready. Initializing Table...');
-            initTable(window.$);
-        }).catch(err => {
-            console.error('Failed to load export fallbacks', err);
-            // Init anyway so at least Search/Sort works
-            initTable(window.$);
-        });
-    }
-
-    function initTable($) {
-        if ($.fn.DataTable.isDataTable('#latestConditionTable')) {
-            $('#latestConditionTable').DataTable().destroy();
-        }
-
-        var table = $('#latestConditionTable').DataTable({
-            dom: 'Brtip', 
-            buttons: [
-                { 
-                    extend: 'excelHtml5', 
-                    className: 'buttons-excel', 
-                    title: 'Latest_Isotank_Condition',
-                    exportOptions: { orthogonal: 'export' }
-                },
-                { 
-                    extend: 'pdfHtml5', 
-                    className: 'buttons-pdf', 
-                    orientation: 'landscape', 
-                    pageSize: 'A2', 
-                    title: 'Latest Isotank Condition',
-                    exportOptions: { orthogonal: 'export' },
-                    customize: function(doc) { doc.defaultStyle.fontSize = 6; }
-                }
-            ],
-            fixedColumns: { left: 2 },
-            scrollX: true,
-            ordering: false,
-            pageLength: 20,
-            
-            initComplete: function() {
-                this.api().columns().every(function() {
-                     var that = this;
-                     if($(this.footer()).length) {
-                        var title = $(this.footer()).text();
-                        $(this.footer()).html('<input type="text" class="form-control form-control-sm" placeholder="'+title+'" />');
-                        $('input', this.footer()).on('keyup change clear', function() {
-                            if (that.search() !== this.value) { that.search(this.value).draw(); }
-                        });
-                     }
-                });
+$(document).ready(function() {
+    // Basic DataTable Init
+    var table = $('#latestConditionTable').DataTable({
+        dom: 'Brtip', 
+        buttons: [
+            { 
+                extend: 'excelHtml5', 
+                className: 'buttons-excel', 
+                title: 'Latest_Isotank_Condition',
+                exportOptions: { orthogonal: 'export' }
+            },
+            { 
+                extend: 'pdfHtml5', 
+                className: 'buttons-pdf', 
+                orientation: 'landscape', 
+                pageSize: 'A2', 
+                title: 'Latest Isotank Condition',
+                exportOptions: { orthogonal: 'export' },
+                customize: function(doc) { doc.defaultStyle.fontSize = 6; }
             }
-        });
-
-        $('.dt-buttons').hide();
-
-        $('#btnExportExcel').off('click').on('click', function() { 
-            table.button('.buttons-excel').trigger(); 
-        });
+        ],
+        fixedColumns: { left: 2 },
+        scrollX: true,
+        ordering: false,
+        pageLength: 20,
         
-        $('#btnExportPdf').off('click').on('click', function() { 
-            table.button('.buttons-pdf').trigger(); 
-        });
-        
-        $('#customSearch').off('keyup change').on('keyup change', function() { 
-            table.search(this.value).draw(); 
-        });
-        
-        const slider = document.querySelector('.dataTables_scrollBody');
-        if(slider) {
-            let isDown=false, startX, scrollLeft;
-            slider.style.cursor='grab';
-            slider.addEventListener('mousedown', (e)=>{isDown=true; slider.style.cursor='grabbing'; startX=e.pageX-slider.offsetLeft; scrollLeft=slider.scrollLeft;});
-            slider.addEventListener('mouseleave',()=>{isDown=false;slider.style.cursor='grab';});
-            slider.addEventListener('mouseup',()=>{isDown=false;slider.style.cursor='grab';});
-            slider.addEventListener('mousemove',(e)=>{if(!isDown)return;e.preventDefault();const x=e.pageX-slider.offsetLeft;const walk=(x-startX)*2;slider.scrollLeft=scrollLeft-walk;});
+        initComplete: function() {
+            // Setup Search Inputs
+            this.api().columns().every(function() {
+                 var that = this;
+                 if($(this.footer()).length) {
+                    var title = $(this.footer()).text();
+                    $(this.footer()).html('<input type="text" class="form-control form-control-sm" placeholder="'+title+'" />');
+                    $('input', this.footer()).on('keyup change clear', function() {
+                        if (that.search() !== this.value) { that.search(this.value).draw(); }
+                    });
+                 }
+            });
         }
+    });
+
+    // Hide default DT buttons
+    $('.dt-buttons').hide();
+
+    // Map Custom Buttons
+    $('#btnExportExcel').on('click', function() { table.button('.buttons-excel').trigger(); });
+    $('#btnExportPdf').on('click', function() { table.button('.buttons-pdf').trigger(); });
+    $('#customSearch').on('keyup change', function() { table.search(this.value).draw(); });
+
+    // Drag Scroll
+    const slider = document.querySelector('.dataTables_scrollBody');
+    if(slider) {
+        let isDown=false, startX, scrollLeft;
+        slider.style.cursor='grab';
+        slider.addEventListener('mousedown', (e)=>{isDown=true; slider.style.cursor='grabbing'; startX=e.pageX-slider.offsetLeft; scrollLeft=slider.scrollLeft;});
+        slider.addEventListener('mouseleave',()=>{isDown=false;slider.style.cursor='grab';});
+        slider.addEventListener('mouseup',()=>{isDown=false;slider.style.cursor='grab';});
+        slider.addEventListener('mousemove',(e)=>{if(!isDown)return;e.preventDefault();const x=e.pageX-slider.offsetLeft;const walk=(x-startX)*2;slider.scrollLeft=scrollLeft-walk;});
     }
 });
 </script>
