@@ -159,15 +159,15 @@
                         $getVal = function($keys) use ($log, $logData, $iLog) {
                             if (!is_array($keys)) $keys = [$keys];
                             foreach($keys as $k) {
-                                // 1. Check Master Cols
-                                if (isset($log->$k) && $log->$k !== null && $log->$k !== '') return $log->$k;
-                                // 2. Check InspectionLog Cols
+                                // 1. Check InspectionLog Cols (Source of Truth)
                                 if ($iLog && isset($iLog->$k) && $iLog->$k !== null && $iLog->$k !== '') return $iLog->$k;
-                                // 3. Check JSON Data (Direct)
+                                // 2. Check JSON Data (Direct)
                                 if (isset($logData[$k]) && $logData[$k] !== null && $logData[$k] !== '') return $logData[$k];
-                                // 4. Check JSON Data (Underscored)
+                                // 3. Check JSON Data (Underscored)
                                 $uK = str_replace([' ', '.', '/'], '_', $k);
                                 if (isset($logData[$uK]) && $logData[$uK] !== null && $logData[$uK] !== '') return $logData[$uK];
+                                // 4. Fallback: Check Master Cols
+                                if (isset($log->$k) && $log->$k !== null && $log->$k !== '') return $log->$k;
                             }
                             return null;
                         };
