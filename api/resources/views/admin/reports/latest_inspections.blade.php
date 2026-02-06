@@ -358,28 +358,24 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         var table = $('#latestConditionTable').DataTable({
-            layout: {
-                topStart: {
-                    buttons: [
-                        { 
-                            extend: 'excelHtml5', 
-                            className: 'buttons-excel',
-                            title: 'Latest_Isotank_Condition',
-                            exportOptions: { orthogonal: 'export' }
-                        },
-                        { 
-                            extend: 'pdfHtml5', 
-                            className: 'buttons-pdf',
-                            orientation: 'landscape', 
-                            pageSize: 'A2', 
-                            title: 'Latest Isotank Condition',
-                            exportOptions: { orthogonal: 'export' },
-                            customize: function(doc) { doc.defaultStyle.fontSize = 6; }
-                        }
-                    ]
-                }
-            },
             dom: 'Brtip',
+            buttons: [
+                { 
+                    extend: 'excelHtml5', 
+                    className: 'buttons-excel',
+                    title: 'Latest_Isotank_Condition',
+                    exportOptions: { orthogonal: 'export' }
+                },
+                { 
+                    extend: 'pdfHtml5', 
+                    className: 'buttons-pdf',
+                    orientation: 'landscape', 
+                    pageSize: 'A2', 
+                    title: 'Latest Isotank Condition',
+                    exportOptions: { orthogonal: 'export' },
+                    customize: function(doc) { doc.defaultStyle.fontSize = 6; }
+                }
+            ],
             fixedColumns: { left: 2 },
             scrollX: true,
             ordering: false,
@@ -397,9 +393,20 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        $('#btnExportExcel').on('click', function() { table.button('.buttons-excel').trigger(); });
-        $('#btnExportPdf').on('click', function() { table.button('.buttons-pdf').trigger(); });
-        $('#customSearch').on('keyup', function() { table.search(this.value).draw(); });
+        // Robust Event Binding
+        $('#btnExportExcel').off('click').on('click', function() { 
+            console.log('Triggering Excel...');
+            table.button('.buttons-excel').trigger(); 
+        });
+        
+        $('#btnExportPdf').off('click').on('click', function() { 
+            console.log('Triggering PDF...');
+            table.button('.buttons-pdf').trigger(); 
+        });
+        
+        $('#customSearch').off('keyup change').on('keyup change', function() { 
+            table.search(this.value).draw(); 
+        });
         
         const slider = document.querySelector('.dataTables_scrollBody');
         if(slider) {
