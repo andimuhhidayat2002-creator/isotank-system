@@ -346,43 +346,12 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM Ready. Waiting for Global Dependencies...');
-
-    // Helper to load scripts sequentially
-    function loadScript(src) {
-        return new Promise(function(resolve, reject) {
-            var s = document.createElement('script');
-            s.src = src;
-            s.onload = resolve;
-            s.onerror = reject;
-            document.head.appendChild(s);
-        });
-    }
-
+    // Wait for the main app.js to load jQuery and DataTables
     var checkInterval = setInterval(function() {
-        if (window.$ && window.DataTable) {
+        if (window.$ && window.DataTable && window.JSZip && window.pdfMake) {
             clearInterval(checkInterval);
-            console.log('jQuery found. Loading Export Dependencies...');
-            
-            // Load Dependencies sequentially to ensure jQuery is attached
-            Promise.all([
-                loadScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js'),
-                loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js')
-            ]).then(function() {
-                return loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js');
-            }).then(function() {
-                return loadScript('https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js');
-            }).then(function() {
-                return Promise.all([
-                    loadScript('https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js'),
-                    loadScript('https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js')
-                ]);
-            }).then(function() {
-                console.log('All Dependencies Loaded. Initializing Table...');
-                initTable(window.$);
-            }).catch(function(err) {
-                console.error('Failed to load dependencies', err);
-            });
+            console.log('Global Dependencies (jQuery, DT, JSZip, PDFMake) Found. Initializing...');
+            initTable(window.$);
         }
     }, 100);
 
@@ -392,22 +361,26 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         var table = $('#latestConditionTable').DataTable({
-            dom: 'Brtip', // B for Buttons
+            // Explicitly define DOM to ensure Buttons (B) are rendered
+            dom: 'Brtip', 
             buttons: [
                 { 
                     extend: 'excelHtml5', 
-                    className: 'buttons-excel', // Hidden class, triggered manually
+                    className: 'buttons-excel', // Used for manual trigger
                     title: 'Latest_Isotank_Condition',
                     exportOptions: { orthogonal: 'export' }
                 },
                 { 
                     extend: 'pdfHtml5', 
-                    className: 'buttons-pdf',
+                    className: 'buttons-pdf', // Used for manual trigger
                     orientation: 'landscape', 
                     pageSize: 'A2', 
                     title: 'Latest Isotank Condition',
                     exportOptions: { orthogonal: 'export' },
-                    customize: function(doc) { doc.defaultStyle.fontSize = 6; }
+                    customize: function(doc) { 
+                        // Fix for PDFMake 0.2+ font compatibility if needed
+                         doc.defaultStyle.fontSize = 6; 
+                    }
                 }
             ],
             fixedColumns: { left: 2 },
@@ -418,35 +391,32 @@ document.addEventListener('DOMContentLoaded', function() {
             initComplete: function() {
                 // Search Logic
                 this.api().columns().every(function() {
-                    var that = this;
-                    // Ensure footer exists before trying to access it
-                    if($(this.footer()).length) {
+                     var that = this;
+                     if($(this.footer()).length) {
                         var title = $(this.footer()).text();
                         $(this.footer()).html('<input type="text" class="form-control form-control-sm" placeholder="'+title+'" />');
                         $('input', this.footer()).on('keyup change clear', function() {
                             if (that.search() !== this.value) { that.search(this.value).draw(); }
                         });
-                    }
+                     }
                 });
             }
         });
 
-        // Hide default buttons (we trigger them manually)
+        // Hide default DataTables buttons because we use our own custom buttons
         $('.dt-buttons').hide();
 
-        // Robust Event Binding
+        // Bind Custom Buttons
         $('#btnExportExcel').off('click').on('click', function() { 
-            console.log('Triggering Excel...');
             table.button('.buttons-excel').trigger(); 
         });
         
         $('#btnExportPdf').off('click').on('click', function() { 
-            console.log('Triggering PDF...');
             table.button('.buttons-pdf').trigger(); 
         });
         
+        // Bind Custom Search
         $('#customSearch').off('keyup change').on('keyup change', function() { 
-            console.log('Searching: ' + this.value);
             table.search(this.value).draw(); 
         });
         
