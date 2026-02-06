@@ -802,9 +802,13 @@ $(document).ready(function() {
         }
     });
     // SweetAlert2 Delete Handler
+    // SweetAlert2 Delete Handler (AJAX)
     $(document).on('submit', '.delete-alert-form', function(e) {
         e.preventDefault();
         var form = this;
+        var row = $(this).closest('tr');
+        var table = $(this).closest('table');
+        
         Swal.fire({
             title: 'Confirm Deletion',
             text: "Are you sure you want to remove this activity? This cannot be undone.",
@@ -815,7 +819,50 @@ $(document).ready(function() {
             confirmButtonText: 'Yes, delete it!'
         }).then((result) => {
             if (result.isConfirmed) {
-                form.submit();
+                // Show loading state
+                Swal.fire({
+                    title: 'Deleting...',
+                    text: 'Please wait',
+                    allowOutsideClick: false,
+                    showConfirmButton: false,
+                    didOpen: () => { Swal.showLoading(); }
+                });
+
+                $.ajax({
+                    url: $(form).attr('action'),
+                    type: 'POST',
+                    data: $(form).serialize(),
+                    success: function(response) {
+                        Swal.close(); 
+                        
+                        // Check if inside a DataTable
+                        if ($.fn.DataTable.isDataTable(table)) {
+                            table.DataTable().row(row).remove().draw(false);
+                        } else {
+                            row.fadeOut(300, function() { $(this).remove(); });
+                        }
+                        
+                        // Toast Notification
+                        const Toast = Swal.mixin({
+                            toast: true,
+                            position: 'top-end',
+                            showConfirmButton: false,
+                            timer: 2000,
+                            timerProgressBar: true
+                        });
+                        Toast.fire({
+                            icon: 'success',
+                            title: 'Activity removed successfully'
+                        });
+                    },
+                    error: function(xhr) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Failed to delete. ' + (xhr.responseJSON?.message || 'Please try again.')
+                        });
+                    }
+                });
             }
         });
     });
