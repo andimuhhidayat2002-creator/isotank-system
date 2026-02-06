@@ -227,8 +227,8 @@
                                             @endphp
 
                                              @foreach($grouped as $categoryName => $items)
-                                                @if(($tankCat ?? 'T75') !== 'T75' || !in_array($categoryName, ['d', 'e', 'f', 'g']))
-                                                    <tr class="table-secondary"><th colspan="2" class="text-white">{{ $categoryMap[$categoryName] ?? strtoupper($categoryName) }}</th></tr>
+                                                @if(true)
+                                                    <tr class="table-secondary"><th colspan="2" class="text-white">{{ $categoryMap[strtolower($categoryName)] ?? strtoupper($categoryMap[$categoryName] ?? $categoryName) }}</th></tr>
                                                     @foreach($items as $item)
                                                         @php 
                                                             $code = $item->code; 
@@ -302,41 +302,7 @@
                                                 @endforeach
                                             @endif
 
-                                            @if($tankCat == 'T75')
-                                            <!-- SECTION D: IBOX -->
-                                            <tr class="table-secondary"><th colspan="2" class="text-white">D. IBOX SYSTEM</th></tr>
-                                            <tr><td class="ps-3">IBOX Condition</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->ibox_condition])</td></tr>
-                                            <tr><td class="ps-3">Pressure (Digital)</td><td class="text-center">{{ $log->ibox_pressure ?? '-' }}</td></tr>
-                                            <tr><td class="ps-3">Temperature #1 (Digital)</td><td class="text-center">{{ $log->ibox_temperature ?? '-' }}</td></tr>
-                                            @endif
 
-                                            @if($tankCat == 'T75')
-                                            <!-- SECTION E: INSTRUMENTS -->
-                                            <tr class="bg-dark bg-opacity-50"><th colspan="2" class="text-white ps-3">E. INSTRUMENTS</th></tr>
-                                            <tr><td class="ps-3">Pressure Gauge</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->pressure_gauge_condition])</td></tr>
-                                            <tr><td class="ps-3">Level Gauge</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->level_gauge_condition])</td></tr>
-                                            @endif
-
-                                            @if($tankCat == 'T75')
-                                            <!-- SECTION F: VACUUM -->
-                                            <tr class="bg-dark bg-opacity-50"><th colspan="2" class="text-white ps-3">F. VACUUM SYSTEM</th></tr>
-                                            <tr><td class="ps-3">Vacuum Gauge</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->vacuum_gauge_condition])</td></tr>
-                                            <tr><td class="ps-3">Port Suction</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->vacuum_port_suction_condition ?? $logData['port_suction_condition'] ?? $logData['Port Suction Condition'] ?? null])</td></tr>
-                                            <tr><td class="ps-3">Value</td><td class="text-center fw-bold">{{ $log->vacuum_value ? (float)$log->vacuum_value . ' mTorr' : '-' }}</td></tr>
-                                            @endif
-
-                                            @if($tankCat == 'T75')
-                                            <!-- SECTION G: PSV -->
-                                            <tr class="bg-dark bg-opacity-50"><th colspan="2" class="text-white ps-3">G. PSV</th></tr>
-                                            @foreach(['psv1', 'psv2', 'psv3', 'psv4'] as $p)
-                                                @if($log->{$p.'_condition'}) {{-- Only show if data exists (legacy friendly) --}}
-                                                <tr>
-                                                    <td class="ps-3">{{ strtoupper($p) }} Condition</td>
-                                                    <td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->{$p.'_condition'}])</td>
-                                                </tr>
-                                                @endif
-                                            @endforeach
-                                            @endif
                                         </tbody>
                                     </table>
                                 </div>
