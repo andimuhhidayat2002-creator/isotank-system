@@ -10,10 +10,28 @@
 <!-- FixedColumns CSS is fine here -->
 
 <style>
-    /* Minimal Layout Fixes Only */
+    /* 1. VISIBILITY FIX: Force White Text on Dark Background */
+    #latestConditionTable { font-size: 0.75rem !important; }
+    #latestConditionTable th, #latestConditionTable td { padding: 5px 6px !important; vertical-align: middle; }
+    
+    #latestConditionTable tbody td { color: #ffffff !important; }
+    #latestConditionTable tbody td .text-muted { color: #cccccc !important; }
+    #latestConditionTable tbody td a { color: #3dd5f3 !important; } /* Cyan for links */
+
+    /* Dark Zebra Striping */
+    #latestConditionTable tbody tr:nth-of-type(odd) td { background-color: #2c2c2c !important; }
+    #latestConditionTable tbody tr:nth-of-type(even) td { background-color: #222222 !important; }
+
+    /* Fixed Columns Darker */
+    table.dataTable tbody tr td.dtfc-fixed-left { background-color: #1a1a1a !important; color: #fff !important; z-index: 10; border-right: 1px solid #444; }
+    table.dataTable thead tr th.dtfc-fixed-left { background-color: #333 !important; z-index: 20; }
+    
+    /* Layout */
     .vertical-headers th { height: 140px; vertical-align: bottom; }
     .vertical-headers th div { writing-mode: vertical-rl; transform: rotate(180deg); width: 100%; }
-    .dt-buttons { display: none !important; }
+    
+    /* Hide Default Buttons Interface (We use custom buttons) */
+    .dt-buttons { display: none !important; } 
 </style>
 
 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -109,28 +127,46 @@
                 </thead>
                 <tbody>
                     @foreach($logs as $log)
-                    @php 
+@php 
                         $iLog = $log->lastInspectionLog;
                         $logData = ($iLog && $iLog->inspection_data) ? (is_array($iLog->inspection_data) ? $iLog->inspection_data : json_decode($iLog->inspection_data, true)) : [];
                         
-                        // --- ROBUST DATA LOOKUP HELPER ---
-                        $getVal = function($keys) use ($log, $logData, $iLog) {
-                            if (!is_array($keys)) $keys = [$keys];
+                        $legacyMap = [
+                            'Surface Condition' => 'surface', 'Tank Surface & Paint Condition' => 'surface',
+                            'Frame Condition' => 'frame', 'Frame Structure' => 'frame',
+                            'Tank Name Plate' => 'tank_plate', 'Data Plate' => 'tank_plate',
+                            'Venting Pipe' => 'venting_pipe', 'Explosion Proof Cover' => 'explosion_proof_cover',
+                            'Safety Label' => 'safety_label', 'DG 1972 GHS MSA_Safety_label' => 'safety_label',
+                            'Document Container' => 'document_container', 'Valve Box Door' => 'valve_box_door',
+                            'Grounding System' => 'grounding_system', 'Valve Condition' => 'valve_condition',
+                            'Valve Position' => 'valve_position', 'Pipe Joint' => 'pipe_joint',
+                            'Air Source Connection' => 'air_source_connection', 'ESDV' => 'esdv',
+                            'Blind Flange' => 'blind_flange', 'PRV' => 'prv'
+                        ];
+
+                        $getVal = function($code, $label) use ($logData, $legacyMap, $log, $iLog) {
+                            $val = $logData[$code] ?? null;
+                            if (!$val) $val = $iLog->$code ?? ($log->$code ?? null);
+                            if (!$val && $code === 'port_suction_condition') $val = $iLog->vacuum_port_suction_condition ?? ($log->vacuum_port_suction_condition ?? null);
+                            if (!$val) { $uCode = str_replace([' ', '.', '/'], '_', $code); $val = $logData[$uCode] ?? null; }
+                            if (!$val && isset($legacyMap[$label])) { $lKey = $legacyMap[$label]; $val = $logData[$lKey] ?? ($iLog->$lKey ?? ($log->$lKey ?? null)); }
+                            if (!$val) { $uLabel = str_replace([' ', '.', '/'], '_', $label); $val = $logData[$uLabel] ?? null; }
+                            if (!$val) { $uLabelLower = str_replace([' ', '.', '/'], '_', strtolower($label)); $val = $logData[$uLabelLower] ?? null; }
+                            if (!$val) { $val = $logData[$label] ?? null; }
+                            return $val;
+                        };
+                        
+                        $getCol = function($keys) use ($iLog, $logData, $log) {
+                            if(!is_array($keys)) $keys = [$keys];
                             foreach($keys as $k) {
-                                // 1. Check InspectionLog Cols (Source of Truth)
-                                if ($iLog && isset($iLog->$k) && $iLog->$k !== null && $iLog->$k !== '') return $iLog->$k;
-                                // 2. Check JSON Data (Direct)
-                                if (isset($logData[$k]) && $logData[$k] !== null && $logData[$k] !== '') return $logData[$k];
-                                // 3. Check JSON Data (Underscored)
-                                $uK = str_replace([' ', '.', '/'], '_', $k);
-                                if (isset($logData[$uK]) && $logData[$uK] !== null && $logData[$uK] !== '') return $logData[$uK];
-                                // 4. Fallback: Check Master Cols
-                                if (isset($log->$k) && $log->$k !== null && $log->$k !== '') return $log->$k;
+                                if($iLog && isset($iLog->$k)) return $iLog->$k;
+                                if(isset($logData[$k])) return $logData[$k];
+                                $uK = str_replace(' ','_',$k);
+                                if(isset($logData[$uK])) return $logData[$uK];
+                                if(isset($log->$k)) return $log->$k;
                             }
                             return null;
                         };
-
-                        $legacyMap = ['Surface Condition' => 'surface', 'Tank Name Plate' => 'tank_plate', 'Valve Condition' => 'valve_condition', 'PRV' => 'prv']; 
                     @endphp
                     <tr>
                         <td class="fw-bold text-start">
@@ -139,23 +175,11 @@
                             </a>
                         </td>
                         <td class="small">{{ $log->updated_at ? $log->updated_at->format('Y-m-d') : '-' }}</td>
-                         @foreach($groupedItems as $catName => $items)
+@foreach($groupedItems as $catName => $items)
                              @if(($tCat === 'T75' || $tCat === 'all') && in_array(strtolower($catName), ['d', 'e', 'f', 'g'])) @continue @endif
                             @foreach($items as $item)
                                 @php
-                                    $code = $item->code;
-                                    $val = $getVal([$code]);
-                                    
-                                    // Fallback similar to Inspection Show
-                                    if (!$val) {
-                                         // Underscore Label matched to key
-                                         $uLabel = str_replace([' ', '.', '/'], '_', $item->label);
-                                         $val = $logData[$uLabel] ?? null;
-                                    }
-                                    if (!$val && isset($legacyMap[$item->label])) {
-                                        $val = $getVal($legacyMap[$item->label]);
-                                    }
-                                    
+                                    $val = $getVal($item->code, $item->label);
                                     if ($item->type === 'photo') $val = $val ? 'Uploaded' : 'Empty';
                                 @endphp
                                 <td>@include('admin.reports.partials.badge', ['status' => $val])</td>
@@ -165,16 +189,16 @@
                         @if($category === 'all' || $category === 'T75')
                             <!-- IBOX (With Robust Lookup) -->
                             @php
-                                $ibox_cond = $getVal(['ibox_condition']);
-                                $ibox_bat  = $getVal(['ibox_battery_percent', 'battery']);
-                                $ibox_prs  = $getVal(['ibox_pressure', 'pressure']);
-                                $ibox_tmp1 = $getVal(['ibox_temperature_1', 'ibox_temperature', 'temperature']);
-                                $ibox_ts1  = $getVal(['ibox_temperature_1_timestamp', 'ibox_temperature_timestamp']);
+                                $ibox_cond = $getCol(['ibox_condition']);
+                                $ibox_bat  = $getCol(['ibox_battery_percent', 'battery']);
+                                $ibox_prs  = $getCol(['ibox_pressure', 'pressure']);
+                                $ibox_tmp1 = $getCol(['ibox_temperature_1', 'ibox_temperature', 'temperature']);
+                                $ibox_ts1  = $getCol(['ibox_temperature_1_timestamp', 'ibox_temperature_timestamp']);
                                 
-                                $ibox_tmp2 = $getVal(['ibox_temperature_2']);
-                                $ibox_ts2  = $getVal(['ibox_temperature_2_timestamp']);
+                                $ibox_tmp2 = $getCol(['ibox_temperature_2']);
+                                $ibox_ts2  = $getCol(['ibox_temperature_2_timestamp']);
                                 
-                                $ibox_lvl  = $getVal(['ibox_level', 'level']);
+                                $ibox_lvl  = $getCol(['ibox_level', 'level']);
                                 
                                 // Time Format Helper
                                 $fmtTime = function($ts) { return $ts ? \Carbon\Carbon::parse($ts)->format('H:i') : '-'; };
@@ -190,23 +214,23 @@
 
                             <!-- INST -->
                             @php
-                                $pgc = $getVal(['pressure_gauge_condition']);
-                                $pgsn = $getVal(['pressure_gauge_serial_number']);
-                                $pgcal = $getVal(['pressure_gauge_calibration_date']);
+                                $pgc = $getCol(['pressure_gauge_condition']);
+                                $pgsn = $getCol(['pressure_gauge_serial_number']);
+                                $pgcal = $getCol(['pressure_gauge_calibration_date']);
                                 
-                                $p1 = $getVal(['pressure_1']);
-                                $p1_ts = $getVal(['pressure_1_timestamp']);
+                                $p1 = $getCol(['pressure_1']);
+                                $p1_ts = $getCol(['pressure_1_timestamp']);
                                 
-                                $p2 = $getVal(['pressure_2']);
-                                $p2_ts = $getVal(['pressure_2_timestamp']);
+                                $p2 = $getCol(['pressure_2']);
+                                $p2_ts = $getCol(['pressure_2_timestamp']);
                                 
-                                $lgc = $getVal(['level_gauge_condition']);
+                                $lgc = $getCol(['level_gauge_condition']);
                                 
-                                $l1 = $getVal(['level_1']);
-                                $l1_ts = $getVal(['level_1_timestamp']);
+                                $l1 = $getCol(['level_1']);
+                                $l1_ts = $getCol(['level_1_timestamp']);
                                 
-                                $l2 = $getVal(['level_2']);
-                                $l2_ts = $getVal(['level_2_timestamp']);
+                                $l2 = $getCol(['level_2']);
+                                $l2_ts = $getCol(['level_2_timestamp']);
                             @endphp
                             <td>@include('admin.reports.partials.badge', ['status' => $pgc])</td>
                             <td class="small">{{ $pgsn ?? '-' }}</td>
@@ -228,11 +252,11 @@
 
                             <!-- VAC -->
                             @php
-                                $vc = $getVal(['vacuum_gauge_condition']);
-                                $vpc = $getVal(['vacuum_port_suction_condition', 'port_suction_condition', 'Port Suction Condition']);
-                                $vval = $getVal(['vacuum_value']);
-                                $vtmp = $getVal(['vacuum_temperature']);
-                                $vdt = $getVal(['vacuum_check_datetime']);
+                                $vc = $getCol(['vacuum_gauge_condition']);
+                                $vpc = $getCol(['vacuum_port_suction_condition', 'port_suction_condition', 'Port Suction Condition']);
+                                $vval = $getCol(['vacuum_value']);
+                                $vtmp = $getCol(['vacuum_temperature']);
+                                $vdt = $getCol(['vacuum_check_datetime']);
                             @endphp
                             <td>@include('admin.reports.partials.badge', ['status' => $vc])</td>
                             <td>@include('admin.reports.partials.badge', ['status' => $vpc])</td>
@@ -243,9 +267,9 @@
                             <!-- PSV -->
                             @for($i=1; $i<=4; $i++)
                                 @php 
-                                    $pcond = $getVal(["psv{$i}_condition"]);
-                                    $psn   = $getVal(["psv{$i}_serial_number"]); 
-                                    $pdt   = $getVal(["psv{$i}_calibration_date"]);
+                                    $pcond = $getCol(["psv{$i}_condition"]);
+                                    $psn   = $getCol(["psv{$i}_serial_number"]); 
+                                    $pdt   = $getCol(["psv{$i}_calibration_date"]);
                                     // Fallback to Components if needed
                                     if (!$psn && $log->isotank) {
                                          $comp = $log->isotank->components->where('component_type', 'PSV')->where('position_code', $i)->first();
@@ -302,53 +326,58 @@
 @push('scripts')
 <script>
 $(document).ready(function() {
-    // Basic DataTable Init
-    var table = $('#latestConditionTable').DataTable({
-        dom: 'Brtip', 
-        buttons: [
-            { 
-                extend: 'excelHtml5', 
-                className: 'buttons-excel', 
-                title: 'Latest_Isotank_Condition',
-                exportOptions: { orthogonal: 'export' }
-            },
-            { 
-                extend: 'pdfHtml5', 
-                className: 'buttons-pdf', 
-                orientation: 'landscape', 
-                pageSize: 'A2', 
-                title: 'Latest Isotank Condition',
-                exportOptions: { orthogonal: 'export' },
-                customize: function(doc) { doc.defaultStyle.fontSize = 6; }
-            }
-        ],
-        fixedColumns: { left: 2 },
-        scrollX: true,
-        ordering: false,
-        pageLength: 20,
-        
-        initComplete: function() {
-            // Setup Search Inputs
-            this.api().columns().every(function() {
-                 var that = this;
-                 if($(this.footer()).length) {
-                    var title = $(this.footer()).text();
-                    $(this.footer()).html('<input type="text" class="form-control form-control-sm" placeholder="'+title+'" />');
-                    $('input', this.footer()).on('keyup change clear', function() {
-                        if (that.search() !== this.value) { that.search(this.value).draw(); }
-                    });
-                 }
-            });
+    var table;
+    try {
+        // 3. JS FIX - Robust Init
+        table = $('#latestConditionTable').DataTable({
+            // Ensure Buttons are initialized but hidden initially
+            dom: 'Brtip', 
+            buttons: [
+                { extend: 'excelHtml5', className: 'buttons-excel', title: 'Latest_Isotank_Condition', exportOptions: { orthogonal: 'export' } },
+                { extend: 'pdfHtml5', className: 'buttons-pdf', orientation: 'landscape', pageSize: 'A2', title: 'Latest Isotank Condition', exportOptions: { orthogonal: 'export' }, customize: function(doc) { doc.defaultStyle.fontSize = 6; } }
+            ],
+            fixedColumns: { left: 2 },
+            scrollX: true,
+            ordering: false,
+            pageLength: 20
+        });
+
+        // Hide Default Buttons (We use Custom)
+        $('.dt-buttons').hide();
+
+        // Bind Custom Buttons
+        $('#btnExportExcel').on('click', function() { table.button('.buttons-excel').trigger(); });
+        $('#btnExportPdf').on('click', function() { table.button('.buttons-pdf').trigger(); });
+
+        // Bind Custom Search
+        $('#customSearch').on('keyup change', function() { 
+            table.search(this.value).draw(); 
+        });
+
+        console.log('DataTable initialized successfully');
+
+    } catch (error) {
+        console.error('DataTable Buttons failed to load. Fallback to basic.', error);
+        // Fallback if Buttons extension is missing
+        if ($.fn.DataTable.isDataTable('#latestConditionTable')) {
+             $('#latestConditionTable').DataTable().destroy();
         }
-    });
-
-    // Hide default DT buttons
-    $('.dt-buttons').hide();
-
-    // Map Custom Buttons
-    $('#btnExportExcel').on('click', function() { table.button('.buttons-excel').trigger(); });
-    $('#btnExportPdf').on('click', function() { table.button('.buttons-pdf').trigger(); });
-    $('#customSearch').on('keyup change', function() { table.search(this.value).draw(); });
+        table = $('#latestConditionTable').DataTable({
+            dom: 'rtip', // No buttons
+            fixedColumns: { left: 2 },
+            scrollX: true,
+            ordering: false,
+            pageLength: 20
+        });
+        
+        // Manual Search Fallback
+         $('#customSearch').on('keyup change', function() { 
+            table.search(this.value).draw(); 
+        });
+        
+        // Alert user
+        $('#btnExportExcel, #btnExportPdf').prop('disabled', true).attr('title', 'Export unavailable (Dependency missing)');
+    }
 
     // Drag Scroll
     const slider = document.querySelector('.dataTables_scrollBody');
