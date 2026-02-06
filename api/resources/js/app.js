@@ -25,6 +25,14 @@ import pdfFonts from 'pdfmake/build/vfs_fonts';
 
 // Assign Export Libs to Window so DataTables can find them
 window.JSZip = JSZip;
-pdfMake.vfs = pdfFonts.pdfMake.vfs;
+
+// Robust vfs assignment
+if (pdfFonts && pdfFonts.pdfMake && pdfFonts.pdfMake.vfs) {
+    pdfMake.vfs = pdfFonts.pdfMake.vfs;
+} else if (pdfFonts && pdfFonts.vfs) {
+    pdfMake.vfs = pdfFonts.vfs;
+} else {
+    console.warn('Could not assign pdfMake.vfs, PDF export might fail', pdfFonts);
+}
 window.pdfMake = pdfMake;
 

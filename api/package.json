@@ -21,7 +21,7 @@
         "datatables.net-bs5": "^2.3.6",
         "datatables.net-buttons-bs5": "^3.2.6",
         "datatables.net-fixedcolumns-bs5": "^5.0.5",
-        "jquery": "^4.0.0",
+        "jquery": "^3.7.1",
         "jszip": "^3.10.1",
         "pdfmake": "^0.3.3"
     }
