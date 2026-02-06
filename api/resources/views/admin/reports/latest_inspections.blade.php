@@ -99,6 +99,7 @@
                             }
                         @endphp
                         @foreach($groupedItems as $catName => $items)
+                            @if(($tCat === 'T75' || $tCat === 'all') && in_array(strtolower($catName), ['d', 'e', 'f', 'g'])) @continue @endif
                             <th colspan="{{ $items->count() }}" class="{{ $colorToggle ? 'bg-primary' : 'bg-success bg-opacity-75' }} text-white">
                                 {{ $categoryMap[$catName] ?? strtoupper($catName) }}
                             </th>
@@ -114,6 +115,7 @@
                     </tr>
                     <tr>
                         @foreach($groupedItems as $catName => $items)
+                            @if(($tCat === 'T75' || $tCat === 'all') && in_array(strtolower($catName), ['d', 'e', 'f', 'g'])) @continue @endif
                             @foreach($items as $item) 
                                 @php $displayLabel = str_replace(['FRONT: ', 'REAR: ', 'RIGHT: ', 'LEFT: ', 'TOP: '], '', $item->label); @endphp
                                 <th class="vertical-headers"><div>{{ substr($displayLabel,0,25) }}</div></th> 
@@ -158,8 +160,11 @@
                                 if (isset($log->$k) && $log->$k !== null && $log->$k !== '') return $log->$k;
                                 // 2. Check InspectionLog Cols
                                 if ($iLog && isset($iLog->$k) && $iLog->$k !== null && $iLog->$k !== '') return $iLog->$k;
-                                // 3. Check JSON Data
+                                // 3. Check JSON Data (Direct)
                                 if (isset($logData[$k]) && $logData[$k] !== null && $logData[$k] !== '') return $logData[$k];
+                                // 4. Check JSON Data (Underscored)
+                                $uK = str_replace([' ', '.', '/'], '_', $k);
+                                if (isset($logData[$uK]) && $logData[$uK] !== null && $logData[$uK] !== '') return $logData[$uK];
                             }
                             return null;
                         };
@@ -174,11 +179,22 @@
                         </td>
                         <td class="small">{{ $log->updated_at ? $log->updated_at->format('Y-m-d') : '-' }}</td>
                          @foreach($groupedItems as $catName => $items)
+                             @if(($tCat === 'T75' || $tCat === 'all') && in_array(strtolower($catName), ['d', 'e', 'f', 'g'])) @continue @endif
                             @foreach($items as $item)
                                 @php
                                     $code = $item->code;
-                                    $val = $getVal([$code, str_replace([' ', '.', '/'], '_', $code)]);
-                                    if (!$val && isset($legacyMap[$item->label])) $val = $getVal($legacyMap[$item->label]);
+                                    $val = $getVal([$code]);
+                                    
+                                    // Fallback similar to Inspection Show
+                                    if (!$val) {
+                                         // Underscore Label matched to key
+                                         $uLabel = str_replace([' ', '.', '/'], '_', $item->label);
+                                         $val = $logData[$uLabel] ?? null;
+                                    }
+                                    if (!$val && isset($legacyMap[$item->label])) {
+                                        $val = $getVal($legacyMap[$item->label]);
+                                    }
+                                    
                                     if ($item->type === 'photo') $val = $val ? 'Uploaded' : 'Empty';
                                 @endphp
                                 <td>@include('admin.reports.partials.badge', ['status' => $val])</td>
@@ -204,7 +220,7 @@
                             @endphp
                             <td>@include('admin.reports.partials.badge', ['status' => $ibox_cond])</td>
                             <td class="small">{{ $ibox_bat ? $ibox_bat.'%' : '-' }}</td>
-                            <td class="small">{{ $ibox_prs ? $ibox_prs : '-' }}</td>
+                            <td class="small">{{ $ibox_prs ? $ibox_prs.' MPa' : '-' }}</td>
                             <td class="small">{{ $ibox_tmp1 ? $ibox_tmp1.' °C' : '-' }}</td>
                             <td class="small text-muted">{{ $fmtTime($ibox_ts1) }}</td>
                             <td class="small">{{ $ibox_tmp2 ? $ibox_tmp2.' °C' : '-' }}</td>
@@ -259,7 +275,7 @@
                             @endphp
                             <td>@include('admin.reports.partials.badge', ['status' => $vc])</td>
                             <td>@include('admin.reports.partials.badge', ['status' => $vpc])</td>
-                            <td class="small">{{ $vval ?? '-' }}</td>
+                            <td class="small">{{ $vval ? $vval.' mTorr' : '-' }}</td>
                             <td class="small">{{ $vtmp ?? '-' }}</td>
                             <td class="small">{{ $vdt ? \Carbon\Carbon::parse($vdt)->format('y-m-d') : '-' }}</td>
 
