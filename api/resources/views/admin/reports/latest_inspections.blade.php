@@ -3,22 +3,114 @@
 @section('content')
 <!-- FIXED COLUMNS CSS -->
 <link rel="stylesheet" href="https://cdn.datatables.net/fixedcolumns/4.3.0/css/fixedColumns.bootstrap5.min.css">
-<!-- BUTTONS CSS -->
-<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css">
-
-<!-- Load DataTables Extensions (Deferred to wait for jQuery from app.js) -->
-<!-- JSZip for Excel -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" defer></script>
-<!-- PDFMake for PDF -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js" defer></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js" defer></script>
-<!-- Buttons Core & HTML5 -->
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js" defer></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js" defer></script>
-<!-- FixedColumns -->
-<script src="https://cdn.datatables.net/fixedcolumns/4.3.0/js/dataTables.fixedColumns.min.js" defer></script>
+<!-- Buttons CSS is already imported in app.js SCSS usually, but we keep FixedColumns CSS as it might be missing -->
 
 <!-- CSS overrides remain here -->
+
+<style>
+/* ... existing styles ... */
+</style>
+
+<!-- ... HTML Content ... -->
+
+@push('scripts')
+<script>
+// Polling function to wait for Vite bundle (jQuery + Dependencies)
+function waitForDependencies(callback) {
+    if (window.jQuery && $.fn.DataTable && window.JSZip && window.pdfMake) {
+        callback();
+    } else {
+        console.log('Waiting for libraries...');
+        setTimeout(() => waitForDependencies(callback), 100);
+    }
+}
+
+waitForDependencies(function() {
+    console.log('Dependencies loaded. Initializing Table...');
+    
+    // Ensure DataTable is not already initialized
+    if ($.fn.DataTable.isDataTable('#latestConditionTable')) {
+        $('#latestConditionTable').DataTable().destroy();
+    }
+
+    // Initialize DataTable
+    var table = $('#latestConditionTable').DataTable({
+        dom: 'Brtip', 
+        buttons: [
+            { 
+                extend: 'excelHtml5', 
+                className: 'buttons-excel', 
+                title: 'Latest_Isotank_Condition_' + new Date().toISOString().split('T')[0], 
+                exportOptions: { 
+                    orthogonal: 'export',
+                    format: {
+                        body: function ( data, row, column, node ) {
+                            return data ? String(data).replace(/<[^>]+>/g, "").trim() : "";
+                        }
+                    }
+                } 
+            },
+            { 
+                extend: 'pdfHtml5', 
+                className: 'buttons-pdf', 
+                orientation: 'landscape', 
+                pageSize: 'A1', 
+                title: 'Latest Isotank Condition', 
+                exportOptions: { 
+                    orthogonal: 'export',
+                    format: {
+                        body: function ( data, row, column, node ) {
+                            return data ? String(data).replace(/<[^>]+>/g, "").trim() : "";
+                        }
+                    }
+                }, 
+                customize: function(doc) { 
+                    doc.defaultStyle.fontSize = 5; 
+                    doc.styles.tableHeader.fontSize = 6;
+                    // Auto-width adjustment for strict alignment
+                    var colCount = doc.content[1].table.body[0].length;
+                    doc.content[1].table.widths = Array(colCount).fill('*');
+                } 
+            }
+        ],
+        fixedColumns: { left: 2 },
+        scrollX: true,
+        ordering: false,
+        pageLength: 20,
+        searching: true,
+        autoWidth: false
+    });
+
+    // Hide default buttons container
+    $('.dt-buttons').hide();
+
+    // Bind Custom Inputs
+    $('#btnExportExcel').off('click').on('click', function() { 
+        table.button('.buttons-excel').trigger(); 
+    });
+    
+    $('#btnExportPdf').off('click').on('click', function() { 
+        table.button('.buttons-pdf').trigger(); 
+    });
+
+    $('#customSearch').off('keyup change').on('keyup change', function() { 
+        table.search(this.value).draw(); 
+    });
+
+    // Drag Scroll
+    const slider = document.querySelector('.dataTables_scrollBody');
+    if(slider) {
+        let isDown = false, startX, scrollLeft;
+        slider.style.cursor = 'grab';
+        slider.addEventListener('mousedown', (e) => { isDown=true; slider.style.cursor='grabbing'; startX=e.pageX-slider.offsetLeft; scrollLeft=slider.scrollLeft; });
+        slider.addEventListener('mouseleave', () => { isDown=false; slider.style.cursor='grab'; });
+        slider.addEventListener('mouseup', () => { isDown=false; slider.style.cursor='grab'; });
+        slider.addEventListener('mousemove', (e) => { if(!isDown) return; e.preventDefault(); const x=e.pageX-slider.offsetLeft; const walk=(x-startX)*2; slider.scrollLeft=scrollLeft-walk; });
+    }
+});
+</script>
+@endpush
+@endsection
 
 <style>
     /* 1. VISIBILITY FIX: Force White Text on Dark Background */
@@ -335,16 +427,29 @@
 </div>
 
 @push('scripts')
+@push('scripts')
 <script>
-$(document).ready(function() {
+// Polling function to wait for Vite bundle (jQuery + Dependencies)
+function waitForDependencies(callback) {
+    if (window.jQuery && $.fn.DataTable && window.JSZip && window.pdfMake) {
+        callback();
+    } else {
+        console.log('Waiting for libraries...');
+        setTimeout(() => waitForDependencies(callback), 100);
+    }
+}
+
+waitForDependencies(function() {
+    console.log('Dependencies loaded. Initializing Table...');
+    
     // Ensure DataTable is not already initialized
     if ($.fn.DataTable.isDataTable('#latestConditionTable')) {
         $('#latestConditionTable').DataTable().destroy();
     }
 
-    // Initialize DataTable with Buttons and FixedColumns
+    // Initialize DataTable
     var table = $('#latestConditionTable').DataTable({
-        dom: 'Brtip', // B=Buttons, r=processing, t=table, i=info, p=pagination
+        dom: 'Brtip', 
         buttons: [
             { 
                 extend: 'excelHtml5', 
@@ -354,7 +459,6 @@ $(document).ready(function() {
                     orthogonal: 'export',
                     format: {
                         body: function ( data, row, column, node ) {
-                            // Strip HTML tags (like badges) for clean Excel export
                             return data ? String(data).replace(/<[^>]+>/g, "").trim() : "";
                         }
                     }
@@ -364,7 +468,7 @@ $(document).ready(function() {
                 extend: 'pdfHtml5', 
                 className: 'buttons-pdf', 
                 orientation: 'landscape', 
-                pageSize: 'A1', // Use A1 safely for wide tables
+                pageSize: 'A1', 
                 title: 'Latest Isotank Condition', 
                 exportOptions: { 
                     orthogonal: 'export',
@@ -375,62 +479,47 @@ $(document).ready(function() {
                     }
                 }, 
                 customize: function(doc) { 
-                    // Make font smaller to fit
                     doc.defaultStyle.fontSize = 5; 
                     doc.styles.tableHeader.fontSize = 6;
-                    // Center align table
-                    doc.content[1].table.widths = Array(doc.content[1].table.body[0].length + 1).join('*').split('');
+                    // Auto-width adjustment for strict alignment
+                    var colCount = doc.content[1].table.body[0].length;
+                    doc.content[1].table.widths = Array(colCount).fill('*');
                 } 
             }
         ],
         fixedColumns: { left: 2 },
         scrollX: true,
-        ordering: false, // Disable sorting as requested in previous tasks
+        ordering: false,
         pageLength: 20,
-        searching: true, // Must be true for API search() to work
+        searching: true,
         autoWidth: false
     });
 
-    // Hide the default DataTables buttons container (we trigger them via custom buttons)
+    // Hide default buttons container
     $('.dt-buttons').hide();
 
-    // Bind Custom Export Buttons
-    $('#btnExportExcel').on('click', function() { 
+    // Bind Custom Inputs
+    $('#btnExportExcel').off('click').on('click', function() { 
         table.button('.buttons-excel').trigger(); 
     });
     
-    $('#btnExportPdf').on('click', function() { 
+    $('#btnExportPdf').off('click').on('click', function() { 
         table.button('.buttons-pdf').trigger(); 
     });
 
-    // Bind Custom Search Input
-    $('#customSearch').on('keyup change', function() { 
+    $('#customSearch').off('keyup change').on('keyup change', function() { 
         table.search(this.value).draw(); 
     });
 
-    // Verify initialization
-    console.log('DataTable initialized with Buttons:', $.fn.DataTable.Buttons ? 'YES' : 'NO');
-
-    // Drag Scroll Implementation (Mouse Drag)
+    // Drag Scroll
     const slider = document.querySelector('.dataTables_scrollBody');
     if(slider) {
         let isDown = false, startX, scrollLeft;
         slider.style.cursor = 'grab';
-        slider.addEventListener('mousedown', (e) => {
-            isDown = true; 
-            slider.style.cursor = 'grabbing'; 
-            startX = e.pageX - slider.offsetLeft; 
-            scrollLeft = slider.scrollLeft;
-        });
-        slider.addEventListener('mouseleave', () => { isDown = false; slider.style.cursor = 'grab'; });
-        slider.addEventListener('mouseup', () => { isDown = false; slider.style.cursor = 'grab'; });
-        slider.addEventListener('mousemove', (e) => {
-            if(!isDown) return;
-            e.preventDefault();
-            const x = e.pageX - slider.offsetLeft;
-            const walk = (x - startX) * 2; // Scroll-fast
-            slider.scrollLeft = scrollLeft - walk;
-        });
+        slider.addEventListener('mousedown', (e) => { isDown=true; slider.style.cursor='grabbing'; startX=e.pageX-slider.offsetLeft; scrollLeft=slider.scrollLeft; });
+        slider.addEventListener('mouseleave', () => { isDown=false; slider.style.cursor='grab'; });
+        slider.addEventListener('mouseup', () => { isDown=false; slider.style.cursor='grab'; });
+        slider.addEventListener('mousemove', (e) => { if(!isDown) return; e.preventDefault(); const x=e.pageX-slider.offsetLeft; const walk=(x-startX)*2; slider.scrollLeft=scrollLeft-walk; });
     }
 });
 </script>
