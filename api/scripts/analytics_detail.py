@@ -167,6 +167,11 @@ def analyze_vacuum(conn, db_type):
     # Calculate Rate per Tank
     tank_rates = []
     
+    # Pre-calculate counts even for single readings
+    total_monitored = df['isotank_id'].nunique() if not df.empty else 0
+    latest_readings = df.sort_values('check_datetime').groupby('isotank_id').last()
+    critical_count = len(latest_readings[latest_readings['vacuum_value_mtorr'] > 50]) if not latest_readings.empty else 0
+
     for iso_id, group in df.groupby('isotank_id'):
         if len(group) < 2: continue
         
@@ -232,17 +237,11 @@ def analyze_vacuum(conn, db_type):
     }
     
     # Summary Statistics
-    # 1. Total Monitored Tanks (unique tanks with logs in period)
-    total_monitored = df['isotank_id'].nunique() if not df.empty else 0
-    
-    # 2. Critical Tanks (current vacuum > 50 mTorr - using last reading)
-    # Get latest reading for each tank
-    latest_readings = df.sort_values('check_datetime').groupby('isotank_id').last()
-    critical_count = len(latest_readings[latest_readings['vacuum_value_mtorr'] > 50]) if not latest_readings.empty else 0
+    # Used the pre-calculated total_monitored and critical_count
     
     # 3. Avg Rise Rate (from tank_rates calculated above)
     avg_rise_rate = df_rates['rate'].mean() if not df_rates.empty else 0
-    avg_rise_rate_str = f"{avg_rise_rate:.2f} mTorr/d"
+    avg_rise_rate_str = f"{avg_rise_rate:.2f} mTorr/d" if not df_rates.empty else "N/A"
     
     # 4. Best Manufacturer (lowest rise rate)
     best_manu = "N/A"
@@ -259,6 +258,7 @@ def analyze_vacuum(conn, db_type):
     }
     
     return stats
+
 def analyze_inspector(conn, db_type):
     stats = {}
     
@@ -269,7 +269,7 @@ def analyze_inspector(conn, db_type):
         SELECT inspector_name, COUNT(*) as count 
         FROM inspection_logs 
         WHERE created_at >= {date_filter}
-        AND inspector_name IS NOT NULL
+        AND inspector_name IS NOT NULL AND inspector_name != ''
         GROUP BY inspector_name 
         ORDER BY count DESC LIMIT 10
     """
@@ -280,28 +280,20 @@ def analyze_inspector(conn, db_type):
         'data': df_vol['count'].tolist()
     }
     
-    # 2. Issues Found (Strictness)
+    # 2. Issues Found (Strictness) - Simplified Logic and Reduced Strictness on Query
     # Count how many details have condition NOT 'Good'
     q_issues = f"""
         SELECT l.inspector_name, 
                COUNT(d.id) as total_checks,
-               SUM(CASE WHEN d.condition_value IN ('fail', 'monitor', 'damage', 'dirty') THEN 1 ELSE 0 END) as issues_found
+               SUM(CASE WHEN d.condition_value IN ('fail', 'monitor', 'damage', 'dirty', 'poor') THEN 1 ELSE 0 END) as issues_found
         FROM inspection_logs l
         JOIN inspection_log_details d ON l.id = d.inspection_id
         WHERE l.created_at >= {date_filter}
-        AND l.inspector_name IS NOT NULL
+        AND l.inspector_name IS NOT NULL AND l.inspector_name != ''
         GROUP BY l.inspector_name
-        HAVING total_checks > 10
         ORDER BY issues_found DESC LIMIT 10
     """
-    # Note: condition_value matching depends on actual data. Assuming 'fail', 'damage' etc.
-    # If standard is just 'Ok' vs 'Not Ok', adjust accordingly.
-    # For now, let's just count total details vs total inspections as proxy for thoroughness? 
-    # Better: Issues found per inspection average.
-    
-    # Let's simplify: Top 10 inspectors with most "Issues" reported.
-    # We will assume non-null condition remarks or specific status.
-    # Actually, let's just use the Volume for now, and avg time if available.
+    # Removed HAVING > 10 to ensure we get data even if few inspections exist
     
     # Alternative: Recent Activity Trend
     fmt = "%Y-%m"
