@@ -6,6 +6,7 @@ import sqlite3
 import pandas as pd
 import numpy as np
 import warnings
+import contextlib
 from datetime import datetime, timedelta
 
 warnings.filterwarnings("ignore")
@@ -18,157 +19,129 @@ class NpEncoder(json.JSONEncoder):
         return super(NpEncoder, self).default(obj)
 
 def get_connection():
-    env_path = os.path.join(os.path.dirname(__file__), '..', '.env')
-    db_config = {}
-    if os.path.exists(env_path):
-        with open(env_path, 'r') as f:
-            for line in f:
-                if line.startswith('#') or '=' not in line: continue
-                k, v = line.strip().split('=', 1)
-                db_config[k] = v
-    
-    conn_type = db_config.get('DB_CONNECTION', 'mysql')
-    if conn_type == 'sqlite':
-        return sqlite3.connect(os.path.join(os.path.dirname(__file__), '..', 'database', 'database.sqlite')), 'sqlite'
-    
-    import mysql.connector
-    return mysql.connector.connect(
-        host=db_config.get('DB_HOST', '127.0.0.1'),
-        user=db_config.get('DB_USERNAME', 'root'), 
-        password=db_config.get('DB_PASSWORD', ''),
-        database=db_config.get('DB_DATABASE', 'isotank'),
-        port=int(db_config.get('DB_PORT', 3306))
-    ), 'mysql'
+    try:
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        env_path = os.path.join(base_dir, '..', '.env')
+        
+        db_config = {}
+        if os.path.exists(env_path):
+            with open(env_path, 'r') as f:
+                for line in f:
+                    line = line.strip()
+                    if not line or line.startswith('#') or '=' not in line: continue
+                    k, v = line.split('=', 1)
+                    db_config[k.strip()] = v.strip().strip('"').strip("'")
+        
+        conn_type = db_config.get('DB_CONNECTION', 'mysql')
+        
+        if conn_type == 'sqlite':
+            db_path = os.path.join(base_dir, '..', 'database', 'database.sqlite')
+            return sqlite3.connect(db_path), 'sqlite'
+        
+        import mysql.connector
+        return mysql.connector.connect(
+            host=db_config.get('DB_HOST', '127.0.0.1'),
+            user=db_config.get('DB_USERNAME', 'root'), 
+            password=db_config.get('DB_PASSWORD', ''),
+            database=db_config.get('DB_DATABASE', 'isotank_db'),
+            port=int(db_config.get('DB_PORT', 3306))
+        ), 'mysql'
+    except Exception as e:
+        raise Exception(f"DB Connection Failed: {str(e)}")
 
 def analyze_maintenance(conn, db_type):
     stats = {}
     
     # 1. Pareto Faults (Top Items)
-    q_faults = "SELECT source_item, COUNT(*) as count FROM maintenance_jobs WHERE status='closed' GROUP BY source_item ORDER BY count DESC LIMIT 10"
-    df_faults = pd.read_sql_query(q_faults, conn)
-    df_faults = df_faults.replace({np.nan: None})
-    stats['top_faults'] = df_faults.to_dict(orient='records')
+    try:
+        q_faults = "SELECT source_item, COUNT(*) as count FROM maintenance_jobs WHERE status='closed' GROUP BY source_item ORDER BY count DESC LIMIT 10"
+        df_faults = pd.read_sql_query(q_faults, conn)
+        df_faults = df_faults.replace({np.nan: None})
+        stats['top_faults'] = df_faults.to_dict(orient='records')
+    except:
+        stats['top_faults'] = []
     
     # 2. Lemon Tanks (Problematic Units)
-    date_filter = "DATE_SUB(NOW(), INTERVAL 12 MONTH)" if db_type == 'mysql' else "date('now', '-12 months')"
-    q_lemons = f"""
-        SELECT i.iso_number, i.id as isotank_id, i.manufacturer, COUNT(*) as job_count
-        FROM maintenance_jobs j
-        JOIN master_isotanks i ON j.isotank_id = i.id
-        WHERE j.created_at >= {date_filter}
-        GROUP BY i.id
-        ORDER BY job_count DESC LIMIT 10
-    """
-    df_lemons = pd.read_sql_query(q_lemons, conn)
-    df_lemons = df_lemons.replace({np.nan: None})
-    stats['lemon_tanks'] = df_lemons.to_dict(orient='records')
+    try:
+        date_filter = "DATE_SUB(NOW(), INTERVAL 12 MONTH)" if db_type == 'mysql' else "date('now', '-12 months')"
+        q_lemons = f"""
+            SELECT i.iso_number, i.id as isotank_id, i.manufacturer, COUNT(j.id) as job_count
+            FROM maintenance_jobs j
+            JOIN master_isotanks i ON j.isotank_id = i.id
+            WHERE j.created_at >= {date_filter}
+            GROUP BY i.id
+            ORDER BY job_count DESC LIMIT 10
+        """
+        df_lemons = pd.read_sql_query(q_lemons, conn)
+        df_lemons = df_lemons.replace({np.nan: None})
+        stats['lemon_tanks'] = df_lemons.to_dict(orient='records')
+    except:
+        stats['lemon_tanks'] = []
     
     # 3. Monthly Spend/Count Trend
-    fmt = "%Y-%m"
-    q_trend = f"""
-        SELECT 
-            strftime('{fmt}', created_at) as month, 
-            COUNT(*) as count 
-        FROM maintenance_jobs 
-        WHERE created_at >= {date_filter}
-        GROUP BY month 
-        ORDER BY month
-    """ if db_type == 'sqlite' else f"""
-        SELECT 
-            DATE_FORMAT(created_at, '{fmt}') as month, 
-            COUNT(*) as count 
-        FROM maintenance_jobs 
-        WHERE created_at >= {date_filter}
-        GROUP BY month 
-        ORDER BY month
-    """
-    df_trend = pd.read_sql_query(q_trend, conn)
-    df_trend = df_trend.replace({np.nan: None})
-    stats['trend'] = {
-        'labels': df_trend['month'].tolist(),
-        'data': df_trend['count'].tolist()
-    }
-    
-    # 4. Summary Statistics
-    # Total Open Jobs
-    q_open = "SELECT COUNT(*) as count FROM maintenance_jobs WHERE status IN ('open', 'in_progress')"
-    df_open = pd.read_sql_query(q_open, conn)
-    total_open = int(df_open['count'].iloc[0]) if not df_open.empty else 0
-    
-    # Deferred Jobs
-    q_deferred = "SELECT COUNT(*) as count FROM maintenance_jobs WHERE status = 'deferred'"
-    df_deferred = pd.read_sql_query(q_deferred, conn)
-    deferred = int(df_deferred['count'].iloc[0]) if not df_deferred.empty else 0
-    
-    # Completed in last 30 days
-    date_30d = "DATE_SUB(NOW(), INTERVAL 30 DAY)" if db_type == 'mysql' else "date('now', '-30 days')"
-    q_completed = f"SELECT COUNT(*) as count FROM maintenance_jobs WHERE status = 'closed' AND completed_at >= {date_30d}"
-    df_completed = pd.read_sql_query(q_completed, conn)
-    completed_30d = int(df_completed['count'].iloc[0]) if not df_completed.empty else 0
-    
-    # Average MTTR (Mean Time To Repair) in hours
-    q_mttr = f"""
-        SELECT AVG(TIMESTAMPDIFF(HOUR, created_at, completed_at)) as avg_hours
-        FROM maintenance_jobs 
-        WHERE status = 'closed' 
-        AND completed_at IS NOT NULL
-        AND created_at >= {date_30d}
-    """ if db_type == 'mysql' else f"""
-        SELECT AVG((julianday(completed_at) - julianday(created_at)) * 24) as avg_hours
-        FROM maintenance_jobs 
-        WHERE status = 'closed' 
-        AND completed_at IS NOT NULL
-        AND created_at >= {date_30d}
-    """
-    df_mttr = pd.read_sql_query(q_mttr, conn)
-    avg_mttr_hours = df_mttr['avg_hours'].iloc[0] if not df_mttr.empty and df_mttr['avg_hours'].iloc[0] is not None else None
-    
-    if avg_mttr_hours:
-        if avg_mttr_hours < 24:
-            avg_mttr = f"{int(avg_mttr_hours)}h"
-        else:
-            avg_mttr = f"{int(avg_mttr_hours / 24)}d"
-    else:
-        avg_mttr = "N/A"
-    
-    stats['summary'] = {
-        'total_open': total_open,
-        'deferred': deferred,
-        'completed_30d': completed_30d,
-        'avg_mttr': avg_mttr
-    }
-    
+    try:
+        q_trend = f"""
+            SELECT 
+                DATE_FORMAT(completion_date, '%Y-%m') as month,
+                COUNT(*) as total_jobs,
+                SUM(total_cost) as total_spend,
+                AVG(DATEDIFF(completion_date, created_at)) as avg_mttr
+            FROM maintenance_jobs
+            WHERE status='closed' AND completion_date >= {date_filter}
+            GROUP BY month
+            ORDER BY month ASC
+        """
+        if db_type == 'sqlite':
+            q_trend = f"SELECT strftime('%Y-%m', completion_date) as month, COUNT(*) as total_jobs, SUM(total_cost) as total_spend, AVG(julianday(completion_date) - julianday(created_at)) as avg_mttr FROM maintenance_jobs WHERE status='closed' AND completion_date >= {date_filter} GROUP BY month ORDER BY month ASC"
+            
+        df_trend = pd.read_sql_query(q_trend, conn)
+        df_trend = df_trend.replace({np.nan: None})
+        stats['monthly_trend'] = df_trend.to_dict(orient='records')
+        
+        # Summary KPI based on trend
+        stats['completed_30d'] = int(df_trend.iloc[-1]['total_jobs']) if not df_trend.empty else 0
+        stats['avg_mttr'] = f"{df_trend['avg_mttr'].mean():.1f}d" if not df_trend.empty else "N/A"
+    except:
+         stats['monthly_trend'] = []
+         stats['completed_30d'] = 0
+         stats['avg_mttr'] = "N/A"
+
+    # KPI: Open Deferred
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) FROM maintenance_jobs WHERE status='open'")
+        stats['total_open'] = cursor.fetchone()[0]
+        
+        cursor.execute("SELECT COUNT(*) FROM maintenance_jobs WHERE priority='deferred'")
+        stats['deferred'] = cursor.fetchone()[0]
+    except:
+        stats['total_open'] = 0
+        stats['deferred'] = 0
+        
     return stats
 
 def analyze_vacuum(conn, db_type):
     stats = {}
-    
-    # 1. Manufacturer Performance (Avg Rate of Rise)
-    # Strategy: Fetch last 2 valid readings for each tank to calculate curent rate
-    # Then group by manufacturer
-    
     date_filter = "DATE_SUB(NOW(), INTERVAL 6 MONTH)" if db_type == 'mysql' else "date('now', '-6 months')"
+    date_filter_year = "DATE_SUB(NOW(), INTERVAL 12 MONTH)" if db_type == 'mysql' else "date('now', '-12 months')"
     
-    # Vacuum Analytics
-    # Strategy: 
-    # 1. Use vacuum_logs for historical trend and rise rate.
-    # 2. Use master_isotanks (measurement status) for CURRENT critical count and monitored total (Live Data).
-    
-    # Live Data (Current Status)
-    q_live = """
-        SELECT COUNT(*) as total, 
-               SUM(CASE WHEN vacuum_mtorr > 50 THEN 1 ELSE 0 END) as critical 
-        FROM master_isotank_measurement_statuses
-    """
+    # Live Data (Current Status) for KPI Cards
+    # Use measurement status table directly for reliability
     try:
+        q_live = """
+            SELECT COUNT(*) as total, 
+                   SUM(CASE WHEN vacuum_mtorr > 50 THEN 1 ELSE 0 END) as critical 
+            FROM master_isotank_measurement_statuses
+        """
         df_live = pd.read_sql_query(q_live, conn)
-        live_total = df_live['total'].iloc[0] if not df_live.empty else 0
-        live_critical = df_live['critical'].iloc[0] if not df_live.empty else 0
+        live_total = int(df_live['total'].iloc[0]) if not df_live.empty else 0
+        live_critical = int(df_live['critical'].iloc[0]) if not df_live.empty else 0
     except:
         live_total = 0
         live_critical = 0
 
-    # Historical Data (Logs)
+    # Historical Rate Calculation
+    # Does not throw exception but sets empty df on fail
     q_logs = f"""
         SELECT v.isotank_id, v.vacuum_value_mtorr, v.check_datetime, m.manufacturer
         FROM vacuum_logs v
@@ -179,52 +152,64 @@ def analyze_vacuum(conn, db_type):
     try:
         df = pd.read_sql_query(q_logs, conn)
     except:
-        df = pd.DataFrame() # Handle query failure gracefully
-    
-    df_rates = pd.DataFrame() # Default empty
-    
-    if not df.empty:
-        df['check_datetime'] = pd.to_datetime(df['check_datetime'])
-        
-        # Calculate Rate per Tank
-        tank_rates = []
-        for iso_id, group in df.groupby('isotank_id'):
-            if len(group) < 2: continue
-            
-            # Take last 2 readings
-            last = group.iloc[-1]
-            prev = group.iloc[-2]
-            
-            days = (last['check_datetime'] - prev['check_datetime']).days
-            if days < 1: days = 1 # Avoid div by zero
-            
-            diff = last['vacuum_value_mtorr'] - prev['vacuum_value_mtorr']
-            rate = diff / days
-            
-            # Filter noise
-            if -5 < rate < 20: 
-                 tank_rates.append({
-                     'isotank_id': int(iso_id),
-                     'manufacturer': last['manufacturer'] if last['manufacturer'] else 'Unknown',
-                     'rate': rate,
-                     'current_val': last['vacuum_value_mtorr']
-                 })
-        df_rates = pd.DataFrame(tank_rates)
+        df = pd.DataFrame()
 
-    # Group by Manufacturer
+    tank_rates = []
+    if not df.empty:
+        try:
+            df['check_datetime'] = pd.to_datetime(df['check_datetime'])
+            
+            for iso_id, group in df.groupby('isotank_id'):
+                if len(group) < 2: continue
+                
+                last = group.iloc[-1]
+                prev = group.iloc[-2]
+                
+                days = (last['check_datetime'] - prev['check_datetime']).days
+                if days < 1: days = 1
+                
+                diff = last['vacuum_value_mtorr'] - prev['vacuum_value_mtorr']
+                rate = diff / days
+                
+                if -5 < rate < 20: 
+                     tank_rates.append({
+                         'isotank_id': int(iso_id),
+                         'manufacturer': str(last['manufacturer']) if last['manufacturer'] else 'Unknown',
+                         'rate': float(rate),
+                         'current_val': float(last['vacuum_value_mtorr'])
+                     })
+        except:
+             pass # Skip rate calc on error
+    
+    df_rates = pd.DataFrame(tank_rates)
+    
+    # Best Manufacturer & Avg Rate
+    avg_rise_rate_str = "N/A"
+    best_manu = "N/A"
+    
     if not df_rates.empty:
-        manu_perf = df_rates.groupby('manufacturer')['rate'].mean().reset_index()
-        manu_perf = manu_perf.sort_values('rate', ascending=False) # Highest rate (worst) first
-        manu_perf = manu_perf.replace({np.nan: None})
-        stats['manufacturers'] = {
-            'labels': manu_perf['manufacturer'].tolist(),
-            'data': manu_perf['rate'].round(2).tolist()
-        }
+        try:
+            avg_rise_rate = df_rates['rate'].mean()
+            avg_rise_rate_str = f"{avg_rise_rate:.2f} mTorr/d"
+            
+            manu_perf = df_rates.groupby('manufacturer')['rate'].mean().reset_index()
+            manu_perf = manu_perf.sort_values('rate', ascending=False)
+            manu_perf = manu_perf.replace({np.nan: None})
+            
+            stats['manufacturers'] = {
+                'labels': manu_perf['manufacturer'].tolist(),
+                'data': manu_perf['rate'].round(2).tolist()
+            }
+            
+            manu_grp = df_rates.groupby('manufacturer')['rate'].mean()
+            if not manu_grp.empty:
+                best_manu = manu_grp.idxmin()
+        except:
+             stats['manufacturers'] = {'labels': [], 'data': []}
     else:
         stats['manufacturers'] = {'labels': [], 'data': []}
-        
+
     # Yearly Trend
-    stats['yearly_trend'] = {'labels': [], 'data': []} # Default
     try:
         q_trend = f"""
             SELECT 
@@ -235,7 +220,6 @@ def analyze_vacuum(conn, db_type):
             GROUP BY month 
             ORDER BY month
         """
-        # Note: SQLite handling omitted for brevity, assuming MySQL in prod context or handled by try/except fallback
         if db_type == 'sqlite':
              q_trend = f"SELECT strftime('%Y-%m', check_datetime) as month, AVG(vacuum_value_mtorr) as avg_val FROM vacuum_logs WHERE check_datetime >= {date_filter_year} GROUP BY month ORDER BY month"
              
@@ -246,62 +230,46 @@ def analyze_vacuum(conn, db_type):
             'data': df_trend['avg_val'].round(2).tolist()
         }
     except:
-        pass
-
-    # Summary Statistics
-    # Use Live Data for counts if available, otherwise fallback to logs
-    total_monitored = int(live_total) if live_total > 0 else (df['isotank_id'].nunique() if not df.empty else 0)
-    critical_count = int(live_critical) if live_total > 0 else 0
+        stats['yearly_trend'] = {'labels': [], 'data': []}
     
-    # Rise Rate still depends on history
-    avg_rise_rate = df_rates['rate'].mean() if not df_rates.empty else 0
-    avg_rise_rate_str = f"{avg_rise_rate:.2f} mTorr/d" if not df_rates.empty else "N/A"
+    # Final Summary for Cards
+    display_total_monitored = live_total if live_total > 0 else (df['isotank_id'].nunique() if not df.empty else 0)
     
-    best_manu = "N/A"
-    if not df_rates.empty:
-        manu_grp = df_rates.groupby('manufacturer')['rate'].mean()
-        if not manu_grp.empty:
-            best_manu = manu_grp.idxmin()
-            
     stats['summary'] = {
-        'total_monitored': total_monitored,
-        'critical_tanks': critical_count,
+        'total_monitored': int(display_total_monitored),
+        'critical_tanks': int(live_critical),
         'avg_rise_rate': avg_rise_rate_str,
-        'best_manufacturer': str(best_manu) if best_manu else "N/A"
+        'best_manufacturer': str(best_manu)
     }
     
     return stats
 
 def analyze_inspector(conn, db_type):
     stats = {}
-    
     date_filter = "DATE_SUB(NOW(), INTERVAL 6 MONTH)" if db_type == 'mysql' else "date('now', '-6 months')"
-    
-    # 1. Total Inspections by Inspector
-    # Use LEFT JOIN to catch all inspections, and COALESCE for name
-    q_vol = f"""
-        SELECT COALESCE(u.name, 'Unknown') as inspector_name, COUNT(*) as count 
-        FROM inspection_logs l
-        LEFT JOIN users u ON l.inspector_id = u.id
-        WHERE l.created_at >= {date_filter}
-        GROUP BY inspector_name 
-        ORDER BY count DESC LIMIT 10
-    """
+    date_filter_vol = "DATE_SUB(NOW(), INTERVAL 6 YEAR)" if db_type == 'mysql' else "date('now', '-6 years')" # Longer range for volume to ensure data
+
+    # 1. Volume by Inspector (Robust Join)
+    # Using COALESCE for name
     try:
+        q_vol = f"""
+            SELECT COALESCE(u.name, 'Unknown') as inspector_name, COUNT(*) as count 
+            FROM inspection_logs l
+            LEFT JOIN users u ON l.inspector_id = u.id
+            WHERE l.created_at >= {date_filter}
+            GROUP BY inspector_name 
+            ORDER BY count DESC LIMIT 10
+        """
         df_vol = pd.read_sql_query(q_vol, conn)
         df_vol = df_vol.replace({np.nan: "Unknown"})
         stats['volume'] = {
             'labels': df_vol['inspector_name'].tolist(),
             'data': df_vol['count'].tolist()
         }
-    except Exception as e:
-        stats['volume'] = {'labels': [], 'data': []} # Fallback
-        # Log error in output or just robustly continue for now
-    
-    # 2. Issues Found (Skipped for now)
-    
-    # 3. Trend
-    stats['trend'] = {'labels': [], 'data': []}
+    except:
+        stats['volume'] = {'labels': [], 'data': []}
+
+    # 2. Trend (Volume over time)
     try:
         fmt = "%Y-%m"
         q_trend = f"""
@@ -323,38 +291,38 @@ def analyze_inspector(conn, db_type):
             'data': df_trend['count'].tolist()
         }
     except:
-        pass
-
+        stats['trend'] = {'labels': [], 'data': []}
+        
     return stats
-    import contextlib
-    
+
+def main():
     if len(sys.argv) < 2:
-        print(json.dumps({'error': 'No mode specified'}))
+        print(json.dumps({'error': 'No mode provided'}))
         sys.exit(1)
         
     mode = sys.argv[1]
+    result = {'error': 'Execution failed without exception'} # Default error
     
-    # Suppress all stdout during processing to prevent noise
-    with open(os.devnull, 'w') as devnull:
-        with contextlib.redirect_stdout(devnull):
-            conn = None
-            result = {}
-            try:
-                conn, db_type = get_connection()
-                if mode == 'maintenance':
-                    result = analyze_maintenance(conn, db_type)
-                elif mode == 'vacuum':
-                    result = analyze_vacuum(conn, db_type)
-                elif mode == 'inspector':
-                    result = analyze_inspector(conn, db_type)
-                else:
-                    result = {'error': 'Invalid mode'}
-            except Exception as e:
-                result = {'error': str(e)}
-            finally:
-                if conn: 
-                    try: conn.close()
-                    except: pass
+    try:
+        # Redirect stdout to devnull to suppress libraries noise, but catch errors
+        with open(os.devnull, 'w') as devnull:
+             with contextlib.redirect_stdout(devnull):
+                 conn, db_type = get_connection()
+                 
+                 if mode == 'maintenance':
+                     result = analyze_maintenance(conn, db_type)
+                 elif mode == 'vacuum':
+                     result = analyze_vacuum(conn, db_type)
+                 elif mode == 'inspector':
+                     result = analyze_inspector(conn, db_type)
+                 
+                 if conn: conn.close()
+                 
+    except Exception as e:
+        result = {'error': f"Script Error: {str(e)}"}
     
-    # Print only the final JSON to actual stdout
+    # Final Output
     print(json.dumps(result, cls=NpEncoder))
+
+if __name__ == "__main__":
+    main()
