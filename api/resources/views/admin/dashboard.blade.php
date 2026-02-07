@@ -125,7 +125,7 @@
             <!-- MAINTENANCE STATS -->
             <div class="col-lg-4 col-md-6 mb-4">
                 <div class="glass-card h-100 p-4 position-relative overflow-hidden">
-                    <div class="position-absolute top-0 end-0 p-3 opacity-10">
+                    <div class="position-absolute top-0 end-0 p-3 opacity-10" style="pointer-events: none;">
                         <i class="bi bi-tools display-1"></i>
                     </div>
                     
@@ -133,7 +133,7 @@
                         <h5 class="fw-bold mb-0 text-white">
                             <i class="bi bi-tools me-2 text-warning"></i>Maintenance Stats
                         </h5>
-                        <a href="{{ route('admin.dashboard.maintenance') }}" class="btn btn-sm btn-outline-light rounded-pill px-3" style="font-size: 0.7rem;">
+                        <a href="{{ route('admin.dashboard.maintenance') }}" class="btn btn-sm btn-outline-light rounded-pill px-3 position-relative" style="font-size: 0.7rem; z-index: 5;">
                             View Details <i class="bi bi-arrow-right ms-1"></i>
                         </a>
                     </div>
@@ -150,9 +150,10 @@
 
                     <div class="tab-content">
                         <!-- TAB 1: MTTR Data (Original) -->
+                        <div class="tab-pane fade show active" id="mttr" role="tabpanel">
                             <div class="d-flex justify-content-between align-items-end mb-2">
                                 <div>
-                                    <h2 class="display-5 fw-bold mb-0 text-white">{{ $globalStats['avg_repair_time'] ?? 'N/A' }}</h2>
+                                    <h2 class="fs-2 fw-bold mb-0 text-white">{{ $globalStats['avg_repair_time'] ?? 'N/A' }}</h2>
                                     <small class="text-muted">{{ $globalStats['repair_time_label'] ?? 'Mean Time' }}</small>
                                 </div>
                                 <div class="text-end">
@@ -227,7 +228,7 @@
         {{-- Vacuum Risk --}}
         <div class="col-lg-4 col-md-6 mb-4">
             <div class="glass-card h-100 p-4 position-relative overflow-hidden">
-                <div class="position-absolute top-0 end-0 p-3 opacity-10">
+                <div class="position-absolute top-0 end-0 p-3 opacity-10" style="pointer-events: none;">
                     <i class="bi bi-graph-down display-1"></i>
                 </div>
                 
@@ -235,7 +236,7 @@
                     <h5 class="fw-bold mb-0 text-white">
                         <i class="bi bi-graph-down me-2 text-info"></i>Vacuum Monitor
                     </h5>
-                    <a href="{{ route('admin.dashboard.vacuum') }}" class="btn btn-sm btn-outline-light rounded-pill px-3" style="font-size: 0.7rem;">
+                    <a href="{{ route('admin.dashboard.vacuum') }}" class="btn btn-sm btn-outline-light rounded-pill px-3 position-relative" style="font-size: 0.7rem; z-index: 5;">
                         Detailed <i class="bi bi-arrow-right ms-1"></i>
                     </a>
                 </div>
@@ -282,7 +283,7 @@
                     <div class="tab-pane fade" id="health" role="tabpanel">
                          @if(isset($globalStats['vacuum_stats']['avg_value']))
                             <div class="text-center mb-3">
-                                  <h2 class="display-6 fw-bold text-white mb-0">{{ $globalStats['vacuum_stats']['avg_value'] }}</h2>
+                                  <h2 class="fs-2 fw-bold text-white mb-0">{{ $globalStats['vacuum_stats']['avg_value'] }}</h2>
                                   <small class="text-muted">Fleet Average (mTorr)</small>
                             </div>
                             <div class="d-flex justify-content-around text-center">
