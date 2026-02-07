@@ -262,6 +262,31 @@ class SendWeeklyReport extends Command
             'expiry_alerts_count' => $expiryCount
         ];
 
+        // PYTHON INTEGRATION: Enhancing Analytics
+        try {
+            $scriptPath = base_path('scripts/report_analytics.py');
+            $dateStr = $startOfWeek->format('Y-m-d');
+            
+            $process = new \Symfony\Component\Process\Process(['python3', $scriptPath, 'weekly', $dateStr]);
+            $process->setTimeout(15); 
+            $process->run();
+
+            if ($process->isSuccessful()) {
+                 $pyData = json_decode($process->getOutput(), true);
+                 if (json_last_error() === JSON_ERROR_NONE && !isset($pyData['error'])) {
+                      // Merge Python charts/insights into data
+                      $data['stock_chart'] = $pyData['ascii_chart_stock'] ?? '';
+                      $data['trend_analysis'] = $pyData['filling_distribution'] ?? [];
+                 } else {
+                      \Illuminate\Support\Facades\Log::warning("Weekly Report Python JSON Error: " . ($pyData['error'] ?? 'Invalid JSON'));
+                 }
+            } else {
+                 \Illuminate\Support\Facades\Log::warning("Weekly Report Python Failed: " . $process->getErrorOutput());
+            }
+        } catch (\Exception $e) {
+             \Illuminate\Support\Facades\Log::error("Weekly Report Python Exception: " . $e->getMessage());
+        }
+
         // 8. SEND EMAIL
         // Handle recipients
         if (!$this->argument('email')) {

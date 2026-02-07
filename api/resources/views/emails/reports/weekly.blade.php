@@ -76,6 +76,16 @@
             </table>
         </div>
 
+        <!-- PYTHON ANALYTICS: STOCK CHART -->
+        @if(isset($stock_chart) && !empty($stock_chart))
+            <div class="section">
+                <h3 class="section-title">2.5 VISUAL ANALYTICS</h3>
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; border: 1px solid #ddd;">
+                    <pre style="font-family: Consolas, 'Courier New', monospace; font-size: 11px; line-height: 1.4; color: #333; margin: 0; overflow-x: auto;">{{ $stock_chart }}</pre>
+                </div>
+            </div>
+        @endif
+
         <div class="section">
             <h3 class="section-title">3. LOCATION OVERVIEW</h3>
             <table>

@@ -107,6 +107,14 @@
     <p style="color: #666; font-style: italic;">No status data available.</p>
     @endif
 
+    <!-- PYTHON ANALYTICS: STOCK CHART -->
+    @if(isset($summary['stock_chart']) && !empty($summary['stock_chart']))
+        <h3 style="margin-top: 30px; border-bottom: 2px solid #0d47a1; color: #0d47a1;">📈 Occupancy Visualization (Analytics)</h3>
+        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #dee2e6;">
+            <pre style="font-family: Consolas, 'Courier New', monospace; font-size: 12px; line-height: 1.4; color: #333; margin: 0; white-space: pre-wrap;">{{ $summary['stock_chart'] }}</pre>
+        </div>
+    @endif
+
     <!-- 3. HIGHLIGHT MASALAH (EXCEPTION REPORT) -->
     @if(count($issues) > 0)
     <h3 style="color: #c62828; border-bottom-color: #c62828;">⚠️ Exception Report (Needs Attention)</h3>
