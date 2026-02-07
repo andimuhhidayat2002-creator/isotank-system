@@ -413,7 +413,7 @@ class AdminController extends Controller
             // Remove BOM and trim
             $output = preg_replace('/^\xEF\xBB\xBF/', '', $output);
             $output = trim($output);
-            $analytics = json_decode($output, true);
+            $analytics = json_decode($output, true) ?? [];
             
             if (json_last_error() !== JSON_ERROR_NONE) {
                 \Illuminate\Support\Facades\Log::error('Maintenance Analytics JSON Error: ' . json_last_error_msg());
@@ -445,7 +445,7 @@ class AdminController extends Controller
             // Remove BOM and trim
             $output = preg_replace('/^\xEF\xBB\xBF/', '', $output);
             $output = trim($output);
-            $analytics = json_decode($output, true);
+            $analytics = json_decode($output, true) ?? [];
             
             if (json_last_error() !== JSON_ERROR_NONE) {
                 \Illuminate\Support\Facades\Log::error('Vacuum Analytics JSON Error: ' . json_last_error_msg());
@@ -457,11 +457,24 @@ class AdminController extends Controller
         }
 
         // Detailed Lists
-        $exceedList = MasterIsotankMeasurementStatus::where('vacuum_mtorr', '>', 5)
+        $exceedList = \App\Models\MasterIsotankMeasurementStatus::where('vacuum_mtorr', '>', 5)
             ->with('isotank:id,iso_number,location')
             ->orderByDesc('vacuum_mtorr')
             ->limit(50)
             ->get();
+
+        // Fallback: Ensure consistency between Card (Python) and Table (PHP)
+        // If Python fails or returns 0 inconsistently, use PHP count
+        $criticalCount = \App\Models\MasterIsotankMeasurementStatus::where('vacuum_mtorr', '>', 5)->count();
+        $totalMonitored = \App\Models\MasterIsotank::count();
+        
+        if (empty($analytics['summary']['critical_tanks']) || ($analytics['summary']['critical_tanks'] == 0 && $criticalCount > 0)) {
+            $analytics['summary']['critical_tanks'] = $criticalCount;
+        }
+        
+        if (empty($analytics['summary']['total_monitored'])) {
+            $analytics['summary']['total_monitored'] = $totalMonitored;
+        }
 
         return view('admin.dashboard.vacuum_monitoring', compact('analytics', 'exceedList'));
     }
@@ -481,7 +494,7 @@ class AdminController extends Controller
             // Remove BOM and trim
             $output = preg_replace('/^\xEF\xBB\xBF/', '', $output);
             $output = trim($output);
-            $analytics = json_decode($output, true);
+            $analytics = json_decode($output, true) ?? [];
             
             if (json_last_error() !== JSON_ERROR_NONE) {
                 \Illuminate\Support\Facades\Log::error('Inspector Analytics JSON Error: ' . json_last_error_msg());
