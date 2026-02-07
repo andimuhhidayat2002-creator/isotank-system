@@ -4,6 +4,12 @@ import json
 import sqlite3
 import pandas as pd
 import numpy as np
+import warnings
+
+# === 1. SUPPRESS ALL WARNINGS ===
+# This is crucial because Pandas emits "UserWarning: pandas only supports SQLAlchemy..."
+# which pollutes stdout and causes PHP json_decode() to fail.
+warnings.filterwarnings("ignore")
 
 # Ensure native types for JSON serialization
 class NpEncoder(json.JSONEncoder):
@@ -217,50 +223,52 @@ def calculate_stats(category='All'):
              query_mttr += f" AND i.tank_category = '{category}'"
         query_mttr += " ORDER BY m.updated_at DESC LIMIT 100"
 
-        df_mttr = pd.read_sql_query(query_mttr, conn)
-        
-        has_mttr = False
-        if not df_mttr.empty:
-            df_mttr['created_at'] = pd.to_datetime(df_mttr['created_at'])
-            df_mttr['updated_at'] = pd.to_datetime(df_mttr['updated_at'])
-            duration = (df_mttr['updated_at'] - df_mttr['created_at']).dt.total_seconds() / 3600
-            avg_hours = duration.mean()
+        try:
+            df_mttr = pd.read_sql_query(query_mttr, conn)
             
-            if avg_hours > 0:
-                stats['repair_time_label'] = "MTTR (Closed Jobs)"
-                if avg_hours < 24:
-                    stats['avg_repair_time'] = f"{round(avg_hours, 1)} Hours"
+            has_mttr = False
+            if not df_mttr.empty:
+                df_mttr['created_at'] = pd.to_datetime(df_mttr['created_at'])
+                df_mttr['updated_at'] = pd.to_datetime(df_mttr['updated_at'])
+                duration = (df_mttr['updated_at'] - df_mttr['created_at']).dt.total_seconds() / 3600
+                avg_hours = duration.mean()
+                
+                if avg_hours > 0:
+                    stats['repair_time_label'] = "MTTR (Closed Jobs)"
+                    if avg_hours < 24:
+                        stats['avg_repair_time'] = f"{round(avg_hours, 1)} Hours"
+                    else:
+                        stats['avg_repair_time'] = f"{round(avg_hours / 24, 1)} Days"
+                    has_mttr = True
+
+            # B. Fallback to Open Jobs Age
+            if not has_mttr:
+                query_open = """
+                    SELECT m.created_at 
+                    FROM maintenance_jobs m
+                    JOIN master_isotanks i ON m.isotank_id = i.id
+                    WHERE m.status IN ('open', 'on_progress', 'in_progress')
+                """
+                if category in ['T75', 'T11', 'T50']:
+                    query_open += f" AND i.tank_category = '{category}'"
+                
+                df_open = pd.read_sql_query(query_open, conn)
+                if not df_open.empty:
+                    df_open['created_at'] = pd.to_datetime(df_open['created_at'])
+                    now = pd.Timestamp.now()
+                    duration = (now - df_open['created_at']).dt.total_seconds() / 3600
+                    avg_hours = duration.mean()
+                    
+                    stats['repair_time_label'] = "Avg Age (Active Jobs)"
+                    if avg_hours < 24:
+                        stats['avg_repair_time'] = f"{round(avg_hours, 1)} Hours"
+                    else:
+                        stats['avg_repair_time'] = f"{round(avg_hours / 24, 1)} Days"
                 else:
-                    stats['avg_repair_time'] = f"{round(avg_hours / 24, 1)} Days"
-                has_mttr = True
-
-        # B. Fallback to Open Jobs Age
-        if not has_mttr:
-             query_open = """
-                SELECT m.created_at 
-                FROM maintenance_jobs m
-                JOIN master_isotanks i ON m.isotank_id = i.id
-                WHERE m.status IN ('open', 'on_progress', 'in_progress')
-             """
-             if category in ['T75', 'T11', 'T50']:
-                 query_open += f" AND i.tank_category = '{category}'"
-             
-             df_open = pd.read_sql_query(query_open, conn)
-             if not df_open.empty:
-                 df_open['created_at'] = pd.to_datetime(df_open['created_at'])
-                 now = pd.Timestamp.now()
-                 duration = (now - df_open['created_at']).dt.total_seconds() / 3600
-                 avg_hours = duration.mean()
-                 
-                 stats['repair_time_label'] = "Avg Age (Active Jobs)"
-                 if avg_hours < 24:
-                     stats['avg_repair_time'] = f"{round(avg_hours, 1)} Hours"
-                 else:
-                     stats['avg_repair_time'] = f"{round(avg_hours / 24, 1)} Days"
-             else:
-                 stats['repair_time_label'] = "Maintenance Data"
-                 stats['avg_repair_time'] = "N/A" # Really no data
-
+                    stats['repair_time_label'] = "Maintenance Data"
+                    stats['avg_repair_time'] = "N/A" # Really no data
+        except Exception as e:
+             stats['avg_repair_time'] = "N/A"
 
         # 8. Vacuum Analysis (Decay Rate)
         # Fetch vacuum logs for ACTIVE tanks, last 180 days
@@ -327,10 +335,11 @@ def calculate_stats(category='All'):
         except Exception as e:
             stats['vacuum_risks'] = []
 
-        
+        # FINAL OUTPUT: MUST BE CLEAN JSON
         print(json.dumps(stats, cls=NpEncoder))
 
     except Exception as e:
+        # Handle top level errors
         print(json.dumps({"error": str(e)}))
     finally:
         if conn:
