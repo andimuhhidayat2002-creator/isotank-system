@@ -29,7 +29,7 @@
     {{-- 2. PRIMARY KPI CARDS (GLOWING) --}}
     <div class="row g-4 mb-5">
         {{-- Total Fleet --}}
-        <div class="col-xl-2 col-md-4 col-sm-6">
+        <div class="col-xl-3 col-md-6">
             <div class="glass-card p-4 h-100 position-relative hover-scale">
                 <div class="d-flex justify-content-between align-items-start mb-3">
                     <div>
@@ -48,7 +48,7 @@
         </div>
 
         {{-- Calibration --}}
-        <div class="col-xl-2 col-md-4 col-sm-6">
+        <div class="col-xl-3 col-md-6">
             <a href="{{ route('admin.calibration.index') }}" class="text-decoration-none">
                 <div class="glass-card p-4 h-100 position-relative hover-scale">
                     <div class="d-flex justify-content-between align-items-start mb-3">
@@ -71,7 +71,7 @@
         </div>
 
         {{-- Maintenance (Clickable) --}}
-        <div class="col-xl-2 col-md-4 col-sm-6">
+        <div class="col-xl-3 col-md-6">
             <a href="{{ route('admin.dashboard.maintenance') }}" class="text-decoration-none">
                 <div class="glass-card p-4 h-100 position-relative hover-scale">
                     <div class="d-flex justify-content-between align-items-start mb-3">
@@ -98,7 +98,7 @@
         </div>
 
         {{-- Inspections --}}
-        <div class="col-xl-2 col-md-4 col-sm-6">
+        <div class="col-xl-3 col-md-6">
             <div class="glass-card p-4 h-100 position-relative hover-scale">
                 <div class="d-flex justify-content-between align-items-start mb-3">
                     <div>
