@@ -147,6 +147,7 @@
                     </div>
                 </a>
             </div>
+            </div>
         </div>
 
         {{-- Inspectors --}}
