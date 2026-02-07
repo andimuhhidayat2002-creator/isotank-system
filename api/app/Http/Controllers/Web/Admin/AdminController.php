@@ -491,8 +491,8 @@ class AdminController extends Controller
         }
 
         // Recent Inspections List
-        $recentInspections = \App\Models\InspectionLog::with('isotank')
-            ->whereNotNull('inspector_name')
+        $recentInspections = \App\Models\InspectionLog::with(['isotank', 'inspector'])
+            ->whereNotNull('inspector_id')
             ->latest()
             ->limit(20)
             ->get();

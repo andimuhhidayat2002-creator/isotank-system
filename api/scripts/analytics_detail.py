@@ -153,14 +153,13 @@ def analyze_vacuum(conn, db_type):
         SELECT v.isotank_id, v.vacuum_value_mtorr, v.check_datetime, m.manufacturer
         FROM vacuum_logs v
         JOIN master_isotanks m ON v.isotank_id = m.id
-        WHERE m.status = 'active' 
-        AND v.check_datetime >= {date_filter}
+        WHERE v.check_datetime >= {date_filter}
         ORDER BY v.isotank_id, v.check_datetime ASC
     """
     df = pd.read_sql_query(q_logs, conn)
     
     if df.empty:
-        return {'manufacturers': [], 'worst_tanks': [], 'yearly_trend': {'labels': [], 'data': []}}
+        return {'manufacturers': [], 'worst_tanks': [], 'yearly_trend': {'labels': [], 'data': []}, 'summary': {'total_monitored': 0, 'critical_tanks': 0, 'avg_rise_rate': 'N/A', 'best_manufacturer': 'N/A'}}
 
     df['check_datetime'] = pd.to_datetime(df['check_datetime'])
     
@@ -265,12 +264,13 @@ def analyze_inspector(conn, db_type):
     date_filter = "DATE_SUB(NOW(), INTERVAL 6 MONTH)" if db_type == 'mysql' else "date('now', '-6 months')"
     
     # 1. Total Inspections by Inspector
+    # Corrected: Join with users table on inspector_id
     q_vol = f"""
-        SELECT inspector_name, COUNT(*) as count 
-        FROM inspection_logs 
-        WHERE created_at >= {date_filter}
-        AND inspector_name IS NOT NULL AND inspector_name != ''
-        GROUP BY inspector_name 
+        SELECT u.name as inspector_name, COUNT(*) as count 
+        FROM inspection_logs l
+        JOIN users u ON l.inspector_id = u.id
+        WHERE l.created_at >= {date_filter}
+        GROUP BY u.name 
         ORDER BY count DESC LIMIT 10
     """
     df_vol = pd.read_sql_query(q_vol, conn)
@@ -280,20 +280,9 @@ def analyze_inspector(conn, db_type):
         'data': df_vol['count'].tolist()
     }
     
-    # 2. Issues Found (Strictness) - Simplified Logic and Reduced Strictness on Query
-    # Count how many details have condition NOT 'Good'
-    q_issues = f"""
-        SELECT l.inspector_name, 
-               COUNT(d.id) as total_checks,
-               SUM(CASE WHEN d.condition_value IN ('fail', 'monitor', 'damage', 'dirty', 'poor') THEN 1 ELSE 0 END) as issues_found
-        FROM inspection_logs l
-        JOIN inspection_log_details d ON l.id = d.inspection_id
-        WHERE l.created_at >= {date_filter}
-        AND l.inspector_name IS NOT NULL AND l.inspector_name != ''
-        GROUP BY l.inspector_name
-        ORDER BY issues_found DESC LIMIT 10
-    """
-    # Removed HAVING > 10 to ensure we get data even if few inspections exist
+    # 2. Issues Found (Strictness)
+    # Not implemented fully yet to avoid complex joins, just return empty valid structure or simplistic
+    # For now, let's just skip the issues chart and only show volume and trend, as requested.
     
     # Alternative: Recent Activity Trend
     fmt = "%Y-%m"

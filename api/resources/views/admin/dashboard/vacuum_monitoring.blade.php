@@ -121,7 +121,7 @@
                 <tr>
                     <td class="fw-bold">{{ $item->isotank->iso_number ?? 'N/A' }}</td>
                     <td>{{ $item->isotank->location ?? '-' }}</td>
-                    <td class="text-white fw-bold">{{ $item->vacuum_mtorr }}</td>
+                    <td class="text-white fw-bold">{{ (float)$item->vacuum_mtorr }}</td>
                     <td>
                         @if($item->vacuum_mtorr > 8) <span class="badge bg-danger">CRITICAL</span>
                         @else <span class="badge bg-warning text-dark">WARNING</span>
