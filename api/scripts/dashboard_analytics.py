@@ -105,7 +105,11 @@ def calculate_stats(category='All'):
             'avg_repair_time': 'N/A',
             'repair_time_label': 'Maintenance Stats',
             'top_inspectors': [],
-            'vacuum_risks': []
+            'repair_time_label': 'Maintenance Stats',
+            'top_inspectors': [],
+            'problematic_tanks': [], # New: Most repaired tanks
+            'vacuum_risks': [],
+            'vacuum_stats': {} # New: Fleet health distribution
         }
 
         # SQL Helper helper to filter by category
@@ -270,6 +274,34 @@ def calculate_stats(category='All'):
         except Exception as e:
              stats['avg_repair_time'] = "N/A"
 
+        # 7.5 Problematic Isotanks (Most Maintenance Jobs)
+        # Identify "Lemons" - tanks that return to maintenance often
+        query_freq = """
+            SELECT i.iso_number, COUNT(m.id) as job_count
+            FROM maintenance_jobs m
+            JOIN master_isotanks i ON m.isotank_id = i.id
+            WHERE m.created_at >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
+        """ if db_type == 'mysql' else """
+            SELECT i.iso_number, COUNT(m.id) as job_count
+            FROM maintenance_jobs m
+            JOIN master_isotanks i ON m.isotank_id = i.id
+            WHERE m.created_at >= date('now', '-12 months')
+        """
+        
+        if category in ['T75', 'T11', 'T50']:
+             query_freq += f" AND i.tank_category = '{category}'"
+        
+        query_freq += " GROUP BY i.id ORDER BY job_count DESC LIMIT 3"
+
+        try:
+             df_freq = pd.read_sql_query(query_freq, conn)
+             if not df_freq.empty:
+                df_freq['job_count'] = df_freq['job_count'].astype(int)
+                stats['problematic_tanks'] = df_freq.to_dict(orient='records')
+        except Exception:
+             stats['problematic_tanks'] = []
+
+
         # 8. Vacuum Analysis (Decay Rate)
         # Fetch vacuum logs for ACTIVE tanks, last 180 days
         date_cond = "v.check_datetime >= date('now', '-180 days')" if db_type == 'sqlite' else "v.check_datetime >= DATE_SUB(NOW(), INTERVAL 180 DAY)"
@@ -331,9 +363,31 @@ def calculate_stats(category='All'):
             # Sort: "Already Failed" (lowest negative) to "Imminent" (small positive)
             risks.sort(key=lambda x: x['days_to_fail'])
             stats['vacuum_risks'] = risks[:5]
+
+            # 8.5 Vacuum Fleet Health (Distribution)
+            # Latest vacuum reading for EACH tank
+            # Group active tanks into health buckets
+            if not df_vac.empty:
+                 # Get latest reading per tank
+                 latest_readings = df_vac.sort_values('check_datetime').groupby('isotank_id').tail(1)
+                 
+                 total_monitored = len(latest_readings)
+                 if total_monitored > 0:
+                     excellent = len(latest_readings[latest_readings['vacuum_value_mtorr'] < 3])
+                     good = len(latest_readings[(latest_readings['vacuum_value_mtorr'] >= 3) & (latest_readings['vacuum_value_mtorr'] < 5)])
+                     warning = len(latest_readings[latest_readings['vacuum_value_mtorr'] >= 5])
+                     
+                     stats['vacuum_stats'] = {
+                         'total': total_monitored,
+                         'excellent_pct': round((excellent / total_monitored) * 100),
+                         'good_pct': round((good / total_monitored) * 100),
+                         'warning_pct': round((warning / total_monitored) * 100),
+                         'avg_value': round(latest_readings['vacuum_value_mtorr'].mean(), 2)
+                     }
             
         except Exception as e:
             stats['vacuum_risks'] = []
+            stats['vacuum_stats'] = {}
 
         # FINAL OUTPUT: MUST BE CLEAN JSON
         print(json.dumps(stats, cls=NpEncoder))

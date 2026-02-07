@@ -122,23 +122,60 @@
     {{-- PERFORMANCE METRICS ROW (Added via Python) --}}
     <div class="row g-4 mb-5">
         {{-- Maintenance --}}
+        {{-- Maintenance --}}
         <div class="col-xl-4">
             <div class="glass-card p-4 h-100">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h5 class="fw-bold mb-0 text-white"><i class="bi bi-stopwatch me-2 text-warning"></i>Maintenance Stats</h5>
-                    <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25">{{ $globalStats['repair_time_label'] ?? 'Performance' }}</span>
+                    <ul class="nav nav-pills nav-xs bg-dark rounded-pill p-1" style="background: rgba(0,0,0,0.3) !important;">
+                        <li class="nav-item">
+                            <button class="nav-link rounded-pill active py-1 px-3 text-white small" data-bs-toggle="tab" data-bs-target="#tab-mttr">MTTR</button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link rounded-pill py-1 px-3 text-white small" data-bs-toggle="tab" data-bs-target="#tab-freq">Top Units</button>
+                        </li>
+                    </ul>
                 </div>
-                <div class="d-flex align-items-center justify-content-center flex-column py-4">
-                     <div class="display-4 fw-bold text-white mb-2">
-                         {{ $globalStats['avg_repair_time'] ?? 'N/A' }}
-                     </div>
-                     <div class="text-muted small text-center px-3">
-                         @if(str_contains($globalStats['repair_time_label'] ?? '', 'Open'))
-                             Average age of currently active jobs
+                
+                <div class="tab-content">
+                    {{-- TAB 1: MTTR --}}
+                    <div class="tab-pane fade show active" id="tab-mttr">
+                        <div class="d-flex align-items-center justify-content-center flex-column py-2">
+                             <div class="display-4 fw-bold text-white mb-2">
+                                 {{ $globalStats['avg_repair_time'] ?? 'N/A' }}
+                             </div>
+                             <div class="text-muted small text-center px-3 mb-3">
+                                 @if(str_contains($globalStats['repair_time_label'] ?? '', 'Open'))
+                                     Avg Duration (Active Jobs)
+                                 @else
+                                     Mean Time To Repair
+                                 @endif
+                             </div>
+                             <div class="p-2 rounded bg-warning bg-opacity-10 border border-warning border-opacity-25 w-100 text-center">
+                                 <small class="text-warning">Target: < 7 Days</small>
+                             </div>
+                        </div>
+                    </div>
+
+                    {{-- TAB 2: FREQ --}}
+                    <div class="tab-pane fade" id="tab-freq">
+                         @if(isset($globalStats['problematic_tanks']) && count($globalStats['problematic_tanks']) > 0)
+                            <div class="d-flex flex-column gap-2">
+                                <small class="text-muted text-uppercase mb-2" style="font-size: 0.7rem;">Most Frequent Visitors (12M)</small>
+                                @foreach($globalStats['problematic_tanks'] as $tank)
+                                    <div class="d-flex justify-content-between align-items-center bg-black bg-opacity-20 p-2 rounded">
+                                        <span class="text-white fw-bold">{{ $tank['iso_number'] }}</span>
+                                        <span class="badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-20">{{ $tank['job_count'] }} Jobs</span>
+                                    </div>
+                                @endforeach
+                            </div>
                          @else
-                             Mean Duration (Open to Closed)
+                            <div class="text-center text-muted py-3">
+                                <i class="bi bi-check-circle display-4 opacity-25 text-success"></i>
+                                <p class="mb-0 mt-2 smaller">No repeated failures detected.</p>
+                            </div>
                          @endif
-                     </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -170,36 +207,94 @@
         </div>
 
         {{-- Vacuum Risk --}}
+        {{-- Vacuum Risk --}}
         <div class="col-xl-4">
             <div class="glass-card p-4 h-100">
                 <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="fw-bold mb-0 text-white"><i class="bi bi-speedometer2 me-2 text-danger"></i>Vacuum Decay Risk</h5>
-                    <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25">Predictive Analyics</span>
+                    <h5 class="fw-bold mb-0 text-white"><i class="bi bi-speedometer2 me-2 text-danger"></i>Vacuum Monitor</h5>
+                    <ul class="nav nav-pills nav-xs bg-dark rounded-pill p-1" style="background: rgba(0,0,0,0.3) !important;">
+                        <li class="nav-item">
+                            <button class="nav-link rounded-pill active py-1 px-3 text-white small" data-bs-toggle="tab" data-bs-target="#tab-vac-risk">Risks</button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link rounded-pill py-1 px-3 text-white small" data-bs-toggle="tab" data-bs-target="#tab-vac-health">Health</button>
+                        </li>
+                    </ul>
                 </div>
                 
-                @if(isset($globalStats['vacuum_risks']) && count($globalStats['vacuum_risks']) > 0)
-                    <div class="d-flex flex-column gap-3">
-                        @foreach($globalStats['vacuum_risks'] as $risk)
-                            <div class="d-flex justify-content-between align-items-center border-bottom border-light border-opacity-10 pb-2">
-                                <div>
-                                    <div class="text-white fw-bold">{{ $risk['iso_number'] }}</div>
-                                    <div class="text-muted smaller">Rate: +{{ $risk['rate'] }} mTorr/day</div>
-                                </div>
-                                <div class="text-end">
-                                    <div class="fw-bold {{ $risk['days_to_fail'] < 0 ? 'text-danger' : 'text-warning' }}">
-                                        {{ $risk['days_to_fail'] < 0 ? 'FAILED' : $risk['days_to_fail'] . ' Days' }}
+                <div class="tab-content">
+                    {{-- TAB 1: RISKS --}}
+                    <div class="tab-pane fade show active" id="tab-vac-risk">
+                        @if(isset($globalStats['vacuum_risks']) && count($globalStats['vacuum_risks']) > 0)
+                            <div class="d-flex flex-column gap-3">
+                                @foreach($globalStats['vacuum_risks'] as $risk)
+                                    <div class="d-flex justify-content-between align-items-center border-bottom border-light border-opacity-10 pb-2">
+                                        <div>
+                                            <div class="text-white fw-bold">{{ $risk['iso_number'] }}</div>
+                                            <div class="text-muted smaller">Rate: +{{ $risk['rate'] }} mTorr/day</div>
+                                        </div>
+                                        <div class="text-end">
+                                            <div class="fw-bold {{ $risk['days_to_fail'] < 0 ? 'text-danger' : 'text-warning' }}">
+                                                {{ $risk['days_to_fail'] < 0 ? 'FAILED' : $risk['days_to_fail'] . ' Days' }}
+                                            </div>
+                                            <div class="smaller text-muted">Current: {{ $risk['current_val'] }}</div>
+                                        </div>
                                     </div>
-                                    <div class="smaller text-muted">Current: {{ $risk['current_val'] }}</div>
+                                @endforeach
+                            </div>
+                        @else
+                            <div class="text-center text-muted py-3">
+                                <i class="bi bi-shield-check display-4 opacity-25 text-success"></i>
+                                <p class="mb-0 mt-2 smaller">All monitored tanks stable.</p>
+                            </div>
+                        @endif
+                    </div>
+                    
+                    {{-- TAB 2: HEALTH DISTRIBUTION --}}
+                    <div class="tab-pane fade" id="tab-vac-health">
+                         @if(isset($globalStats['vacuum_stats']['total']))
+                            <div class="text-center mb-3">
+                                <h3 class="fw-bold text-white mb-0">{{ $globalStats['vacuum_stats']['avg_value'] }} <small class="fs-6 text-muted">mTorr</small></h3>
+                                <small class="text-muted">Avg Fleet Vacuum</small>
+                            </div>
+                            
+                            {{-- Excellent --}}
+                            <div class="mb-2">
+                                <div class="d-flex justify-content-between small text-white mb-1">
+                                    <span>Excellent (<3)</span>
+                                    <span>{{ $globalStats['vacuum_stats']['excellent_pct'] }}%</span>
+                                </div>
+                                <div class="progress" style="height: 6px;">
+                                    <div class="progress-bar bg-success" style="width: {{ $globalStats['vacuum_stats']['excellent_pct'] }}%"></div>
                                 </div>
                             </div>
-                        @endforeach
+
+                            {{-- Good --}}
+                            <div class="mb-2">
+                                <div class="d-flex justify-content-between small text-white mb-1">
+                                    <span>Good (3-5)</span>
+                                    <span>{{ $globalStats['vacuum_stats']['good_pct'] }}%</span>
+                                </div>
+                                <div class="progress" style="height: 6px;">
+                                    <div class="progress-bar bg-info" style="width: {{ $globalStats['vacuum_stats']['good_pct'] }}%"></div>
+                                </div>
+                            </div>
+                            
+                            {{-- Warning --}}
+                            <div class="mb-2">
+                                <div class="d-flex justify-content-between small text-white mb-1">
+                                    <span>Warning (>5)</span>
+                                    <span>{{ $globalStats['vacuum_stats']['warning_pct'] }}%</span>
+                                </div>
+                                <div class="progress" style="height: 6px;">
+                                    <div class="progress-bar bg-warning" style="width: {{ $globalStats['vacuum_stats']['warning_pct'] }}%"></div>
+                                </div>
+                            </div>
+                         @else
+                            <div class="text-center text-muted">No data available.</div>
+                         @endif
                     </div>
-                @else
-                    <div class="text-center text-muted py-3">
-                        <i class="bi bi-shield-check display-4 opacity-25 text-success"></i>
-                        <p class="mb-0 mt-2 smaller">All monitored tanks are stable.</p>
-                    </div>
-                @endif
+                </div>
             </div>
         </div>
     </div>
