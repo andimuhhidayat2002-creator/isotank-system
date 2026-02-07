@@ -28,35 +28,36 @@
 
     {{-- 2. PRIMARY KPI CARDS (GLOWING) --}}
     <div class="row g-4 mb-5">
-        {{-- Total Active --}}
-        <div class="col-xl-3 col-md-6">
-            <div class="glass-card p-4 h-100 position-relative">
+        {{-- Total Fleet --}}
+        <div class="col-xl-2 col-md-4 col-sm-6">
+            <div class="glass-card p-4 h-100 position-relative hover-scale">
                 <div class="d-flex justify-content-between align-items-start mb-3">
                     <div>
-                        <div class="text-muted small text-uppercase fw-bold mb-1">Total Fleet</div>
-                        <div class="display-5 fw-bold text-white">{{ $globalStats['total_active'] }}</div>
+                        <div class="text-muted small text-uppercase fw-bold mb-1" style="font-size: 0.65rem;">Total Fleet</div>
+                        <div class="display-6 fw-bold text-white">{{ $globalStats['total_active'] }}</div>
+                        <div class="text-secondary small mt-1">Active Units</div>
                     </div>
-                    <div class="kpi-icon-box text-white" style="background: linear-gradient(135deg, rgba(59,130,246,0.2), rgba(59,130,246,0)); color: #60a5fa !important;">
+                    <div class="kpi-icon-box" style="background: linear-gradient(135deg, rgba(59,130,246,0.2), rgba(59,130,246,0)); color: #60a5fa;">
                         <i class="bi bi-box-seam"></i>
                     </div>
                 </div>
                 <div class="progress" style="height: 4px;">
-                    <div class="progress-bar bg-primary neon-bar" style="width: 70%"></div>
+                    <div class="progress-bar bg-primary neon-bar" style="width: 100%"></div>
                 </div>
-                <div class="mt-3 text-muted small">Active Units in System</div>
             </div>
         </div>
 
-        {{-- Alerts --}}
-        <div class="col-xl-3 col-md-6">
-            <a href="{{ route('admin.dashboard.calibration') }}" class="text-decoration-none">
-                <div class="glass-card p-4 h-100 position-relative">
+        {{-- Calibration --}}
+        <div class="col-xl-2 col-md-4 col-sm-6">
+            <a href="{{ route('admin.calibration.index') }}" class="text-decoration-none">
+                <div class="glass-card p-4 h-100 position-relative hover-scale">
                     <div class="d-flex justify-content-between align-items-start mb-3">
                         <div>
-                            <div class="text-muted small text-uppercase fw-bold mb-1">Calibration Alerts</div>
-                            <div class="display-5 fw-bold {{ $globalStats['calibration_alerts'] > 0 ? 'text-danger' : 'text-white' }}">
+                            <div class="text-muted small text-uppercase fw-bold mb-1" style="font-size: 0.65rem;">Calibration Alerts</div>
+                            <div class="display-6 fw-bold {{ $globalStats['calibration_alerts'] > 0 ? 'text-danger' : 'text-success' }}">
                                 {{ $globalStats['calibration_alerts'] }}
                             </div>
+                             <div class="text-secondary small mt-1">{{ $globalStats['calibration_alerts'] > 0 ? 'Attention Needed' : 'All Valid' }}</div>
                         </div>
                         <div class="kpi-icon-box" style="{{ $globalStats['calibration_alerts'] > 0 ? 'background: linear-gradient(135deg, rgba(239,68,68,0.2), rgba(239,68,68,0)); color: #f87171;' : 'background: linear-gradient(135deg, rgba(16,185,129,0.2), rgba(16,185,129,0)); color: #34d399;' }}">
                             <i class="{{ $globalStats['calibration_alerts'] > 0 ? 'bi bi-exclamation-triangle' : 'bi bi-check-circle' }}"></i>
@@ -65,45 +66,45 @@
                     <div class="progress" style="height: 4px;">
                         <div class="progress-bar {{ $globalStats['calibration_alerts'] > 0 ? 'bg-danger' : 'bg-success' }} neon-bar" style="width: 100%"></div>
                     </div>
-                    <div class="mt-3 text-muted small">
-                        {{ $globalStats['calibration_alerts'] > 0 ? 'Immediate Attention Required' : 'All Certificates Valid' }}
+                </div>
+            </a>
+        </div>
+
+        {{-- Maintenance (Clickable) --}}
+        <div class="col-xl-2 col-md-4 col-sm-6">
+            <a href="{{ route('admin.dashboard.maintenance') }}" class="text-decoration-none">
+                <div class="glass-card p-4 h-100 position-relative hover-scale">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <div class="text-muted small text-uppercase fw-bold mb-1" style="font-size: 0.65rem;">Open Maintenance</div>
+                            <div class="display-6 fw-bold text-white">{{ $globalStats['open_maintenance'] }}</div>
+                            <div class="text-secondary small mt-1">
+                               @if(isset($globalStats['deferred_maintenance']) && $globalStats['deferred_maintenance'] > 0)
+                                    <span class="text-warning">{{ $globalStats['deferred_maintenance'] }} Deferred</span>
+                               @else
+                                    View Details <i class="bi bi-arrow-right-short"></i>
+                               @endif
+                            </div>
+                        </div>
+                        <div class="kpi-icon-box" style="background: linear-gradient(135deg, rgba(245,158,11,0.2), rgba(245,158,11,0)); color: #fbbf24;">
+                            <i class="bi bi-tools"></i>
+                        </div>
+                    </div>
+                    <div class="progress" style="height: 4px;">
+                        <div class="progress-bar bg-warning neon-bar" style="width: {{ $globalStats['open_maintenance'] > 0 ? '60%' : '0%' }}"></div>
                     </div>
                 </div>
             </a>
         </div>
 
-        {{-- Maintenance --}}
-        <div class="col-xl-3 col-md-6">
-            <div class="glass-card p-4 h-100 position-relative">
-                <div class="d-flex justify-content-between align-items-start mb-3">
-                    <div>
-                        <div class="text-muted small text-uppercase fw-bold mb-1">Open Maintenance</div>
-                        <div class="display-5 fw-bold text-white">{{ $globalStats['open_maintenance'] }}</div>
-                    </div>
-                    <div class="kpi-icon-box" style="background: linear-gradient(135deg, rgba(245,158,11,0.2), rgba(245,158,11,0)); color: #fbbf24;">
-                        <i class="bi bi-tools"></i>
-                    </div>
-                </div>
-                <div class="progress" style="height: 4px;">
-                    <div class="progress-bar bg-warning neon-bar" style="width: {{ $globalStats['open_maintenance'] > 0 ? '60%' : '0%' }}"></div>
-                </div>
-                <div class="mt-3 text-muted small">
-                    @if(isset($globalStats['deferred_maintenance']) && $globalStats['deferred_maintenance'] > 0)
-                        <span class="text-warning">{{ $globalStats['deferred_maintenance'] }} Deferred Jobs</span>
-                    @else
-                        Jobs In Progress
-                    @endif
-                </div>
-            </div>
-        </div>
-
         {{-- Inspections --}}
-        <div class="col-xl-3 col-md-6">
-            <div class="glass-card p-4 h-100 position-relative">
+        <div class="col-xl-2 col-md-4 col-sm-6">
+            <div class="glass-card p-4 h-100 position-relative hover-scale">
                 <div class="d-flex justify-content-between align-items-start mb-3">
                     <div>
-                        <div class="text-muted small text-uppercase fw-bold mb-1">Pending Review</div>
-                        <div class="display-5 fw-bold text-white">{{ $globalStats['open_inspections'] }}</div>
+                        <div class="text-muted small text-uppercase fw-bold mb-1" style="font-size: 0.65rem;">Pending Review</div>
+                        <div class="display-6 fw-bold text-white">{{ $globalStats['open_inspections'] }}</div>
+                        <div class="text-secondary small mt-1">Inspection Reports</div>
                     </div>
                     <div class="kpi-icon-box" style="background: linear-gradient(135deg, rgba(6,182,212,0.2), rgba(6,182,212,0)); color: #22d3ee;">
                         <i class="bi bi-clipboard-data"></i>
@@ -112,97 +113,7 @@
                 <div class="progress" style="height: 4px;">
                     <div class="progress-bar bg-info neon-bar" style="width: {{ $globalStats['open_inspections'] > 0 ? '50%' : '0%' }}"></div>
                 </div>
-                <div class="mt-3 text-muted small">Incoming Inspection Reports</div>
-            </div>
-        </div>
-    </div>
-
-
-
-    {{-- PERFORMANCE METRICS ROW (Added via Python) --}}
-    <div class="row g-4 mb-5">
-        {{-- Maintenance --}}
-            <!-- MAINTENANCE STATS -->
-            <div class="col-lg-4 col-md-6 mb-4">
-                <a href="{{ route('admin.dashboard.maintenance') }}" class="text-decoration-none">
-                    <div class="glass-card h-100 p-5 position-relative overflow-hidden hover-scale d-flex flex-column justify-content-center align-items-center text-center">
-                        <div class="position-absolute top-0 end-0 p-3 opacity-10">
-                            <i class="bi bi-tools display-1"></i>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <div class="rounded-circle bg-warning bg-opacity-20 p-4 d-inline-block border border-warning border-opacity-20">
-                                <i class="bi bi-tools display-4 text-warning"></i>
-                            </div>
-                        </div>
-
-                        <h4 class="fw-bold text-white mb-2">Maintenance Analytics</h4>
-                        <p class="text-white-50 small mb-4 px-3">
-                            Deep dive into repair trends, MTTR stats, and frequent failure items.
-                        </p>
-
-                        <button class="btn btn-warning rounded-pill px-4 fw-bold">
-                            View Full Report <i class="bi bi-arrow-right ms-2"></i>
-                        </button>
-                    </div>
-                </a>
-            </div>
-            <!-- End Maintenance Card -->
-
-        {{-- Inspectors --}}
-        <div class="col-xl-4">
-            <div class="glass-card p-4 h-100">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="fw-bold mb-0 text-white"><i class="bi bi-people me-2 text-info"></i>Top Inspectors</h5>
-                    <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25">Volume Leaderboard</span>
-                </div>
-                
-                @if(isset($globalStats['top_inspectors']) && count($globalStats['top_inspectors']) > 0)
-                    <div class="d-flex flex-column gap-3">
-                        @foreach($globalStats['top_inspectors'] as $inspector)
-                            <a href="{{ route('admin.reports.inspection') }}" class="text-decoration-none">
-                                <div class="d-flex justify-content-between align-items-center border-bottom border-light border-opacity-10 pb-2 hover-bg-light rounded px-2">
-                                    <span class="text-white">{{ $inspector['name'] }}</span>
-                                    <span class="badge bg-info bg-opacity-10 text-info">{{ $inspector['report_count'] }} Reports</span>
-                                </div>
-                            </a>
-                        @endforeach
-                    </div>
-                @else
-                    <div class="text-center text-muted py-3">
-                        <i class="bi bi-inbox display-4 opacity-25"></i>
-                        <p class="mb-0 mt-2 smaller">No inspection data found.</p>
-                    </div>
-                @endif
-            </div>
-        </div>
-
-        {{-- Vacuum Risk --}}
-        <div class="col-lg-4 col-md-6 mb-4">
-            <a href="{{ route('admin.dashboard.vacuum') }}" class="text-decoration-none">
-                <div class="glass-card h-100 p-5 position-relative overflow-hidden hover-scale d-flex flex-column justify-content-center align-items-center text-center">
-                    <div class="position-absolute top-0 end-0 p-3 opacity-10" style="pointer-events: none;">
-                        <i class="bi bi-graph-down display-1"></i>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <div class="rounded-circle bg-info bg-opacity-20 p-4 d-inline-block border border-info border-opacity-20">
-                            <i class="bi bi-graph-down display-4 text-info"></i>
-                        </div>
-                    </div>
-
-                    <h4 class="fw-bold text-white mb-2">Vacuum Monitoring</h4>
-                    <p class="text-white-50 small mb-4 px-3">
-                        Track vacuum decay rates, fleet health, and identify critical risks.
-                    </p>
-
-                    <button class="btn btn-info text-white rounded-pill px-4 fw-bold">
-                        Analyze Data <i class="bi bi-arrow-right ms-2"></i>
-                    </button>
-                </div>
-            </a>
-        </div>
-    </div>
+    {{-- Removed old metric row --}}
     
     {{-- 4. SYSTEM OCCUPANCY (VISUAL BAR) --}}
     @if(!empty($fillingStatusStats))
