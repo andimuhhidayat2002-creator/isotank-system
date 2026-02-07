@@ -35,7 +35,7 @@
                     <div>
                         <div class="text-muted small text-uppercase fw-bold mb-1" style="font-size: 0.65rem;">Total Fleet</div>
                         <div class="display-6 fw-bold text-white">{{ $globalStats['total_active'] }}</div>
-                        <div class="text-secondary small mt-1">Active Units</div>
+                        <div class="text-secondary small mt-1">Active Fleet Units</div>
                     </div>
                     <div class="kpi-icon-box" style="background: linear-gradient(135deg, rgba(59,130,246,0.2), rgba(59,130,246,0)); color: #60a5fa;">
                         <i class="bi bi-box-seam"></i>
