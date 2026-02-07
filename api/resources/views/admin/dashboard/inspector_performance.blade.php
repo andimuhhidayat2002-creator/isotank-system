@@ -41,9 +41,9 @@
             <tbody>
                 @forelse($recentInspections as $inspection)
                 <tr>
-                    <td class="fw-bold">{{ $inspection->isotank->iso_number ?? 'N/A' }}</td>
+                    <td class="fw-bold">{{ optional($inspection->isotank)->iso_number ?? 'N/A' }}</td>
                     <td><span class="badge bg-primary bg-opacity-20 text-primary">Unknown (Fixing)</span></td>
-                    <td>{{ $inspection->created_at->format('d M Y') }}</td>
+                    <td>{{ optional($inspection->created_at)->format('d M Y') ?? '-' }}</td>
                     <td>{{ $inspection->inspection_type ?? 'General' }}</td>
                     <td>
                         <a href="{{ route('admin.inspection-logs.show', $inspection->id) }}" class="btn btn-sm btn-outline-info">
