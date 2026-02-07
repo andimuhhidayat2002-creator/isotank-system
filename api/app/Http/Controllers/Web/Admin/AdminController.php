@@ -399,139 +399,39 @@ class AdminController extends Controller
     // Global Statistics Modules
     
     public function maintenanceStatistics() { 
-        // 3) Maintenance Statistics (GLOBAL)
-        // Most frequent failed items (all locations)
-        $frequentFailures = MaintenanceJob::select('source_item', DB::raw('count(*) as count'))
-            ->groupBy('source_item')->orderByDesc('count')->limit(10)->get();
+        // 3) Maintenance Statistics (Detailed Analytics)
+        $process = new \Symfony\Component\Process\Process(['python3', base_path('scripts/analytics_detail.py'), 'maintenance']);
+        $process->run();
+        $analytics = [];
+        
+        if ($process->isSuccessful()) {
+            $analytics = json_decode($process->getOutput(), true);
+        }
 
-        // Maintenance status distribution
-        $statusDistrib = MaintenanceJob::select('status', DB::raw('count(*) as count'))
-            ->groupBy('status')->pluck('count', 'status')->toArray();
+        // Fallback or Supplemental PHP Data
+        $recentJobs = MaintenanceJob::with(['isotank', 'completedBy'])->latest()->limit(50)->get();
 
-        // Maintenance count per isotank (Top 20)
-        $maintenancePerIsotank = MaintenanceJob::select('isotank_id', DB::raw('count(*) as count'))
-            ->with('isotank:id,iso_number,location')
-            ->groupBy('isotank_id')
-            ->orderByDesc('count')
-            ->limit(20)
-            ->get();
-
-        // Maintenance by location
-        $maintenanceByLocation = MaintenanceJob::join('master_isotanks', 'maintenance_jobs.isotank_id', '=', 'master_isotanks.id')
-            ->select('master_isotanks.location', DB::raw('count(*) as count'))
-            ->groupBy('master_isotanks.location')
-            ->orderByDesc('count')
-            ->get();
-            
-        return view('admin.dashboard.maintenance_stats', compact(
-            'frequentFailures', 
-            'statusDistrib', 
-            'maintenancePerIsotank', 
-            'maintenanceByLocation'
-        ));
+        return view('admin.dashboard.maintenance_stats', compact('analytics', 'recentJobs'));
     }
 
     public function vacuumMonitoring() {
-        // 4) Vacuum Monitoring (GLOBAL)
+        // 4) Vacuum Monitoring (Detailed Analytics)
+        $process = new \Symfony\Component\Process\Process(['python3', base_path('scripts/analytics_detail.py'), 'vacuum']);
+        $process->run();
+        $analytics = [];
         
-        // Vacuum exceed frequency (>8 mTorr) - Historical Logs
-        $exceedFrequency = VacuumLog::where('vacuum_value_mtorr', '>', 8)
-            ->select('isotank_id', DB::raw('count(*) as count'))
-            ->with('isotank:id,iso_number,location')
-            ->groupBy('isotank_id')
-            ->orderByDesc('count')
-            ->limit(20)
-            ->get();
-
-        // Vacuum history (Suction Activities)
-        $suctionHistory = VacuumSuctionActivity::with('isotank:id,iso_number')
-            ->orderByDesc('created_at')
-            ->limit(50)
-            ->get();
-
-        // Vacuum expiry alert (11 months)
-        $expiryAlerts = MasterIsotankMeasurementStatus::where('last_measurement_at', '<', now()->subMonths(11))
-            ->with('isotank:id,iso_number,location')
-            ->get();
-            
-        // Current Exceed List (>8 mTorr)
-        $currentExceed = MasterIsotankMeasurementStatus::where('vacuum_mtorr', '>', 8)
-            ->with('isotank:id,iso_number,location')
-            ->get();
-
-        // 1. Trend Analysis (Last 12 Months)
-        $trendData = VacuumLog::select(
-                DB::raw("DATE_FORMAT(check_datetime, '%Y-%m') as month"), 
-                DB::raw('AVG(vacuum_value_mtorr) as avg_vacuum')
-            )
-            ->where('check_datetime', '>=', now()->subYear())
-            ->groupBy(DB::raw("DATE_FORMAT(check_datetime, '%Y-%m')")) // Fix: Group by expression, not alias
-            ->orderBy(DB::raw("DATE_FORMAT(check_datetime, '%Y-%m')"))
-            ->get();
-
-        // 2. Comparison (Current vs Last Year)
-        // Get active tanks with their vacuum logs eagerly loaded to avoid N+1
-        $activeTanks = MasterIsotank::with(['measurementStatus', 'vacuumLogs' => function($q) {
-                $q->orderBy('check_datetime', 'desc')->limit(20); // Get recent logs
-            }])
-            ->where('status', 'active')
-            ->limit(50)
-            ->get();
-
-        $comparisonData = [];
-
-        foreach ($activeTanks as $tank) {
-            // Latest reading from relation (already loaded in memory)
-            $latest = $tank->vacuumLogs->first();
-            
-            // Self-Healing Logic
-            try {
-                if ($latest && $tank->measurementStatus) {
-                    $masterVal = (float)$tank->measurementStatus->vacuum_mtorr;
-                    $logVal = (float)$latest->vacuum_value_mtorr;
-                    
-                    if (abs($masterVal - $logVal) > 0.01) {
-                        $tank->measurementStatus->update([
-                            'vacuum_mtorr' => $logVal,
-                            'temperature' => $latest->temperature,
-                            'last_measurement_at' => $latest->check_datetime
-                        ]);
-                    }
-                }
-            } catch (\Exception $e) { /* Ignore */ }
-            
-            if ($latest) {
-                // Approximate history from relation (in memory filter)
-                // This is much faster than running a new SQL query for each tank
-                $oneYearAgo = now()->subYear();
-                $historical = $tank->vacuumLogs->filter(function($log) use ($oneYearAgo) {
-                    return $log->check_datetime <= $oneYearAgo;
-                })->first();
-
-                // Fallback if not found in top 20, assume oldest available in the eager loaded set
-                if (!$historical) {
-                     $historical = $tank->vacuumLogs->last();
-                }
-
-                $comparisonData[] = [
-                    'iso_number' => $tank->iso_number,
-                    'current_val' => $latest->vacuum_value_mtorr,
-                    'current_date' => $latest->check_datetime,
-                    'history_val' => $historical ? $historical->vacuum_value_mtorr : null,
-                    'history_date' => $historical ? $historical->check_datetime : null,
-                    'change' => ($historical && $latest) ? ($latest->vacuum_value_mtorr - $historical->vacuum_value_mtorr) : null
-                ];
-            }
+        if ($process->isSuccessful()) {
+            $analytics = json_decode($process->getOutput(), true);
         }
 
-        return view('admin.dashboard.vacuum_monitoring', compact(
-            'exceedFrequency',
-            'suctionHistory',
-            'expiryAlerts',
-            'currentExceed',
-            'trendData',
-            'comparisonData'
-        ));
+        // Detailed Lists
+        $exceedList = MasterIsotankMeasurementStatus::where('vacuum_mtorr', '>', 5)
+            ->with('isotank:id,iso_number,location')
+            ->orderByDesc('vacuum_mtorr')
+            ->limit(50)
+            ->get();
+
+        return view('admin.dashboard.vacuum_monitoring', compact('analytics', 'exceedList'));
     }
 
     public function calibrationMonitoring() {
