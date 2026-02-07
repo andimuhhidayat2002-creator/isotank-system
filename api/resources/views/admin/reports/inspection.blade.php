@@ -36,15 +36,21 @@
                 <tbody class="border-top-0">
                     @foreach($logs as $log)
                     <tr>
-                        <td class="text-white">{{ $log->created_at->format('Y-m-d H:i') }}</td>
+                        <td class="text-white">{{ $log->updated_at->format('Y-m-d H:i') }}</td>
                         <td class="fw-bold"><a href="{{ route('admin.isotanks.show', $log->isotank_id) }}" class="text-decoration-none text-primary">{{ $log->isotank->iso_number ?? 'UNKNOWN' }}</a></td>
                         <td class="text-white">{{ str_replace('_', ' ', strtoupper($log->inspection_type)) }}</td>
                         <td class="text-white">{{ $log->inspector->name ?? '-' }}</td>
                         <td>
                             @if($log->status == 'missing')
-                                <span class="badge bg-warning text-white">MISSING</span>
+                                <span class="badge bg-danger text-white">MISSING</span>
+                            @elseif($log->is_draft)
+                                <span class="badge bg-secondary text-white">DRAFT</span>
+                            @elseif($log->inspection_type == 'outgoing_inspection' && !$log->receiver_confirmed_at)
+                                <span class="badge bg-warning text-dark">PENDING CONFIRMATION</span>
+                            @elseif($log->inspection_type == 'outgoing_inspection' && $log->receiver_confirmed_at)
+                                <span class="badge bg-success text-white">CONFIRMED</span>
                             @else
-                                <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle text-white">LOGGED</span>
+                                <span class="badge bg-primary text-white">COMPLETED</span>
                             @endif
                         </td>
                         <td class="text-end">
