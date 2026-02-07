@@ -57,7 +57,7 @@ class AdminController extends Controller
         try {
             $scriptPath = base_path('scripts/dashboard_analytics.py');
             // Use Process to execute python
-            $process = new \Symfony\Component\Process\Process(['python', $scriptPath, $category]);
+            $process = new \Symfony\Component\Process\Process(['python3', $scriptPath, $category]);
             $process->setTimeout(10); // 10 seconds timeout
             $process->run();
 
