@@ -222,25 +222,80 @@
         </div>
 
         {{-- Vacuum Risk --}}
+        <div class="col-lg-4 col-md-6 mb-4">
+            <a href="{{ route('admin.dashboard.vacuum') }}" class="text-decoration-none card-link-hover">
+                <div class="glass-card h-100 p-4 position-relative overflow-hidden">
+                    <div class="position-absolute top-0 end-0 p-3 opacity-10">
+                        <i class="bi bi-graph-down display-1"></i>
+                    </div>
+                    <h5 class="fw-bold mb-4 text-white d-flex align-items-center">
+                        <i class="bi bi-graph-down me-2 text-info"></i>Vacuum Monitor
+                    </h5>
+                    
+                    <!-- TAB NAVIGATION -->
+                    <ul class="nav nav-pills mb-3 custom-pills" id="vacuum-tabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active py-0 px-2" id="risks-tab" data-bs-toggle="pill" data-bs-target="#risks" type="button" role="tab" style="font-size: 0.8rem;">Risks</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link py-0 px-2" id="health-tab" data-bs-toggle="pill" data-bs-target="#health" type="button" role="tab" style="font-size: 0.8rem;">Health</button>
+                        </li>
+                    </ul>
+
+                     <div class="tab-content">
+                         <!-- TAB 1: RISKS -->
+                        <div class="tab-pane fade show active" id="risks" role="tabpanel">
+                            @if(isset($globalStats['vacuum_risks']) && count($globalStats['vacuum_risks']) > 0)
+                                <div class="d-flex flex-column gap-3">
+                                    @foreach($globalStats['vacuum_risks'] as $risk)
+                                    <div class="d-flex justify-content-between align-items-center border-bottom border-light border-opacity-10 pb-2 hover-bg-light rounded px-2">
+                                        <div>
+                                            <div class="text-white fw-bold">{{ $risk['iso_number'] }}</div>
+                                            <div class="text-muted smaller">Rate: +{{ $risk['rate'] }} mTorr/day</div>
+                                        </div>
+                                        <div class="text-end">
+                                            <div class="fw-bold {{ $risk['days_to_fail'] < 0 ? 'text-danger' : 'text-warning' }}">
+                                                {{ $risk['days_to_fail'] < 0 ? 'FAILED' : $risk['days_to_fail'] . ' Days' }}
+                                            </div>
+                                            <div class="smaller text-muted">Current: {{ $risk['current_val'] }}</div>
+                                        </div>
+                                    </div>
+                                    @endforeach
                                 </div>
-                            </div>
-                            
-                            {{-- Warning --}}
-                            <div class="mb-2">
-                                <div class="d-flex justify-content-between small text-white mb-1">
-                                    <span>Warning (>5)</span>
-                                    <span>{{ $globalStats['vacuum_stats']['warning_pct'] }}%</span>
+                            @else
+                                <div class="text-center text-muted py-3">
+                                    <i class="bi bi-check-circle text-success mb-2" style="font-size: 1.5rem;"></i>
+                                    <div>All Systems Nominal</div>
                                 </div>
-                                <div class="progress" style="height: 6px;">
-                                    <div class="progress-bar bg-warning" style="width: {{ $globalStats['vacuum_stats']['warning_pct'] }}%"></div>
+                            @endif
+                        </div>
+
+                         <!-- TAB 2: HEALTH DISTRIBUTION -->
+                        <div class="tab-pane fade" id="health" role="tabpanel">
+                             @if(isset($globalStats['vacuum_stats']['average_val']))
+                                <div class="text-center mb-3">
+                                      <h2 class="display-6 fw-bold text-white mb-0">{{ $globalStats['vacuum_stats']['average_val'] }}</h2>
+                                      <small class="text-muted">Fleet Average (mTorr)</small>
                                 </div>
-                            </div>
-                         @else
-                            <div class="text-center text-muted">No data available.</div>
-                         @endif
+                                <div class="d-flex justify-content-around text-center">
+                                     <div>
+                                         <div class="fw-bold text-success">{{ $globalStats['vacuum_stats']['excellent'] }}</div>
+                                         <small class="text-muted" style="font-size: 0.7rem;">Excellent</small>
+                                     </div>
+                                     <div>
+                                         <div class="fw-bold text-info">{{ $globalStats['vacuum_stats']['good'] }}</div>
+                                         <small class="text-muted" style="font-size: 0.7rem;">Good</small>
+                                     </div>
+                                     <div>
+                                         <div class="fw-bold text-warning">{{ $globalStats['vacuum_stats']['warning'] }}</div>
+                                         <small class="text-muted" style="font-size: 0.7rem;">Warning</small>
+                                     </div>
+                                </div>
+                             @endif
+                        </div>
                     </div>
                 </div>
-            </div>
+            </a>
         </div>
     </div>
     
