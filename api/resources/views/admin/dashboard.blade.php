@@ -124,76 +124,28 @@
         {{-- Maintenance --}}
             <!-- MAINTENANCE STATS -->
             <div class="col-lg-4 col-md-6 mb-4">
-                <div class="glass-card h-100 p-4 position-relative overflow-hidden">
-                    <div class="position-absolute top-0 end-0 p-3 opacity-10" style="pointer-events: none;">
-                        <i class="bi bi-tools display-1"></i>
-                    </div>
-                    
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h5 class="fw-bold mb-0 text-white">
-                            <i class="bi bi-tools me-2 text-warning"></i>Maintenance Stats
-                        </h5>
-                        <a href="{{ route('admin.dashboard.maintenance') }}" class="btn btn-sm btn-outline-light rounded-pill px-3 position-relative" style="font-size: 0.7rem; z-index: 5;">
-                            View Details <i class="bi bi-arrow-right ms-1"></i>
-                        </a>
-                    </div>
-                    
-                    <!-- TAB NAVIGATION -->
-                    <ul class="nav nav-pills mb-3 custom-pills" id="maint-tabs" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link active py-0 px-2" id="mttr-tab" data-bs-toggle="pill" data-bs-target="#mttr" type="button" role="tab" style="font-size: 0.8rem;">Stats</button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link py-0 px-2" id="top-units-tab" data-bs-toggle="pill" data-bs-target="#top-units" type="button" role="tab" style="font-size: 0.8rem;">Top Units</button>
-                        </li>
-                    </ul>
-
-                    <div class="tab-content">
-                        <!-- TAB 1: MTTR Data (Original) -->
-                        <div class="tab-pane fade show active" id="mttr" role="tabpanel">
-                            <div class="d-flex justify-content-between align-items-end mb-2">
-                                <div>
-                                    <h2 class="fs-2 fw-bold mb-0 text-white">{{ $globalStats['avg_repair_time'] ?? 'N/A' }}</h2>
-                                    <small class="text-muted">{{ $globalStats['repair_time_label'] ?? 'Mean Time' }}</small>
-                                </div>
-                                <div class="text-end">
-                                    <h4 class="mb-0 text-white">{{ $globalStats['open_maintenance'] ?? 0 }}</h4>
-                                    <small class="text-muted">Total Active Jobs</small>
-                                </div>
-                            </div>
-                            <div class="progress bg-white bg-opacity-10" style="height: 6px;">
-                                <div class="progress-bar bg-warning" role="progressbar" style="width: 70%"></div>
-                            </div>
-                            <div class="mt-3 d-flex gap-2">
-                                <div class="badge bg-warning bg-opacity-20 text-warning border border-warning border-opacity-20">
-                                    {{ $globalStats['open_maintenance'] ?? 0 }} Active
-                                </div>
-                                <div class="badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-20">
-                                    {{ $globalStats['deferred_maintenance'] ?? 0 }} Deferred
-                                </div>
-                            </div>
+                <a href="{{ route('admin.dashboard.maintenance') }}" class="text-decoration-none">
+                    <div class="glass-card h-100 p-5 position-relative overflow-hidden hover-scale d-flex flex-column justify-content-center align-items-center text-center">
+                        <div class="position-absolute top-0 end-0 p-3 opacity-10">
+                            <i class="bi bi-tools display-1"></i>
                         </div>
                         
-                        <!-- TAB 2: Problematic Tanks -->
-                        <div class="tab-pane fade" id="top-units" role="tabpanel">
-                             @if(isset($globalStats['problematic_tanks']) && count($globalStats['problematic_tanks']) > 0)
-                                <div class="d-flex flex-column gap-2">
-                                    <small class="text-muted text-uppercase mb-2" style="font-size: 0.7rem;">Most Frequent Visitors (12M)</small>
-                                    @foreach($globalStats['problematic_tanks'] as $tank)
-                                        <div class="d-flex justify-content-between align-items-center bg-black bg-opacity-20 p-2 rounded hover-border-primary">
-                                            <span class="text-white fw-bold">{{ $tank['iso_number'] }}</span>
-                                            <span class="badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-20">{{ $tank['job_count'] }} Jobs</span>
-                                        </div>
-                                    @endforeach
-                                </div>
-                             @else
-                                <div class="text-center text-muted py-3">
-                                    <small>No critical units found</small>
-                                </div>
-                             @endif
+                        <div class="mb-3">
+                            <div class="rounded-circle bg-warning bg-opacity-20 p-4 d-inline-block border border-warning border-opacity-20">
+                                <i class="bi bi-tools display-4 text-warning"></i>
+                            </div>
                         </div>
+
+                        <h4 class="fw-bold text-white mb-2">Maintenance Analytics</h4>
+                        <p class="text-white-50 small mb-4 px-3">
+                            Deep dive into repair trends, MTTR stats, and frequent failure items.
+                        </p>
+
+                        <button class="btn btn-warning rounded-pill px-4 fw-bold">
+                            View Full Report <i class="bi bi-arrow-right ms-2"></i>
+                        </button>
                     </div>
-                </div>
+                </a>
             </div>
         </div>
 
@@ -227,85 +179,28 @@
 
         {{-- Vacuum Risk --}}
         <div class="col-lg-4 col-md-6 mb-4">
-            <div class="glass-card h-100 p-4 position-relative overflow-hidden">
-                <div class="position-absolute top-0 end-0 p-3 opacity-10" style="pointer-events: none;">
-                    <i class="bi bi-graph-down display-1"></i>
-                </div>
-                
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="fw-bold mb-0 text-white">
-                        <i class="bi bi-graph-down me-2 text-info"></i>Vacuum Monitor
-                    </h5>
-                    <a href="{{ route('admin.dashboard.vacuum') }}" class="btn btn-sm btn-outline-light rounded-pill px-3 position-relative" style="font-size: 0.7rem; z-index: 5;">
-                        Detailed <i class="bi bi-arrow-right ms-1"></i>
-                    </a>
-                </div>
-                
-                <!-- TAB NAVIGATION -->
-                <ul class="nav nav-pills mb-3 custom-pills" id="vacuum-tabs" role="tablist">
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link active py-0 px-2" id="risks-tab" data-bs-toggle="pill" data-bs-target="#risks" type="button" role="tab" style="font-size: 0.8rem;">Risks</button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link py-0 px-2" id="health-tab" data-bs-toggle="pill" data-bs-target="#health" type="button" role="tab" style="font-size: 0.8rem;">Health</button>
-                    </li>
-                </ul>
-
-                 <div class="tab-content">
-                     <!-- TAB 1: RISKS -->
-                    <div class="tab-pane fade show active" id="risks" role="tabpanel">
-                        @if(isset($globalStats['vacuum_risks']) && count($globalStats['vacuum_risks']) > 0)
-                            <div class="d-flex flex-column gap-3">
-                                @foreach($globalStats['vacuum_risks'] as $risk)
-                                <div class="d-flex justify-content-between align-items-center border-bottom border-light border-opacity-10 pb-2 hover-bg-light rounded px-2">
-                                    <div>
-                                        <div class="text-white fw-bold">{{ $risk['iso_number'] }}</div>
-                                        <div class="text-muted smaller">Rate: +{{ $risk['rate'] }} mTorr/day</div>
-                                    </div>
-                                    <div class="text-end">
-                                        <div class="fw-bold {{ $risk['days_to_fail'] < 0 ? 'text-danger' : 'text-warning' }}">
-                                            {{ $risk['days_to_fail'] < 0 ? 'FAILED' : $risk['days_to_fail'] . ' Days' }}
-                                        </div>
-                                        <div class="smaller text-muted">Current: {{ $risk['current_val'] }}</div>
-                                    </div>
-                                </div>
-                                @endforeach
-                            </div>
-                        @else
-                            <div class="text-center text-muted py-3">
-                                <i class="bi bi-check-circle text-success mb-2" style="font-size: 1.5rem;"></i>
-                                <div>All Systems Nominal</div>
-                            </div>
-                        @endif
+            <a href="{{ route('admin.dashboard.vacuum') }}" class="text-decoration-none">
+                <div class="glass-card h-100 p-5 position-relative overflow-hidden hover-scale d-flex flex-column justify-content-center align-items-center text-center">
+                    <div class="position-absolute top-0 end-0 p-3 opacity-10" style="pointer-events: none;">
+                        <i class="bi bi-graph-down display-1"></i>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="rounded-circle bg-info bg-opacity-20 p-4 d-inline-block border border-info border-opacity-20">
+                            <i class="bi bi-graph-down display-4 text-info"></i>
+                        </div>
                     </div>
 
-                     <!-- TAB 2: HEALTH DISTRIBUTION -->
-                    <div class="tab-pane fade" id="health" role="tabpanel">
-                         @if(isset($globalStats['vacuum_stats']['avg_value']))
-                            <div class="text-center mb-3">
-                                  <h2 class="fs-2 fw-bold text-white mb-0">{{ $globalStats['vacuum_stats']['avg_value'] }}</h2>
-                                  <small class="text-muted">Fleet Average (mTorr)</small>
-                            </div>
-                            <div class="d-flex justify-content-around text-center">
-                                 <div>
-                                     <div class="fw-bold text-success">{{ $globalStats['vacuum_stats']['excellent_pct'] ?? 0 }}%</div>
-                                     <small class="text-muted" style="font-size: 0.7rem;">Excellent</small>
-                                 </div>
-                                 <div>
-                                     <div class="fw-bold text-info">{{ $globalStats['vacuum_stats']['good_pct'] ?? 0 }}%</div>
-                                     <small class="text-muted" style="font-size: 0.7rem;">Good</small>
-                                 </div>
-                                 <div>
-                                     <div class="fw-bold text-warning">{{ $globalStats['vacuum_stats']['warning_pct'] ?? 0 }}%</div>
-                                     <small class="text-muted" style="font-size: 0.7rem;">Warning</small>
-                                 </div>
-                            </div>
-                         @else
-                            <div class="text-center text-muted py-3">No Data</div>
-                         @endif
-                    </div>
+                    <h4 class="fw-bold text-white mb-2">Vacuum Monitoring</h4>
+                    <p class="text-white-50 small mb-4 px-3">
+                        Track vacuum decay rates, fleet health, and identify critical risks.
+                    </p>
+
+                    <button class="btn btn-info text-white rounded-pill px-4 fw-bold">
+                        Analyze Data <i class="bi bi-arrow-right ms-2"></i>
+                    </button>
                 </div>
-            </div>
+            </a>
         </div>
     </div>
     
