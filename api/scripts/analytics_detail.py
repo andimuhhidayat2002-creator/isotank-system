@@ -229,21 +229,33 @@ def analyze_vacuum(conn, db_type):
     return stats
 
 if __name__ == "__main__":
+    import contextlib
+    
     if len(sys.argv) < 2:
         print(json.dumps({'error': 'No mode specified'}))
         sys.exit(1)
         
     mode = sys.argv[1]
-    conn, db_type = get_connection()
     
-    try:
-        if mode == 'maintenance':
-            print(json.dumps(analyze_maintenance(conn, db_type), cls=NpEncoder))
-        elif mode == 'vacuum':
-            print(json.dumps(analyze_vacuum(conn, db_type), cls=NpEncoder))
-        else:
-            print(json.dumps({'error': 'Invalid mode'}))
-    except Exception as e:
-        print(json.dumps({'error': str(e)}))
-    finally:
-        conn.close()
+    # Suppress all stdout during processing to prevent noise
+    with open(os.devnull, 'w') as devnull:
+        with contextlib.redirect_stdout(devnull):
+            conn = None
+            result = {}
+            try:
+                conn, db_type = get_connection()
+                if mode == 'maintenance':
+                    result = analyze_maintenance(conn, db_type)
+                elif mode == 'vacuum':
+                    result = analyze_vacuum(conn, db_type)
+                else:
+                    result = {'error': 'Invalid mode'}
+            except Exception as e:
+                result = {'error': str(e)}
+            finally:
+                if conn: 
+                    try: conn.close()
+                    except: pass
+    
+    # Print only the final JSON to actual stdout
+    print(json.dumps(result, cls=NpEncoder))

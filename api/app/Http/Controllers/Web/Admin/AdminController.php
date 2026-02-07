@@ -410,6 +410,9 @@ class AdminController extends Controller
         
         if ($process->isSuccessful()) {
             $output = $process->getOutput();
+            // Remove BOM and trim
+            $output = preg_replace('/^\xEF\xBB\xBF/', '', $output);
+            $output = trim($output);
             $analytics = json_decode($output, true);
             
             if (json_last_error() !== JSON_ERROR_NONE) {
@@ -439,6 +442,9 @@ class AdminController extends Controller
         
         if ($process->isSuccessful()) {
             $output = $process->getOutput();
+            // Remove BOM and trim
+            $output = preg_replace('/^\xEF\xBB\xBF/', '', $output);
+            $output = trim($output);
             $analytics = json_decode($output, true);
             
             if (json_last_error() !== JSON_ERROR_NONE) {
