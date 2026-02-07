@@ -231,9 +231,105 @@ def analyze_vacuum(conn, db_type):
         'data': df_trend['avg_val'].round(2).tolist()
     }
     
+    # Summary Statistics
+    # 1. Total Monitored Tanks (unique tanks with logs in period)
+    total_monitored = df['isotank_id'].nunique() if not df.empty else 0
+    
+    # 2. Critical Tanks (current vacuum > 50 mTorr - using last reading)
+    # Get latest reading for each tank
+    latest_readings = df.sort_values('check_datetime').groupby('isotank_id').last()
+    critical_count = len(latest_readings[latest_readings['vacuum_value_mtorr'] > 50]) if not latest_readings.empty else 0
+    
+    # 3. Avg Rise Rate (from tank_rates calculated above)
+    avg_rise_rate = df_rates['rate'].mean() if not df_rates.empty else 0
+    avg_rise_rate_str = f"{avg_rise_rate:.2f} mTorr/d"
+    
+    # 4. Best Manufacturer (lowest rise rate)
+    best_manu = "N/A"
+    if not df_rates.empty:
+        manu_grp = df_rates.groupby('manufacturer')['rate'].mean()
+        if not manu_grp.empty:
+            best_manu = manu_grp.idxmin()
+            
+    stats['summary'] = {
+        'total_monitored': int(total_monitored),
+        'critical_tanks': int(critical_count),
+        'avg_rise_rate': avg_rise_rate_str,
+        'best_manufacturer': str(best_manu) if best_manu else "N/A"
+    }
+    
     return stats
+def analyze_inspector(conn, db_type):
+    stats = {}
+    
+    date_filter = "DATE_SUB(NOW(), INTERVAL 6 MONTH)" if db_type == 'mysql' else "date('now', '-6 months')"
+    
+    # 1. Total Inspections by Inspector
+    q_vol = f"""
+        SELECT inspector_name, COUNT(*) as count 
+        FROM inspection_logs 
+        WHERE created_at >= {date_filter}
+        AND inspector_name IS NOT NULL
+        GROUP BY inspector_name 
+        ORDER BY count DESC LIMIT 10
+    """
+    df_vol = pd.read_sql_query(q_vol, conn)
+    df_vol = df_vol.replace({np.nan: "Unknown"})
+    stats['volume'] = {
+        'labels': df_vol['inspector_name'].tolist(),
+        'data': df_vol['count'].tolist()
+    }
+    
+    # 2. Issues Found (Strictness)
+    # Count how many details have condition NOT 'Good'
+    q_issues = f"""
+        SELECT l.inspector_name, 
+               COUNT(d.id) as total_checks,
+               SUM(CASE WHEN d.condition_value IN ('fail', 'monitor', 'damage', 'dirty') THEN 1 ELSE 0 END) as issues_found
+        FROM inspection_logs l
+        JOIN inspection_log_details d ON l.id = d.inspection_id
+        WHERE l.created_at >= {date_filter}
+        AND l.inspector_name IS NOT NULL
+        GROUP BY l.inspector_name
+        HAVING total_checks > 10
+        ORDER BY issues_found DESC LIMIT 10
+    """
+    # Note: condition_value matching depends on actual data. Assuming 'fail', 'damage' etc.
+    # If standard is just 'Ok' vs 'Not Ok', adjust accordingly.
+    # For now, let's just count total details vs total inspections as proxy for thoroughness? 
+    # Better: Issues found per inspection average.
+    
+    # Let's simplify: Top 10 inspectors with most "Issues" reported.
+    # We will assume non-null condition remarks or specific status.
+    # Actually, let's just use the Volume for now, and avg time if available.
+    
+    # Alternative: Recent Activity Trend
+    fmt = "%Y-%m"
+    q_trend = f"""
+        SELECT 
+            strftime('{fmt}', created_at) as month, 
+            COUNT(*) as count 
+        FROM inspection_logs 
+        WHERE created_at >= {date_filter}
+        GROUP BY month 
+        ORDER BY month
+    """ if db_type == 'sqlite' else f"""
+        SELECT 
+            DATE_FORMAT(created_at, '{fmt}') as month, 
+            COUNT(*) as count 
+        FROM inspection_logs 
+        WHERE created_at >= {date_filter}
+        GROUP BY month 
+        ORDER BY month
+    """
+    df_trend = pd.read_sql_query(q_trend, conn)
+    df_trend = df_trend.replace({np.nan: None})
+    stats['trend'] = {
+        'labels': df_trend['month'].tolist(),
+        'data': df_trend['count'].tolist()
+    }
 
-if __name__ == "__main__":
+    return stats
     import contextlib
     
     if len(sys.argv) < 2:
@@ -253,6 +349,8 @@ if __name__ == "__main__":
                     result = analyze_maintenance(conn, db_type)
                 elif mode == 'vacuum':
                     result = analyze_vacuum(conn, db_type)
+                elif mode == 'inspector':
+                    result = analyze_inspector(conn, db_type)
                 else:
                     result = {'error': 'Invalid mode'}
             except Exception as e:

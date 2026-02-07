@@ -466,6 +466,40 @@ class AdminController extends Controller
         return view('admin.dashboard.vacuum_monitoring', compact('analytics', 'exceedList'));
     }
 
+    public function inspectionPerformance() {
+        // 5) Inspector Performance
+        $pythonCmd = (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') ? 'python' : '/usr/bin/python3';
+        $scriptPath = base_path('scripts/analytics_detail.py');
+        
+        $process = new \Symfony\Component\Process\Process([$pythonCmd, $scriptPath, 'inspector']);
+        $process->run();
+        
+        $analytics = [];
+        
+        if ($process->isSuccessful()) {
+            $output = $process->getOutput();
+            // Remove BOM and trim
+            $output = preg_replace('/^\xEF\xBB\xBF/', '', $output);
+            $output = trim($output);
+            $analytics = json_decode($output, true);
+            
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                \Illuminate\Support\Facades\Log::error('Inspector Analytics JSON Error: ' . json_last_error_msg());
+            }
+        } else {
+             \Illuminate\Support\Facades\Log::error('Inspector Analytics Failed: ' . $process->getErrorOutput());
+        }
+
+        // Recent Inspections List
+        $recentInspections = \App\Models\InspectionLog::with('isotank')
+            ->whereNotNull('inspector_name')
+            ->latest()
+            ->limit(20)
+            ->get();
+
+        return view('admin.dashboard.inspector_performance', compact('analytics', 'recentInspections'));
+    }
+
     public function calibrationMonitoring() {
         try {
             // 5) Calibration Monitoring (GLOBAL) - SOURCE OF TRUTH: MasterIsotankComponent
@@ -590,9 +624,7 @@ class AdminController extends Controller
 
 
     
-    public function inspectionPerformance() {
-        return view('admin.dashboard.inspection_performance');
-    }
+
     
     public function outgoingQuality() {
         return view('admin.dashboard.outgoing_quality');
