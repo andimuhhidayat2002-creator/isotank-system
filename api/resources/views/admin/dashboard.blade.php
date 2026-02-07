@@ -117,6 +117,49 @@
         </div>
     </div>
     {{-- End of primary KPI row --}}
+
+    {{-- 3. SECONDARY ANALYTICS SHORTCUTS --}}
+    <div class="row g-4 mb-5">
+        {{-- Vacuum Monitoring Shortcut --}}
+        <div class="col-xl-6 col-md-6">
+            <a href="{{ route('admin.dashboard.vacuum') }}" class="text-decoration-none">
+                <div class="glass-card p-4 h-100 position-relative hover-scale d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center">
+                        <div class="rounded-circle bg-danger bg-opacity-20 p-3 me-3">
+                            <i class="bi bi-graph-up-arrow text-danger fs-4"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold text-white mb-1">Vacuum Monitoring</h5>
+                            <div class="text-secondary small">Analyze tank vacuum decay & integrity</div>
+                        </div>
+                    </div>
+                    <div class="text-white">
+                        <i class="bi bi-chevron-right fs-5"></i>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        {{-- Inspector Performance Shortcut --}}
+        <div class="col-xl-6 col-md-6">
+            <a href="{{ route('admin.dashboard.inspection') }}" class="text-decoration-none">
+                <div class="glass-card p-4 h-100 position-relative hover-scale d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center">
+                        <div class="rounded-circle bg-primary bg-opacity-20 p-3 me-3">
+                            <i class="bi bi-person-badge text-primary fs-4"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold text-white mb-1">Inspector Status</h5>
+                            <div class="text-secondary small">Review performance & activity logs</div>
+                        </div>
+                    </div>
+                    <div class="text-white">
+                        <i class="bi bi-chevron-right fs-5"></i>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
     
     {{-- 4. SYSTEM OCCUPANCY (VISUAL BAR) --}}
     @if(!empty($fillingStatusStats))
