@@ -49,7 +49,7 @@
 
         {{-- Calibration --}}
         <div class="col-xl-3 col-md-6">
-            <a href="{{ route('admin.calibration.index') }}" class="text-decoration-none">
+            <a href="{{ route('admin.calibration-master.index') }}" class="text-decoration-none">
                 <div class="glass-card p-4 h-100 position-relative hover-scale">
                     <div class="d-flex justify-content-between align-items-start mb-3">
                         <div>
