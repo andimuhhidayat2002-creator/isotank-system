@@ -319,9 +319,10 @@ class InspectionSubmitController extends Controller
                         throw new \Exception("Pressure 1 must be filled before Pressure 2.");
                     }
                     $diff = $currentTime->diffInHours($validated['pressure_1_timestamp']);
-                    if ($diff < 6) {
-                        throw new \Exception("Pressure 2 can only be filled 6 hours after Pressure 1. Current difference: {$diff} hours.");
-                    }
+// REMOVED 6-HOUR RULE AS REQUESTED
+                    // if ($diff < 6) {
+                    //     throw new \Exception("Pressure 2 can only be filled 6 hours after Pressure 1. Current difference: {$diff} hours.");
+                    // }
                     if (!$inspectionLog || empty($inspectionLog->pressure_2_timestamp)) {
                         $validated['pressure_2_timestamp'] = $currentTime;
                     } else {
@@ -341,9 +342,10 @@ class InspectionSubmitController extends Controller
                         throw new \Exception("Level 1 must be filled before Level 2.");
                     }
                     $diff = $currentTime->diffInHours($validated['level_1_timestamp']);
-                    if ($diff < 6) {
-                        throw new \Exception("Level 2 can only be filled 6 hours after Level 1.");
-                    }
+// REMOVED 6-HOUR RULE AS REQUESTED
+                    // if ($diff < 6) {
+                    //     throw new \Exception("Level 2 can only be filled 6 hours after Level 1.");
+                    // }
                     if (!$inspectionLog || empty($inspectionLog->level_2_timestamp)) {
                         $validated['level_2_timestamp'] = $currentTime;
                     } else {
@@ -363,9 +365,10 @@ class InspectionSubmitController extends Controller
                         throw new \Exception("Temperature 1 must be filled before Temperature 2.");
                     }
                     $diff = $currentTime->diffInHours($validated['ibox_temperature_1_timestamp']);
-                    if ($diff < 6) {
-                        throw new \Exception("Temperature 2 can only be filled 6 hours after Temperature 1.");
-                    }
+// REMOVED 6-HOUR RULE AS REQUESTED
+                    // if ($diff < 6) {
+                    //     throw new \Exception("Temperature 2 can only be filled 6 hours after Temperature 1.");
+                    // }
                     if (!$inspectionLog || empty($inspectionLog->ibox_temperature_2_timestamp)) {
                         $validated['ibox_temperature_2_timestamp'] = $currentTime;
                     } else {
