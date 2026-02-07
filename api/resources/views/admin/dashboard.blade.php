@@ -117,28 +117,7 @@
         </div>
     </div>
 
-    {{-- 3. QUICK ACCESS MODULE (RESTORED) --}}
-    <div class="row mb-5">
-        <div class="col-12">
-            <div class="glass-card p-4 d-flex align-items-center justify-content-between flex-wrap gap-3">
-                <h5 class="fw-bold mb-0"><i class="bi bi-lightning-charge me-2 text-warning"></i>Operations Shortcuts</h5>
-                <div class="d-flex gap-3">
-                    <a href="{{ route('admin.dashboard.maintenance') }}" class="btn btn-outline-light border-secondary text-muted">
-                        <i class="bi bi-tools me-2 text-warning"></i> Maintenance Stats
-                    </a>
-                    <a href="{{ route('admin.dashboard.vacuum') }}" class="btn btn-outline-light border-secondary text-muted">
-                        <i class="bi bi-speedometer2 me-2 text-info"></i> Vacuum Monitoring
-                    </a>
-                    <a href="{{ route('admin.dashboard.calibration') }}" class="btn btn-outline-light border-secondary text-muted">
-                        <i class="bi bi-rulers me-2 text-danger"></i> Calibration Alerts
-                    </a>
-                    <a href="{{ route('admin.isotanks.index') }}" class="btn btn-outline-light border-secondary text-muted">
-                        <i class="bi bi-search me-2 text-primary"></i> Fleet Search
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
+
 
     {{-- PERFORMANCE METRICS ROW (Added via Python) --}}
     <div class="row g-4 mb-5">
