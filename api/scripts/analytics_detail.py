@@ -51,7 +51,7 @@ def analyze_maintenance(conn, db_type):
     # 2. Lemon Tanks (Problematic Units)
     date_filter = "DATE_SUB(NOW(), INTERVAL 12 MONTH)" if db_type == 'mysql' else "date('now', '-12 months')"
     q_lemons = f"""
-        SELECT i.iso_number, i.id as isotank_id, m.manufacturer, COUNT(*) as job_count
+        SELECT i.iso_number, i.id as isotank_id, i.manufacturer, COUNT(*) as job_count
         FROM maintenance_jobs j
         JOIN master_isotanks i ON j.isotank_id = i.id
         WHERE j.created_at >= {date_filter}
