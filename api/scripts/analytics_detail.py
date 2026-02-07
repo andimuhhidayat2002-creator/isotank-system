@@ -46,6 +46,7 @@ def analyze_maintenance(conn, db_type):
     # 1. Pareto Faults (Top Items)
     q_faults = "SELECT source_item, COUNT(*) as count FROM maintenance_jobs WHERE status='closed' GROUP BY source_item ORDER BY count DESC LIMIT 10"
     df_faults = pd.read_sql_query(q_faults, conn)
+    df_faults = df_faults.replace({np.nan: None})
     stats['top_faults'] = df_faults.to_dict(orient='records')
     
     # 2. Lemon Tanks (Problematic Units)
@@ -59,6 +60,7 @@ def analyze_maintenance(conn, db_type):
         ORDER BY job_count DESC LIMIT 10
     """
     df_lemons = pd.read_sql_query(q_lemons, conn)
+    df_lemons = df_lemons.replace({np.nan: None})
     stats['lemon_tanks'] = df_lemons.to_dict(orient='records')
     
     # 3. Monthly Spend/Count Trend
@@ -81,6 +83,7 @@ def analyze_maintenance(conn, db_type):
         ORDER BY month
     """
     df_trend = pd.read_sql_query(q_trend, conn)
+    df_trend = df_trend.replace({np.nan: None})
     stats['trend'] = {
         'labels': df_trend['month'].tolist(),
         'data': df_trend['count'].tolist()
@@ -192,6 +195,7 @@ def analyze_vacuum(conn, db_type):
     if not df_rates.empty:
         manu_perf = df_rates.groupby('manufacturer')['rate'].mean().reset_index()
         manu_perf = manu_perf.sort_values('rate', ascending=False) # Highest rate (worst) first
+        manu_perf = manu_perf.replace({np.nan: None})
         stats['manufacturers'] = {
             'labels': manu_perf['manufacturer'].tolist(),
             'data': manu_perf['rate'].round(2).tolist()
@@ -221,6 +225,7 @@ def analyze_vacuum(conn, db_type):
         ORDER BY month
     """
     df_trend = pd.read_sql_query(q_trend, conn)
+    df_trend = df_trend.replace({np.nan: None})
     stats['yearly_trend'] = {
         'labels': df_trend['month'].tolist(),
         'data': df_trend['avg_val'].round(2).tolist()
