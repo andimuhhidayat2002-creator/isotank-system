@@ -150,26 +150,25 @@
 
                     <div class="tab-content">
                         <!-- TAB 1: MTTR Data (Original) -->
-                        <div class="tab-pane fade show active" id="mttr" role="tabpanel">
                             <div class="d-flex justify-content-between align-items-end mb-2">
                                 <div>
-                                    <h2 class="display-5 fw-bold mb-0 text-white">{{ $maintenanceClosedAvg }}<span class="fs-6 text-muted"> hrs</span></h2>
-                                    <small class="text-muted">Avg Repair Time</small>
+                                    <h2 class="display-5 fw-bold mb-0 text-white">{{ $globalStats['avg_repair_time'] ?? 'N/A' }}</h2>
+                                    <small class="text-muted">{{ $globalStats['repair_time_label'] ?? 'Mean Time' }}</small>
                                 </div>
                                 <div class="text-end">
-                                    <h4 class="mb-0 text-white">{{ $maintenanceOpenAvg }}<span class="fs-6 text-muted"> days</span></h4>
-                                    <small class="text-muted">Avg Active Duration</small>
+                                    <h4 class="mb-0 text-white">{{ $globalStats['open_maintenance'] ?? 0 }}</h4>
+                                    <small class="text-muted">Total Active Jobs</small>
                                 </div>
                             </div>
                             <div class="progress bg-white bg-opacity-10" style="height: 6px;">
                                 <div class="progress-bar bg-warning" role="progressbar" style="width: 70%"></div>
                             </div>
                             <div class="mt-3 d-flex gap-2">
-                                <div class="badge bg-success bg-opacity-20 text-success border border-success border-opacity-20">
-                                    {{ $maintenanceCompleted }} Completed
-                                </div>
                                 <div class="badge bg-warning bg-opacity-20 text-warning border border-warning border-opacity-20">
-                                    {{ $maintenanceOpen }} Active
+                                    {{ $globalStats['open_maintenance'] ?? 0 }} Active
+                                </div>
+                                <div class="badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-20">
+                                    {{ $globalStats['deferred_maintenance'] ?? 0 }} Deferred
                                 </div>
                             </div>
                         </div>
@@ -281,25 +280,27 @@
 
                      <!-- TAB 2: HEALTH DISTRIBUTION -->
                     <div class="tab-pane fade" id="health" role="tabpanel">
-                         @if(isset($globalStats['vacuum_stats']['average_val']))
+                         @if(isset($globalStats['vacuum_stats']['avg_value']))
                             <div class="text-center mb-3">
-                                  <h2 class="display-6 fw-bold text-white mb-0">{{ $globalStats['vacuum_stats']['average_val'] }}</h2>
+                                  <h2 class="display-6 fw-bold text-white mb-0">{{ $globalStats['vacuum_stats']['avg_value'] }}</h2>
                                   <small class="text-muted">Fleet Average (mTorr)</small>
                             </div>
                             <div class="d-flex justify-content-around text-center">
                                  <div>
-                                     <div class="fw-bold text-success">{{ $globalStats['vacuum_stats']['excellent'] }}</div>
+                                     <div class="fw-bold text-success">{{ $globalStats['vacuum_stats']['excellent_pct'] ?? 0 }}%</div>
                                      <small class="text-muted" style="font-size: 0.7rem;">Excellent</small>
                                  </div>
                                  <div>
-                                     <div class="fw-bold text-info">{{ $globalStats['vacuum_stats']['good'] }}</div>
+                                     <div class="fw-bold text-info">{{ $globalStats['vacuum_stats']['good_pct'] ?? 0 }}%</div>
                                      <small class="text-muted" style="font-size: 0.7rem;">Good</small>
                                  </div>
                                  <div>
-                                     <div class="fw-bold text-warning">{{ $globalStats['vacuum_stats']['warning'] }}</div>
+                                     <div class="fw-bold text-warning">{{ $globalStats['vacuum_stats']['warning_pct'] ?? 0 }}%</div>
                                      <small class="text-muted" style="font-size: 0.7rem;">Warning</small>
                                  </div>
                             </div>
+                         @else
+                            <div class="text-center text-muted py-3">No Data</div>
                          @endif
                     </div>
                 </div>
