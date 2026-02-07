@@ -192,8 +192,10 @@ def calculate_stats(category='All'):
         
         # 6. Inspector Performance (All Time Volume Leaderboard)
         # Removed 30 day filter to ensure data shows up even if no recent activity
+        
+        # Include ID for linking
         sql_inspector = """
-            SELECT u.name, COUNT(*) as report_count 
+            SELECT l.inspector_id, u.name, COUNT(*) as report_count 
             FROM inspection_logs l 
             JOIN users u ON l.inspector_id = u.id 
             JOIN master_isotanks i ON l.isotank_id = i.id
@@ -277,12 +279,12 @@ def calculate_stats(category='All'):
         # 7.5 Problematic Isotanks (Most Maintenance Jobs)
         # Identify "Lemons" - tanks that return to maintenance often
         query_freq = """
-            SELECT i.iso_number, COUNT(m.id) as job_count
+            SELECT i.id as isotank_id, i.iso_number, COUNT(m.id) as job_count
             FROM maintenance_jobs m
             JOIN master_isotanks i ON m.isotank_id = i.id
             WHERE m.created_at >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
         """ if db_type == 'mysql' else """
-            SELECT i.iso_number, COUNT(m.id) as job_count
+            SELECT i.id as isotank_id, i.iso_number, COUNT(m.id) as job_count
             FROM maintenance_jobs m
             JOIN master_isotanks i ON m.isotank_id = i.id
             WHERE m.created_at >= date('now', '-12 months')
@@ -354,6 +356,7 @@ def calculate_stats(category='All'):
                            # Only list if fail is imminent (e.g. within 60 days) or already failed (negative)
                            if days_to_fail < 60: 
                                 risks.append({
+                                    'isotank_id': int(first.isotank_id), # Add ID
                                     'iso_number': first.iso_number,
                                     'current_val': round(current_val, 2),
                                     'rate': round(rate, 3), # mTorr/day

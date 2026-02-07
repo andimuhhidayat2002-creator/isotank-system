@@ -163,10 +163,12 @@
                             <div class="d-flex flex-column gap-2">
                                 <small class="text-muted text-uppercase mb-2" style="font-size: 0.7rem;">Most Frequent Visitors (12M)</small>
                                 @foreach($globalStats['problematic_tanks'] as $tank)
-                                    <div class="d-flex justify-content-between align-items-center bg-black bg-opacity-20 p-2 rounded">
-                                        <span class="text-white fw-bold">{{ $tank['iso_number'] }}</span>
-                                        <span class="badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-20">{{ $tank['job_count'] }} Jobs</span>
-                                    </div>
+                                    <a href="{{ route('admin.isotanks.show', $tank['isotank_id']) }}" class="text-decoration-none">
+                                        <div class="d-flex justify-content-between align-items-center bg-black bg-opacity-20 p-2 rounded hover-border-primary">
+                                            <span class="text-white fw-bold">{{ $tank['iso_number'] }}</span>
+                                            <span class="badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-20">{{ $tank['job_count'] }} Jobs</span>
+                                        </div>
+                                    </a>
                                 @endforeach
                             </div>
                          @else
@@ -191,10 +193,12 @@
                 @if(isset($globalStats['top_inspectors']) && count($globalStats['top_inspectors']) > 0)
                     <div class="d-flex flex-column gap-3">
                         @foreach($globalStats['top_inspectors'] as $inspector)
-                            <div class="d-flex justify-content-between align-items-center border-bottom border-light border-opacity-10 pb-2">
-                                <span class="text-white">{{ $inspector['name'] }}</span>
-                                <span class="badge bg-info bg-opacity-10 text-info">{{ $inspector['report_count'] }} Reports</span>
-                            </div>
+                            <a href="{{ route('admin.reports.inspection') }}" class="text-decoration-none">
+                                <div class="d-flex justify-content-between align-items-center border-bottom border-light border-opacity-10 pb-2 hover-bg-light rounded px-2">
+                                    <span class="text-white">{{ $inspector['name'] }}</span>
+                                    <span class="badge bg-info bg-opacity-10 text-info">{{ $inspector['report_count'] }} Reports</span>
+                                </div>
+                            </a>
                         @endforeach
                     </div>
                 @else
@@ -228,19 +232,21 @@
                         @if(isset($globalStats['vacuum_risks']) && count($globalStats['vacuum_risks']) > 0)
                             <div class="d-flex flex-column gap-3">
                                 @foreach($globalStats['vacuum_risks'] as $risk)
-                                    <div class="d-flex justify-content-between align-items-center border-bottom border-light border-opacity-10 pb-2">
-                                        <div>
-                                            <div class="text-white fw-bold">{{ $risk['iso_number'] }}</div>
-                                            <div class="text-muted smaller">Rate: +{{ $risk['rate'] }} mTorr/day</div>
-                                        </div>
-                                        <div class="text-end">
-                                            <div class="fw-bold {{ $risk['days_to_fail'] < 0 ? 'text-danger' : 'text-warning' }}">
-                                                {{ $risk['days_to_fail'] < 0 ? 'FAILED' : $risk['days_to_fail'] . ' Days' }}
-                                            </div>
-                                            <div class="smaller text-muted">Current: {{ $risk['current_val'] }}</div>
-                                        </div>
+                            <a href="{{ route('admin.isotanks.show', $risk['isotank_id']) }}" class="text-decoration-none">
+                                <div class="d-flex justify-content-between align-items-center border-bottom border-light border-opacity-10 pb-2 hover-bg-light rounded px-2">
+                                    <div>
+                                        <div class="text-white fw-bold">{{ $risk['iso_number'] }}</div>
+                                        <div class="text-muted smaller">Rate: +{{ $risk['rate'] }} mTorr/day</div>
                                     </div>
-                                @endforeach
+                                    <div class="text-end">
+                                        <div class="fw-bold {{ $risk['days_to_fail'] < 0 ? 'text-danger' : 'text-warning' }}">
+                                            {{ $risk['days_to_fail'] < 0 ? 'FAILED' : $risk['days_to_fail'] . ' Days' }}
+                                        </div>
+                                        <div class="smaller text-muted">Current: {{ $risk['current_val'] }}</div>
+                                    </div>
+                                </div>
+                            </a>
+                        @endforeach
                             </div>
                         @else
                             <div class="text-center text-muted py-3">

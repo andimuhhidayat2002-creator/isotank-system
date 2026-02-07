@@ -315,8 +315,38 @@ class ReportController extends Controller
             'inspections_today' => $inspectionsTodayCount,
             'calibration_progress' => $calProgress,
 
+            'inspections_today' => $inspectionsTodayCount,
+            'calibration_progress' => $calProgress,
+
             'filling_status_breakdown' => $fillingStatusFormatted,
         ];
+
+        // PYTHON INTEGRATION: Enhancing Analytics
+        try {
+            $scriptPath = base_path('scripts/report_analytics.py');
+            $dateStr = $date->format('Y-m-d');
+            
+            // Use Process to execute python (same logic as Dashboard)
+            $process = new \Symfony\Component\Process\Process(['python3', $scriptPath, 'daily', $dateStr]);
+            $process->setTimeout(10); 
+            $process->run();
+
+            if ($process->isSuccessful()) {
+                 $pyData = json_decode($process->getOutput(), true);
+                 if (json_last_error() === JSON_ERROR_NONE && !isset($pyData['error'])) {
+                      // Merge Python charts/insights into summary
+                      $summary['stock_chart'] = $pyData['ascii_chart_stock'] ?? '';
+                      $summary['trend_analysis'] = $pyData['filling_distribution'] ?? [];
+                      // Future: Overlay creating precise stats from Python if needed
+                 } else {
+                      \Illuminate\Support\Facades\Log::warning("Report Python JSON Error: " . ($pyData['error'] ?? 'Invalid JSON'));
+                 }
+            } else {
+                 \Illuminate\Support\Facades\Log::warning("Report Python Failed: " . $process->getErrorOutput());
+            }
+        } catch (\Exception $e) {
+             \Illuminate\Support\Facades\Log::error("Report Python Exception: " . $e->getMessage());
+        }
 
         // 2. Issues (Exception Report)
         $todaysLogs = InspectionLog::with('isotank')
