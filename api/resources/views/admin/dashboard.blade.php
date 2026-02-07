@@ -113,7 +113,10 @@
                 <div class="progress" style="height: 4px;">
                     <div class="progress-bar bg-info neon-bar" style="width: {{ $globalStats['open_inspections'] > 0 ? '50%' : '0%' }}"></div>
                 </div>
-    {{-- Removed old metric row --}}
+            </div>
+        </div>
+    </div>
+    {{-- End of primary KPI row --}}
     
     {{-- 4. SYSTEM OCCUPANCY (VISUAL BAR) --}}
     @if(!empty($fillingStatusStats))
