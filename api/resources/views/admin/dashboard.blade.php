@@ -147,8 +147,7 @@
                     </div>
                 </a>
             </div>
-            </div>
-        </div>
+            <!-- End Maintenance Card -->
 
         {{-- Inspectors --}}
         <div class="col-xl-4">
