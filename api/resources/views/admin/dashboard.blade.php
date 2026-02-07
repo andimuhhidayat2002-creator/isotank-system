@@ -142,25 +142,34 @@
 
     {{-- PERFORMANCE METRICS ROW (Added via Python) --}}
     <div class="row g-4 mb-5">
-        <div class="col-xl-6">
+        {{-- Maintenance --}}
+        <div class="col-xl-4">
             <div class="glass-card p-4 h-100">
                 <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="fw-bold mb-0 text-white"><i class="bi bi-stopwatch me-2 text-warning"></i>Maintenance Performance</h5>
-                    <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25">MTTR (Repair Time)</span>
+                    <h5 class="fw-bold mb-0 text-white"><i class="bi bi-stopwatch me-2 text-warning"></i>Maintenance Stats</h5>
+                    <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25">{{ $globalStats['repair_time_label'] ?? 'Performance' }}</span>
                 </div>
                 <div class="d-flex align-items-center justify-content-center flex-column py-4">
-                    <div class="display-4 fw-bold text-white mb-2">
-                        {{ $globalStats['avg_repair_time'] ?? 'N/A' }}
-                    </div>
-                    <div class="text-muted small">Average time to close maintenance jobs</div>
+                     <div class="display-4 fw-bold text-white mb-2">
+                         {{ $globalStats['avg_repair_time'] ?? 'N/A' }}
+                     </div>
+                     <div class="text-muted small text-center px-3">
+                         @if(str_contains($globalStats['repair_time_label'] ?? '', 'Open'))
+                             Average age of currently active jobs
+                         @else
+                             Mean Duration (Open to Closed)
+                         @endif
+                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-xl-6">
+        {{-- Inspectors --}}
+        <div class="col-xl-4">
             <div class="glass-card p-4 h-100">
                 <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="fw-bold mb-0 text-white"><i class="bi bi-people me-2 text-info"></i>Top Inspectors (30 Days)</h5>
+                    <h5 class="fw-bold mb-0 text-white"><i class="bi bi-people me-2 text-info"></i>Top Inspectors</h5>
+                    <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25">Volume Leaderboard</span>
                 </div>
                 
                 @if(isset($globalStats['top_inspectors']) && count($globalStats['top_inspectors']) > 0)
@@ -173,7 +182,44 @@
                         @endforeach
                     </div>
                 @else
-                    <div class="text-center text-muted py-3">No stats available</div>
+                    <div class="text-center text-muted py-3">
+                        <i class="bi bi-inbox display-4 opacity-25"></i>
+                        <p class="mb-0 mt-2 smaller">No inspection data found.</p>
+                    </div>
+                @endif
+            </div>
+        </div>
+
+        {{-- Vacuum Risk --}}
+        <div class="col-xl-4">
+            <div class="glass-card p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="fw-bold mb-0 text-white"><i class="bi bi-speedometer2 me-2 text-danger"></i>Vacuum Decay Risk</h5>
+                    <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25">Predictive Analyics</span>
+                </div>
+                
+                @if(isset($globalStats['vacuum_risks']) && count($globalStats['vacuum_risks']) > 0)
+                    <div class="d-flex flex-column gap-3">
+                        @foreach($globalStats['vacuum_risks'] as $risk)
+                            <div class="d-flex justify-content-between align-items-center border-bottom border-light border-opacity-10 pb-2">
+                                <div>
+                                    <div class="text-white fw-bold">{{ $risk['iso_number'] }}</div>
+                                    <div class="text-muted smaller">Rate: +{{ $risk['rate'] }} mTorr/day</div>
+                                </div>
+                                <div class="text-end">
+                                    <div class="fw-bold {{ $risk['days_to_fail'] < 0 ? 'text-danger' : 'text-warning' }}">
+                                        {{ $risk['days_to_fail'] < 0 ? 'FAILED' : $risk['days_to_fail'] . ' Days' }}
+                                    </div>
+                                    <div class="smaller text-muted">Current: {{ $risk['current_val'] }}</div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="text-center text-muted py-3">
+                        <i class="bi bi-shield-check display-4 opacity-25 text-success"></i>
+                        <p class="mb-0 mt-2 smaller">All monitored tanks are stable.</p>
+                    </div>
                 @endif
             </div>
         </div>

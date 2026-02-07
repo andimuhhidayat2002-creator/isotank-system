@@ -2,7 +2,16 @@ import sys
 import os
 import json
 import sqlite3
-import pandas as pd # Powerhouse for analytics
+import pandas as pd
+import numpy as np
+
+# Ensure native types for JSON serialization
+class NpEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer): return int(obj)
+        if isinstance(obj, np.floating): return float(obj)
+        if isinstance(obj, np.ndarray): return obj.tolist()
+        return super(NpEncoder, self).default(obj)
 
 # Try to import mysql.connector, handle if missing
 try:
@@ -45,7 +54,7 @@ def get_db_connection():
              if db_name == 'database.sqlite' or db_name.endswith('.sqlite'):
                  db_path = os.path.join(base_dir, 'database', db_name)
              else:
-                 # Logic for other cases? Defaulting to database/database.sqlite
+                  # Logic for other cases? Defaulting to database/database.sqlite
                   db_path = os.path.join(base_dir, 'database', 'database.sqlite')
         
         if not os.path.exists(db_path):
@@ -86,35 +95,47 @@ def calculate_stats(category='All'):
             'open_maintenance': 0,
             'deferred_maintenance': 0,
             'open_inspections': 0,
-            'calibration_alerts': 0
+            'calibration_alerts': 0,
+            'avg_repair_time': 'N/A',
+            'repair_time_label': 'Maintenance Stats',
+            'top_inspectors': [],
+            'vacuum_risks': []
         }
 
-        # 1. Total Active Isotanks
-        query_active = "SELECT COUNT(*) as count FROM master_isotanks WHERE status = 'active'"
-        params_active = []
-        if category != 'All':
-            query_active += " AND tank_category = %s" if db_type == 'mysql' else " AND tank_category = ?"
-            params_active.append(category)
+        # SQL Helper helper to filter by category
+        def with_category(base_sql, table_alias='i'):
+            if category == 'All':
+                return base_sql, []
+            
+            # For pandas/mysql connector compatibility, using params is safer but
+            # simple string injection for 'T75'/'T11' etc is safe as they come from PHP router
+            # valid categories: T75, T11, T50
+            if category in ['T75', 'T11', 'T50']:
+                if 'WHERE' in base_sql:
+                    return f"{base_sql} AND {table_alias}.tank_category = '{category}'", []
+                else:
+                    return f"{base_sql} WHERE {table_alias}.tank_category = '{category}'", []
+            return base_sql, []
+
         
-        cursor.execute(query_active, params_active)
-        result = cursor.fetchone()
-        stats['total_active'] = result['count'] if result else 0
+        # 1. Total Active Isotanks
+        query_active = "SELECT COUNT(*) as count FROM master_isotanks i WHERE i.status = 'active'"
+        sql, _ = with_category(query_active, 'i')
+        cursor.execute(sql)
+        row = cursor.fetchone()
+        stats['total_active'] = row['count'] if row else 0
 
         # 2. Open Maintenance
         query_maint = """
             SELECT COUNT(*) as count 
             FROM maintenance_jobs m
             JOIN master_isotanks i ON m.isotank_id = i.id
-            WHERE m.status IN ('open', 'on_progress')
+            WHERE m.status IN ('open', 'on_progress', 'in_progress')
         """
-        params_maint = []
-        if category != 'All':
-            query_maint += " AND i.tank_category = %s" if db_type == 'mysql' else " AND i.tank_category = ?"
-            params_maint.append(category)
-            
-        cursor.execute(query_maint, params_maint)
-        result = cursor.fetchone()
-        stats['open_maintenance'] = result['count'] if result else 0
+        sql, _ = with_category(query_maint, 'i')
+        cursor.execute(sql)
+        row = cursor.fetchone()
+        stats['open_maintenance'] = row['count'] if row else 0
 
         # 3. Deferred Maintenance
         query_deferred = """
@@ -123,14 +144,10 @@ def calculate_stats(category='All'):
             JOIN master_isotanks i ON m.isotank_id = i.id
             WHERE m.status = 'deferred'
         """
-        params_deferred = []
-        if category != 'All':
-            query_deferred += " AND i.tank_category = %s" if db_type == 'mysql' else " AND i.tank_category = ?"
-            params_deferred.append(category)
-            
-        cursor.execute(query_deferred, params_deferred)
-        result = cursor.fetchone()
-        stats['deferred_maintenance'] = result['count'] if result else 0
+        sql, _ = with_category(query_deferred, 'i')
+        cursor.execute(sql)
+        row = cursor.fetchone()
+        stats['deferred_maintenance'] = row['count'] if row else 0
 
         # 4. Open Inspections
         query_insp = """
@@ -139,17 +156,12 @@ def calculate_stats(category='All'):
             JOIN master_isotanks i ON j.isotank_id = i.id
             WHERE j.status IN ('open', 'in_progress')
         """
-        params_insp = []
-        if category != 'All':
-            query_insp += " AND i.tank_category = %s" if db_type == 'mysql' else " AND i.tank_category = ?"
-            params_insp.append(category)
-            
-        cursor.execute(query_insp, params_insp)
-        result = cursor.fetchone()
-        stats['open_inspections'] = result['count'] if result else 0
+        sql, _ = with_category(query_insp, 'i')
+        cursor.execute(sql)
+        row = cursor.fetchone()
+        stats['open_inspections'] = row['count'] if row else 0
 
         # 5. Calibration Alerts
-        # Date logic differs between MySQL and SQLite
         if db_type == 'sqlite':
             date_clause = "date(c.expiry_date) < date('now', '+1 month')"
         else:
@@ -161,68 +173,162 @@ def calculate_stats(category='All'):
             JOIN master_isotanks i ON c.isotank_id = i.id
             WHERE {date_clause}
         """
-        params_cal = []
-        if category != 'All':
-            query_cal += " AND i.tank_category = %s" if db_type == 'mysql' else " AND i.tank_category = ?"
-            params_cal.append(category)
-            
-        cursor.execute(query_cal, params_cal)
-        result = cursor.fetchone()
-        stats['calibration_alerts'] = result['count'] if result else 0
+        sql, _ = with_category(query_cal, 'i')
+        cursor.execute(sql)
+        row = cursor.fetchone()
+        stats['calibration_alerts'] = row['count'] if row else 0
 
         # === ADVANCED ANALYTICS (Using Pandas) ===
-        # Load data into DataFrame for complex analysis
         
-        # 6. Inspector Performance (Top 5 Inspectors by Volume This Month)
-        if db_type == 'mysql':
-            time_filter = "WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)"
-        else:
-            time_filter = "WHERE created_at >= date('now', '-30 days')"
-            
-        sql_inspector = f"""
+        # 6. Inspector Performance (All Time Volume Leaderboard)
+        # Removed 30 day filter to ensure data shows up even if no recent activity
+        sql_inspector = """
             SELECT u.name, COUNT(*) as report_count 
             FROM inspection_logs l 
             JOIN users u ON l.inspector_id = u.id 
-            {time_filter}
-            GROUP BY l.inspector_id 
-            ORDER BY report_count DESC 
-            LIMIT 5
+            JOIN master_isotanks i ON l.isotank_id = i.id
         """
-        # Pandas read_sql automatically handles column names
-        df_inspectors = pd.read_sql_query(sql_inspector, conn)
-        stats['top_inspectors'] = df_inspectors.to_dict(orient='records')
+        # Logic to add WHERE if category
+        if category in ['T75', 'T11', 'T50']:
+             sql_inspector += f" WHERE i.tank_category = '{category}'"
+             
+        sql_inspector += " GROUP BY l.inspector_id ORDER BY report_count DESC LIMIT 5"
         
-        # 7. Maintenance Efficiency (Mean Time To Repair - MTTR)
-        # Only consider CLOSED jobs
+        try:
+            df_inspectors = pd.read_sql_query(sql_inspector, conn)
+            # Ensure int type
+            if not df_inspectors.empty:
+                 df_inspectors['report_count'] = df_inspectors['report_count'].astype(int)
+            stats['top_inspectors'] = df_inspectors.to_dict(orient='records')
+        except Exception as e:
+            # Fallback if query fails
+            stats['top_inspectors'] = []
+
+
+        # 7. Maintenance Efficiency (MTTR or Avg Age)
+        # A. Try Closed Jobs (MTTR)
         query_mttr = """
-            SELECT created_at, updated_at 
-            FROM maintenance_jobs 
-            WHERE status = 'closed'
-            ORDER BY updated_at DESC
-            LIMIT 100 
+            SELECT m.created_at, m.updated_at 
+            FROM maintenance_jobs m
+            JOIN master_isotanks i ON m.isotank_id = i.id
+            WHERE m.status = 'closed'
         """
-        # Limit 100 to keep it fast, or remove limit for full accuracy
+        if category in ['T75', 'T11', 'T50']:
+             query_mttr += f" AND i.tank_category = '{category}'"
+        query_mttr += " ORDER BY m.updated_at DESC LIMIT 100"
+
         df_mttr = pd.read_sql_query(query_mttr, conn)
         
+        has_mttr = False
         if not df_mttr.empty:
-            # Conversion to datetime
             df_mttr['created_at'] = pd.to_datetime(df_mttr['created_at'])
             df_mttr['updated_at'] = pd.to_datetime(df_mttr['updated_at'])
+            duration = (df_mttr['updated_at'] - df_mttr['created_at']).dt.total_seconds() / 3600
+            avg_hours = duration.mean()
             
-            # Calculate duration in days, allow fractions
-            duration_hours = (df_mttr['updated_at'] - df_mttr['created_at']).dt.total_seconds() / 3600
-            avg_hours = duration_hours.mean()
+            if avg_hours > 0:
+                stats['repair_time_label'] = "MTTR (Closed Jobs)"
+                if avg_hours < 24:
+                    stats['avg_repair_time'] = f"{round(avg_hours, 1)} Hours"
+                else:
+                    stats['avg_repair_time'] = f"{round(avg_hours / 24, 1)} Days"
+                has_mttr = True
+
+        # B. Fallback to Open Jobs Age
+        if not has_mttr:
+             query_open = """
+                SELECT m.created_at 
+                FROM maintenance_jobs m
+                JOIN master_isotanks i ON m.isotank_id = i.id
+                WHERE m.status IN ('open', 'on_progress', 'in_progress')
+             """
+             if category in ['T75', 'T11', 'T50']:
+                 query_open += f" AND i.tank_category = '{category}'"
+             
+             df_open = pd.read_sql_query(query_open, conn)
+             if not df_open.empty:
+                 df_open['created_at'] = pd.to_datetime(df_open['created_at'])
+                 now = pd.Timestamp.now()
+                 duration = (now - df_open['created_at']).dt.total_seconds() / 3600
+                 avg_hours = duration.mean()
+                 
+                 stats['repair_time_label'] = "Avg Age (Active Jobs)"
+                 if avg_hours < 24:
+                     stats['avg_repair_time'] = f"{round(avg_hours, 1)} Hours"
+                 else:
+                     stats['avg_repair_time'] = f"{round(avg_hours / 24, 1)} Days"
+             else:
+                 stats['repair_time_label'] = "Maintenance Data"
+                 stats['avg_repair_time'] = "N/A" # Really no data
+
+
+        # 8. Vacuum Analysis (Decay Rate)
+        # Fetch vacuum logs for ACTIVE tanks, last 180 days
+        date_cond = "v.check_datetime >= date('now', '-180 days')" if db_type == 'sqlite' else "v.check_datetime >= DATE_SUB(NOW(), INTERVAL 180 DAY)"
+        
+        query_vac = f"""
+            SELECT v.isotank_id, v.vacuum_value_mtorr, v.check_datetime, i.iso_number
+            FROM vacuum_logs v
+            JOIN master_isotanks i ON v.isotank_id = i.id
+            WHERE i.status = 'active'
+            AND {date_cond}
+        """
+        if category in ['T75', 'T11', 'T50']:
+             query_vac += f" AND i.tank_category = '{category}'"
+             
+        # Add order for easier pandas processing
+        query_vac += " ORDER BY v.isotank_id, v.check_datetime ASC"
+        
+        try:
+            df_vac = pd.read_sql_query(query_vac, conn)
+            risks = []
+            if not df_vac.empty:
+                 df_vac['check_datetime'] = pd.to_datetime(df_vac['check_datetime'])
+                 # Group by isotank
+                 for iso_id, group in df_vac.groupby('isotank_id'):
+                      if len(group) < 2: continue
+                      
+                      # Get last 3 points for trend
+                      recent = group.tail(3)
+                      if len(recent) < 2: continue
+
+                      first = recent.iloc[0]
+                      last = recent.iloc[-1]
+                      
+                      days = (last.check_datetime - first.check_datetime).days
+                      if days < 1: days = 1 # Avoid div by zero
+                      
+                      diff = last.vacuum_value_mtorr - first.vacuum_value_mtorr
+                      rate = diff / days # mTorr per day turnover
+                      
+                      current_val = last.vacuum_value_mtorr
+                      
+                      # Analysis thresholds:
+                      # Rate > 0.05 mTorr/day is concerning
+                      # OR current value approaching 8 mTorr
+                      
+                      # Prediction: Days until 8 mTorr
+                      if rate > 0.02 and current_val < 30: # Only care if decaying and value is sane
+                           days_to_fail = (8.0 - current_val) / rate
+                           
+                           # Only list if fail is imminent (e.g. within 60 days) or already failed (negative)
+                           if days_to_fail < 60: 
+                                risks.append({
+                                    'iso_number': first.iso_number,
+                                    'current_val': round(current_val, 2),
+                                    'rate': round(rate, 3), # mTorr/day
+                                    'days_to_fail': int(days_to_fail)
+                                })
             
-            # Formating logic
-            if avg_hours < 24:
-                stats['avg_repair_time'] = f"{round(avg_hours, 1)} Hours"
-            else:
-                stats['avg_repair_time'] = f"{round(avg_hours / 24, 1)} Days"
-        else:
-            stats['avg_repair_time'] = "N/A"
+            # Sort: "Already Failed" (lowest negative) to "Imminent" (small positive)
+            risks.sort(key=lambda x: x['days_to_fail'])
+            stats['vacuum_risks'] = risks[:5]
+            
+        except Exception as e:
+            stats['vacuum_risks'] = []
 
         
-        print(json.dumps(stats))
+        print(json.dumps(stats, cls=NpEncoder))
 
     except Exception as e:
         print(json.dumps({"error": str(e)}))
