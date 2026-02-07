@@ -400,12 +400,25 @@ class AdminController extends Controller
     
     public function maintenanceStatistics() { 
         // 3) Maintenance Statistics (Detailed Analytics)
-        $process = new \Symfony\Component\Process\Process(['python3', base_path('scripts/analytics_detail.py'), 'maintenance']);
+        $pythonCmd = (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') ? 'python' : '/usr/bin/python3';
+        $scriptPath = base_path('scripts/analytics_detail.py');
+        
+        $process = new \Symfony\Component\Process\Process([$pythonCmd, $scriptPath, 'maintenance']);
         $process->run();
+        
         $analytics = [];
         
         if ($process->isSuccessful()) {
-            $analytics = json_decode($process->getOutput(), true);
+            $output = $process->getOutput();
+            $analytics = json_decode($output, true);
+            
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                \Illuminate\Support\Facades\Log::error('Maintenance Analytics JSON Error: ' . json_last_error_msg());
+                \Illuminate\Support\Facades\Log::error('Raw Output: ' . $output);
+            }
+        } else {
+            \Illuminate\Support\Facades\Log::error('Maintenance Analytics Failed: ' . $process->getErrorOutput());
+            \Illuminate\Support\Facades\Log::error('Output: ' . $process->getOutput());
         }
 
         // Fallback or Supplemental PHP Data
@@ -416,12 +429,25 @@ class AdminController extends Controller
 
     public function vacuumMonitoring() {
         // 4) Vacuum Monitoring (Detailed Analytics)
-        $process = new \Symfony\Component\Process\Process(['python3', base_path('scripts/analytics_detail.py'), 'vacuum']);
+        $pythonCmd = (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') ? 'python' : '/usr/bin/python3';
+        $scriptPath = base_path('scripts/analytics_detail.py');
+        
+        $process = new \Symfony\Component\Process\Process([$pythonCmd, $scriptPath, 'vacuum']);
         $process->run();
+        
         $analytics = [];
         
         if ($process->isSuccessful()) {
-            $analytics = json_decode($process->getOutput(), true);
+            $output = $process->getOutput();
+            $analytics = json_decode($output, true);
+            
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                \Illuminate\Support\Facades\Log::error('Vacuum Analytics JSON Error: ' . json_last_error_msg());
+                \Illuminate\Support\Facades\Log::error('Raw Output: ' . $output);
+            }
+        } else {
+            \Illuminate\Support\Facades\Log::error('Vacuum Analytics Failed: ' . $process->getErrorOutput());
+            \Illuminate\Support\Facades\Log::error('Output: ' . $process->getOutput());
         }
 
         // Detailed Lists
