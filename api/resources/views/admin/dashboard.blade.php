@@ -140,6 +140,45 @@
         </div>
     </div>
 
+    {{-- PERFORMANCE METRICS ROW (Added via Python) --}}
+    <div class="row g-4 mb-5">
+        <div class="col-xl-6">
+            <div class="glass-card p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="fw-bold mb-0 text-white"><i class="bi bi-stopwatch me-2 text-warning"></i>Maintenance Performance</h5>
+                    <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25">MTTR (Repair Time)</span>
+                </div>
+                <div class="d-flex align-items-center justify-content-center flex-column py-4">
+                    <div class="display-4 fw-bold text-white mb-2">
+                        {{ $globalStats['avg_repair_time'] ?? 'N/A' }}
+                    </div>
+                    <div class="text-muted small">Average time to close maintenance jobs</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-6">
+            <div class="glass-card p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="fw-bold mb-0 text-white"><i class="bi bi-people me-2 text-info"></i>Top Inspectors (30 Days)</h5>
+                </div>
+                
+                @if(isset($globalStats['top_inspectors']) && count($globalStats['top_inspectors']) > 0)
+                    <div class="d-flex flex-column gap-3">
+                        @foreach($globalStats['top_inspectors'] as $inspector)
+                            <div class="d-flex justify-content-between align-items-center border-bottom border-light border-opacity-10 pb-2">
+                                <span class="text-white">{{ $inspector['name'] }}</span>
+                                <span class="badge bg-info bg-opacity-10 text-info">{{ $inspector['report_count'] }} Reports</span>
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="text-center text-muted py-3">No stats available</div>
+                @endif
+            </div>
+        </div>
+    </div>
+    
     {{-- 4. SYSTEM OCCUPANCY (VISUAL BAR) --}}
     @if(!empty($fillingStatusStats))
     <div class="glass-card p-4 mb-5">

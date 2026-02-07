@@ -50,16 +50,47 @@ class AdminController extends Controller
         };
 
         // 1) Global summary (COUNT ONLY - No Data Loading)
-        $globalStats = [
-             'total_active' => MasterIsotank::where('status', 'active')->tap($isotankFilter)->count(),
-             'open_maintenance' => MaintenanceJob::whereIn('status', ['open', 'on_progress'])->tap($relationFilter)->count(),
-             'deferred_maintenance' => MaintenanceJob::where('status', 'deferred')->tap($relationFilter)->count(),
-             'open_inspections' => InspectionJob::whereIn('status', ['open', 'in_progress'])->tap($relationFilter)->count(),
-             'calibration_alerts' => \App\Models\MasterIsotankComponent::where('expiry_date', '<', now()->addMonth())
-                  ->tap($relationFilter)
-                  ->distinct('isotank_id')
-                  ->count('isotank_id')
-        ];
+        // 1) Global summary (Python Integration with PHP Fallback)
+        $globalStats = [];
+        $pythonSuccess = false;
+        
+        try {
+            $scriptPath = base_path('scripts/dashboard_analytics.py');
+            // Use Process to execute python
+            $process = new \Symfony\Component\Process\Process(['python', $scriptPath, $category]);
+            $process->setTimeout(10); // 10 seconds timeout
+            $process->run();
+
+            if ($process->isSuccessful()) {
+                $json = $process->getOutput();
+                $data = json_decode($json, true);
+                
+                if (json_last_error() === JSON_ERROR_NONE && !isset($data['error'])) {
+                    $globalStats = $data;
+                    $pythonSuccess = true;
+                } else {
+                     \Illuminate\Support\Facades\Log::warning("Dashboard Python Script JSON Error: " . ($data['error'] ?? 'Invalid JSON') . " | Raw: " . substr($json, 0, 100));
+                }
+            } else {
+                 \Illuminate\Support\Facades\Log::warning("Dashboard Python Execution Failed: " . $process->getErrorOutput());
+            }
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error("Dashboard Python Exception: " . $e->getMessage());
+        }
+
+        if (!$pythonSuccess) {
+             // Fallback to PHP implementation
+             $globalStats = [
+                 'total_active' => MasterIsotank::where('status', 'active')->tap($isotankFilter)->count(),
+                 'open_maintenance' => MaintenanceJob::whereIn('status', ['open', 'on_progress'])->tap($relationFilter)->count(),
+                 'deferred_maintenance' => MaintenanceJob::where('status', 'deferred')->tap($relationFilter)->count(),
+                 'open_inspections' => InspectionJob::whereIn('status', ['open', 'in_progress'])->tap($relationFilter)->count(),
+                 'calibration_alerts' => \App\Models\MasterIsotankComponent::where('expiry_date', '<', now()->addMonth())
+                      ->tap($relationFilter)
+                      ->distinct('isotank_id')
+                      ->count('isotank_id')
+             ];
+        }
 
         // 2) Location distribution (SQL Group By)
         // Completely removed bulky collection processing
