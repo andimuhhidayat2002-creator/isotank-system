@@ -52,7 +52,7 @@
                 <div>
                     <div class="text-muted small text-uppercase fw-bold mb-1">Critical Tanks</div>
                     <div class="display-6 fw-bold text-danger">{{ $analytics['summary']['critical_tanks'] ?? 0 }}</div>
-                    <small class="text-muted">> 50 mTorr</small>
+                    <small class="text-muted">> 5 mTorr</small>
                 </div>
                 <div class="rounded-circle bg-danger bg-opacity-20 p-3">
                     <i class="bi bi-exclamation-triangle text-danger fs-4"></i>

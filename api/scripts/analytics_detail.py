@@ -130,7 +130,7 @@ def analyze_vacuum(conn, db_type):
     try:
         q_live = """
             SELECT COUNT(*) as total, 
-                   SUM(CASE WHEN vacuum_mtorr > 50 THEN 1 ELSE 0 END) as critical 
+                   SUM(CASE WHEN vacuum_mtorr > 5 THEN 1 ELSE 0 END) as critical 
             FROM master_isotank_measurement_statuses
         """
         df_live = pd.read_sql_query(q_live, conn)

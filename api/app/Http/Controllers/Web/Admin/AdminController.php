@@ -491,8 +491,8 @@ class AdminController extends Controller
         }
 
         // Recent Inspections List
-        $recentInspections = \App\Models\InspectionLog::with(['isotank', 'inspector'])
-            ->whereNotNull('inspector_id')
+        // Note: Temporarily disabled inspector relation to prevent 500 error if column missing
+        $recentInspections = \App\Models\InspectionLog::with('isotank')
             ->latest()
             ->limit(20)
             ->get();

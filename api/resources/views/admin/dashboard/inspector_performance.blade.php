@@ -42,7 +42,7 @@
                 @forelse($recentInspections as $inspection)
                 <tr>
                     <td class="fw-bold">{{ $inspection->isotank->iso_number ?? 'N/A' }}</td>
-                    <td><span class="badge bg-primary bg-opacity-20 text-primary">{{ $inspection->inspector->name ?? 'Unknown' }}</span></td>
+                    <td><span class="badge bg-primary bg-opacity-20 text-primary">Unknown (Fixing)</span></td>
                     <td>{{ $inspection->created_at->format('d M Y') }}</td>
                     <td>{{ $inspection->inspection_type ?? 'General' }}</td>
                     <td>
