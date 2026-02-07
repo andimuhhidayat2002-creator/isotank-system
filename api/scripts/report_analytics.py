@@ -147,9 +147,14 @@ def run_analytics(report_type, target_date):
         q_fill = "SELECT filling_status_code, COUNT(*) as count FROM master_isotanks WHERE status = 'active' GROUP BY filling_status_code"
         df_fill = pd.read_sql_query(q_fill, conn)
         
+        # Handle NaN/None
+        if not df_fill.empty:
+            df_fill['filling_status_code'] = df_fill['filling_status_code'].fillna('No Status')
+        
         fill_dist = {}
         for _, row in df_fill.iterrows():
-            code = row['filling_status_code'] if row['filling_status_code'] else 'No Status'
+            # Ensure string
+            code = str(row['filling_status_code']) if row['filling_status_code'] else 'No Status'
             fill_dist[code] = int(row['count'])
         
         stats['filling_distribution'] = fill_dist
