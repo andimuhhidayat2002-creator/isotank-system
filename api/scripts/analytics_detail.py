@@ -86,6 +86,55 @@ def analyze_maintenance(conn, db_type):
         'data': df_trend['count'].tolist()
     }
     
+    # 4. Summary Statistics
+    # Total Open Jobs
+    q_open = "SELECT COUNT(*) as count FROM maintenance_jobs WHERE status IN ('open', 'in_progress')"
+    df_open = pd.read_sql_query(q_open, conn)
+    total_open = int(df_open['count'].iloc[0]) if not df_open.empty else 0
+    
+    # Deferred Jobs
+    q_deferred = "SELECT COUNT(*) as count FROM maintenance_jobs WHERE status = 'deferred'"
+    df_deferred = pd.read_sql_query(q_deferred, conn)
+    deferred = int(df_deferred['count'].iloc[0]) if not df_deferred.empty else 0
+    
+    # Completed in last 30 days
+    date_30d = "DATE_SUB(NOW(), INTERVAL 30 DAY)" if db_type == 'mysql' else "date('now', '-30 days')"
+    q_completed = f"SELECT COUNT(*) as count FROM maintenance_jobs WHERE status = 'closed' AND completed_at >= {date_30d}"
+    df_completed = pd.read_sql_query(q_completed, conn)
+    completed_30d = int(df_completed['count'].iloc[0]) if not df_completed.empty else 0
+    
+    # Average MTTR (Mean Time To Repair) in hours
+    q_mttr = f"""
+        SELECT AVG(TIMESTAMPDIFF(HOUR, created_at, completed_at)) as avg_hours
+        FROM maintenance_jobs 
+        WHERE status = 'closed' 
+        AND completed_at IS NOT NULL
+        AND created_at >= {date_30d}
+    """ if db_type == 'mysql' else f"""
+        SELECT AVG((julianday(completed_at) - julianday(created_at)) * 24) as avg_hours
+        FROM maintenance_jobs 
+        WHERE status = 'closed' 
+        AND completed_at IS NOT NULL
+        AND created_at >= {date_30d}
+    """
+    df_mttr = pd.read_sql_query(q_mttr, conn)
+    avg_mttr_hours = df_mttr['avg_hours'].iloc[0] if not df_mttr.empty and df_mttr['avg_hours'].iloc[0] is not None else None
+    
+    if avg_mttr_hours:
+        if avg_mttr_hours < 24:
+            avg_mttr = f"{int(avg_mttr_hours)}h"
+        else:
+            avg_mttr = f"{int(avg_mttr_hours / 24)}d"
+    else:
+        avg_mttr = "N/A"
+    
+    stats['summary'] = {
+        'total_open': total_open,
+        'deferred': deferred,
+        'completed_30d': completed_30d,
+        'avg_mttr': avg_mttr
+    }
+    
     return stats
 
 def analyze_vacuum(conn, db_type):

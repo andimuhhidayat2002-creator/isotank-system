@@ -9,6 +9,80 @@
     <a href="{{ route('admin.dashboard') }}" class="btn btn-outline-light btn-sm"><i class="bi bi-arrow-left me-1"></i>Back</a>
 </div>
 
+{{-- Summary Statistics Cards --}}
+<div class="row g-4 mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="glass-card p-4 h-100">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                    <div class="text-muted small text-uppercase fw-bold mb-1">Total Open Jobs</div>
+                    <div class="display-6 fw-bold text-warning">{{ $analytics['summary']['total_open'] ?? 0 }}</div>
+                </div>
+                <div class="rounded-circle bg-warning bg-opacity-20 p-3">
+                    <i class="bi bi-wrench text-warning fs-4"></i>
+                </div>
+            </div>
+            <div class="progress" style="height: 4px;">
+                <div class="progress-bar bg-warning" style="width: 100%"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="glass-card p-4 h-100">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                    <div class="text-muted small text-uppercase fw-bold mb-1">Avg MTTR</div>
+                    <div class="display-6 fw-bold text-info">{{ $analytics['summary']['avg_mttr'] ?? 'N/A' }}</div>
+                    <small class="text-muted">Mean Time To Repair</small>
+                </div>
+                <div class="rounded-circle bg-info bg-opacity-20 p-3">
+                    <i class="bi bi-clock-history text-info fs-4"></i>
+                </div>
+            </div>
+            <div class="progress" style="height: 4px;">
+                <div class="progress-bar bg-info" style="width: 100%"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="glass-card p-4 h-100">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                    <div class="text-muted small text-uppercase fw-bold mb-1">Deferred Jobs</div>
+                    <div class="display-6 fw-bold text-danger">{{ $analytics['summary']['deferred'] ?? 0 }}</div>
+                    <small class="text-muted">Pending Action</small>
+                </div>
+                <div class="rounded-circle bg-danger bg-opacity-20 p-3">
+                    <i class="bi bi-pause-circle text-danger fs-4"></i>
+                </div>
+            </div>
+            <div class="progress" style="height: 4px;">
+                <div class="progress-bar bg-danger" style="width: 100%"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="glass-card p-4 h-100">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                    <div class="text-muted small text-uppercase fw-bold mb-1">Completed (30d)</div>
+                    <div class="display-6 fw-bold text-success">{{ $analytics['summary']['completed_30d'] ?? 0 }}</div>
+                    <small class="text-muted">Last Month</small>
+                </div>
+                <div class="rounded-circle bg-success bg-opacity-20 p-3">
+                    <i class="bi bi-check-circle text-success fs-4"></i>
+                </div>
+            </div>
+            <div class="progress" style="height: 4px;">
+                <div class="progress-bar bg-success" style="width: 100%"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
 {{-- Main Charts --}}
 <div class="row g-4 mb-4">
     <div class="col-lg-6">
