@@ -417,10 +417,52 @@ class AdminController extends Controller
             
             // PHP Fallbacks (Vital KPIs) - Force DB Source of Truth
             $analytics['total_open'] = \App\Models\MaintenanceJob::whereIn('status', ['open', 'on_progress'])->count();
-            $analytics['deferred'] = \App\Models\MaintenanceJob::where('priority', 'deferred')->count();
+            
+            // Robust check for deferred: case-insensitive
+            $analytics['deferred'] = \App\Models\MaintenanceJob::where(function($q) {
+                $q->where('priority', 'deferred')
+                  ->orWhere('priority', 'Deferred')
+                  ->orWhere('priority', 'DEFERRED');
+            })->count();
 
-            $analytics['completed_30d'] = \App\Models\MaintenanceJob::where('status', 'closed')
-                ->where('completed_at', '>=', now()->subDays(30))->count();
+            // Completed in last 30 days
+            $closedJobs30d = \App\Models\MaintenanceJob::where('status', 'closed')
+                ->where('completed_at', '>=', now()->subDays(30))
+                ->get();
+
+            $analytics['completed_30d'] = $closedJobs30d->count();
+
+            // PHP Fallback for AVG MTTR (if N/A or empty)
+            if (empty($analytics['avg_mttr']) || $analytics['avg_mttr'] === 'N/A') {
+                if ($closedJobs30d->count() > 0) {
+                    $totalSeconds = 0;
+                    $validCount = 0;
+                    foreach($closedJobs30d as $job) {
+                        if ($job->completed_at && $job->created_at) {
+                            $start = Carbon::parse($job->created_at);
+                            $end = Carbon::parse($job->completed_at);
+                            // Only count if end > start
+                            if ($end->gte($start)) {
+                                $totalSeconds += $end->diffInSeconds($start);
+                                $validCount++;
+                            }
+                        }
+                    }
+                    
+                    if ($validCount > 0) {
+                        $avgDays = ($totalSeconds / $validCount) / 86400; // Convert seconds to days
+                        if ($avgDays < 1) {
+                            $analytics['avg_mttr'] = number_format($avgDays * 24, 1) . ' hrs';
+                        } else {
+                            $analytics['avg_mttr'] = number_format($avgDays, 1) . ' days';
+                        }
+                    } else {
+                        $analytics['avg_mttr'] = 'N/A';
+                    }
+                } else {
+                    $analytics['avg_mttr'] = 'N/A';
+                }
+            }
 
             
             if (empty($analytics['top_faults'])) {
@@ -432,6 +474,7 @@ class AdminController extends Controller
                     ->get()
                     ->toArray();
             }
+
 
             if (json_last_error() !== JSON_ERROR_NONE) {
                 \Illuminate\Support\Facades\Log::error('Maintenance Analytics JSON Error: ' . json_last_error_msg());
