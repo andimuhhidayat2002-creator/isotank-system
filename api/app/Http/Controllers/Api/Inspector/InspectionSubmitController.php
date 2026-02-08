@@ -616,6 +616,28 @@ class InspectionSubmitController extends Controller
                     // 7. TRIGGER VACUUM SUCTION ACTIVITY (if vacuum_value > 8 mTorr)
                     if ($mtorr > 8) {
                         $this->triggerVacuumSuction($job->isotank_id, $mtorr, $validated['vacuum_temperature'] ?? null);
+                        
+                        // EMAIL ALERT for High Vacuum
+                        try {
+                            // Fetch all admins dynamically
+                            $admins = \App\Models\User::where('role', 'admin')->pluck('email')->toArray();
+                            
+                            // Fallback if no admins found (safety net)
+                            if (empty($admins)) {
+                                $admins = ['andimuhhidayat2002@gmail.com'];
+                            }
+
+                            $dummyJob = (object) [
+                                'item_name' => 'Vacuum System',
+                                'issue' => 'High Vacuum Alert (> 8 mTorr)',
+                            ];
+
+                            \Illuminate\Support\Facades\Mail::to($admins)
+                                ->send(new \App\Mail\MaintenanceAndVacuumAlert($dummyJob, $job->isotank, $mtorr));
+                                
+                        } catch (\Exception $e) {
+                            \Log::error("Failed to send High Vacuum Email: " . $e->getMessage());
+                        }
                     }
                 }
 
@@ -737,7 +759,7 @@ class InspectionSubmitController extends Controller
                 }
 
                 // Create maintenance job
-                MaintenanceJob::create([
+                $maintenanceJob = MaintenanceJob::create([
                     'isotank_id' => $isotankId,
                     'source_item' => $item,
                     'description' => $remark,
@@ -748,6 +770,26 @@ class InspectionSubmitController extends Controller
                     'triggered_by_inspection_log_id' => $inspectionLog->id,
                     'before_photo' => $photoPath,
                 ]);
+
+                // EMAIL ALERT for Maintenance Job
+                try {
+                    // Fetch admins
+                    $admins = \App\Models\User::where('role', 'admin')->pluck('email')->toArray();
+                    if (empty($admins)) {
+                        $admins = ['andimuhhidayat2002@gmail.com'];
+                    }
+
+                    $jobProxy = (object) [
+                        'item_name' => ucwords(str_replace('_', ' ', $maintenanceJob->source_item)),
+                        'issue' => $maintenanceJob->description ?? 'No description provided',
+                    ];
+                    
+                    \Illuminate\Support\Facades\Mail::to($admins)
+                        ->send(new \App\Mail\MaintenanceAndVacuumAlert($jobProxy, $inspectionLog->isotank, 'N/A'));
+
+                } catch (\Exception $e) {
+                    \Log::error("Failed to send Maintenance Job Email: " . $e->getMessage());
+                }
             }
         }
     }
