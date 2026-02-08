@@ -101,16 +101,33 @@ class VacuumImport
                     if (!$checkDate) $checkDate = now();
 
                     // Value Parsing
-                    $val = $getVal($vacuumAliases) ?? 0;
+                    $valRaw = $getVal($vacuumAliases) ?? 0;
+                    $unitRaw = $getVal(['unit', 'uom']) ?? 'mTorr';
+                    $valMtorr = $this->normalizeVacuum((float)$valRaw, $unitRaw);
                     
                     VacuumLog::create([
                         'isotank_id' => $isotank->id,
-                        'vacuum_value_raw' => $val,
-                        'vacuum_unit_raw' => $getVal(['unit', 'uom']) ?? 'mTorr',
-                        'vacuum_value_mtorr' => (float)$val,
+                        'vacuum_value_raw' => $valRaw,
+                        'vacuum_unit_raw' => $unitRaw,
+                        'vacuum_value_mtorr' => $valMtorr,
                         'temperature' => $getVal($tempAliases) ?? null,
                         'check_datetime' => $checkDate
                     ]);
+
+                    // SYNC TO MASTER MEASUREMENT STATUS (CRITICAL FIX)
+                    // Only update if this log is newer than current status, or if status doesn't exist
+                    $status = \App\Models\MasterIsotankMeasurementStatus::firstOrNew(['isotank_id' => $isotank->id]);
+                    
+                    // Convert both to timestamps for comparison (handle nulls safely)
+                    $statusTimestamp = $status->last_measurement_at ? strtotime($status->last_measurement_at) : 0;
+                    $logTimestamp = strtotime($checkDate);
+
+                    if ($logTimestamp >= $statusTimestamp) {
+                        $status->vacuum_mtorr = $valMtorr;
+                        $status->temperature = $getVal($tempAliases) ?? null;
+                        $status->last_measurement_at = $checkDate;
+                        $status->save();
+                    }
 
                     $this->successCount++;
                 } catch (\Exception $e) {
@@ -125,6 +142,25 @@ class VacuumImport
         } catch (\Exception $e) {
             throw $e;
         }
+    }
+
+    private function normalizeVacuum($value, $unit) 
+    {
+        $unit = strtolower((string)$unit);
+        $value = (float)$value;
+        
+        if ($unit === 'torr') {
+            return $value * 1000;
+        }
+        
+        // Handle scientific notation logic if needed, but for now assuming normalized decimal input
+        // mbar conversion? 1 mbar = 0.750062 Torr = 750.062 mTorr
+        if ($unit === 'mbar') {
+            return $value * 750.062;
+        }
+
+        // Default: mTorr
+        return $value;
     }
 
     private function parseDate($value)
