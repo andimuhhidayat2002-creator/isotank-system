@@ -418,12 +418,12 @@ class AdminController extends Controller
             // PHP Fallbacks (Vital KPIs) - Force DB Source of Truth
             $analytics['total_open'] = \App\Models\MaintenanceJob::whereIn('status', ['open', 'on_progress'])->count();
             
-            // Robust check for deferred: case-insensitive
+            // Robust check for deferred: case-insensitive and partial match on priority OR status
             $analytics['deferred'] = \App\Models\MaintenanceJob::where(function($q) {
-                $q->where('priority', 'deferred')
-                  ->orWhere('priority', 'Deferred')
-                  ->orWhere('priority', 'DEFERRED');
+                $q->where('priority', 'LIKE', '%deferred%')
+                  ->orWhere('status', 'LIKE', '%deferred%');
             })->count();
+
 
             // Completed in last 30 days
             $closedJobs30d = \App\Models\MaintenanceJob::where('status', 'closed')
@@ -441,13 +441,16 @@ class AdminController extends Controller
                         if ($job->completed_at && $job->created_at) {
                             $start = Carbon::parse($job->created_at);
                             $end = Carbon::parse($job->completed_at);
-                            // Only count if end > start
-                            if ($end->gte($start)) {
+                            
+                            // CRITICAL FIX: Ignore invalid dates (completed before created) 
+                            // and negative durations which cause "negative hrs"
+                            if ($end->gt($start)) {
                                 $totalSeconds += $end->diffInSeconds($start);
                                 $validCount++;
                             }
                         }
                     }
+
                     
                     if ($validCount > 0) {
                         $avgDays = ($totalSeconds / $validCount) / 86400; // Convert seconds to days
