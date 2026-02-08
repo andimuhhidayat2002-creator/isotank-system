@@ -202,22 +202,43 @@ def analyze_vacuum(conn, db_type):
     avg_rise_rate_str = "N/A"
     best_manu = "N/A"
     
-    if not df_rates.empty:
+    # FINAL DETERMINATION LOGIC
+    
+    # 1. FALLBACK: If rates cannot be calculated (insufficient data), use CURRENT VACUUM LEVEL
+    if df_rates.empty and not df.empty:
+         try:
+             # Take the latest reading for each tank to show CURRENT STATUS
+             latest_readings = df.sort_values('check_datetime').groupby('isotank_id').tail(1)
+             
+             avg_val = latest_readings['vacuum_value_mtorr'].mean()
+             avg_rise_rate_str = f"{avg_val:.2f} mTorr (Avg)"
+             
+             # Manufacturer Performance based on Current Vacuum (Lower is better)
+             manu_perf = latest_readings.groupby('manufacturer')['vacuum_value_mtorr'].mean().reset_index()
+             manu_perf = manu_perf.sort_values('vacuum_value_mtorr', ascending=True)
+             manu_perf = manu_perf.head(10)
+             
+             stats['manufacturers'] = {
+                 'labels': manu_perf['manufacturer'].tolist(),
+                 'data': manu_perf['vacuum_value_mtorr'].round(2).tolist()
+             }
+             
+             if not manu_perf.empty:
+                 best_manu = manu_perf.iloc[0]['manufacturer']
+         except:
+             stats['manufacturers'] = {'labels': [], 'data': []}
+             
+    # 2. NORMAL: If rates exist, use them
+    elif not df_rates.empty:
         try:
-            avg_rise_rate = df_rates['rate'].mean() * 30 # Convert to Monthly Rate for readability? Or keep daily.
-            # User rarely sees daily movement. Let's stick to Daily but precise.
-            # Actually, per year check -> values change by 1-3 mTorr per YEAR.
-            # Rate per day will be tiny (0.005). 
-            # Let's display Rate per MONTH (x30) or YEAR (x365)?
-            # Let's use Year for better readability given the annual check context.
-            avg_rise_rate_year = df_rates['rate'].mean() * 365
-            avg_rise_rate_str = f"{avg_rise_rate_year:.2f} mTorr/yr"
+            avg_rise_rate = df_rates['rate'].mean() * 365 # Yearly Rate
+            avg_rise_rate_str = f"{avg_rise_rate:.2f} mTorr/yr"
             
             # Manufacturer Performance (Lower rate is better)
             df_rates['rate_yearly'] = df_rates['rate'] * 365
             manu_perf = df_rates.groupby('manufacturer')['rate_yearly'].mean().reset_index()
-            manu_perf = manu_perf.sort_values('rate_yearly', ascending=True) # Ascending: Lower is better
-            manu_perf = manu_perf.head(10) # Top 10 best
+            manu_perf = manu_perf.sort_values('rate_yearly', ascending=True) 
+            manu_perf = manu_perf.head(10) 
             
             stats['manufacturers'] = {
                 'labels': manu_perf['manufacturer'].tolist(),
@@ -228,6 +249,8 @@ def analyze_vacuum(conn, db_type):
                 best_manu = manu_perf.iloc[0]['manufacturer']
         except:
              stats['manufacturers'] = {'labels': [], 'data': []}
+             
+    # 3. EMPTY: No data at all
     else:
         stats['manufacturers'] = {'labels': [], 'data': []}
 
