@@ -125,11 +125,11 @@ def analyze_maintenance(conn, db_type):
 
 def analyze_vacuum(conn, db_type):
     stats = {}
-    date_filter = "DATE_SUB(NOW(), INTERVAL 6 MONTH)" if db_type == 'mysql' else "date('now', '-6 months')"
-    date_filter_year = "DATE_SUB(NOW(), INTERVAL 12 MONTH)" if db_type == 'mysql' else "date('now', '-12 months')"
+    # UPGRADE: Extend lookback to 24 months to capture annual checks
+    date_filter = "DATE_SUB(NOW(), INTERVAL 24 MONTH)" if db_type == 'mysql' else "date('now', '-24 months')"
+    date_filter_year = "DATE_SUB(NOW(), INTERVAL 24 MONTH)" if db_type == 'mysql' else "date('now', '-24 months')"
     
     # Live Data (Current Status) for KPI Cards
-    # Use measurement status table directly for reliability
     try:
         q_live = """
             SELECT COUNT(*) as total, 
@@ -144,7 +144,6 @@ def analyze_vacuum(conn, db_type):
         live_critical = 0
 
     # Historical Rate Calculation
-    # Does not throw exception but sets empty df on fail
     q_logs = f"""
         SELECT v.isotank_id, v.vacuum_value_mtorr, v.check_datetime, m.manufacturer
         FROM vacuum_logs v
@@ -165,24 +164,37 @@ def analyze_vacuum(conn, db_type):
             for iso_id, group in df.groupby('isotank_id'):
                 if len(group) < 2: continue
                 
+                # Logic: Compare ONLY the last 2 records
                 last = group.iloc[-1]
                 prev = group.iloc[-2]
                 
                 days = (last['check_datetime'] - prev['check_datetime']).days
-                if days < 1: days = 1
+                if days < 1: days = 1 # Avoid division by zero
                 
-                diff = last['vacuum_value_mtorr'] - prev['vacuum_value_mtorr']
-                rate = diff / days
-                
-                if -5 < rate < 20: 
-                     tank_rates.append({
-                         'isotank_id': int(iso_id),
-                         'manufacturer': str(last['manufacturer']) if last['manufacturer'] else 'Unknown',
-                         'rate': float(rate),
-                         'current_val': float(last['vacuum_value_mtorr'])
-                     })
-        except:
-             pass # Skip rate calc on error
+                # NEW LOGIC: 
+                # If Last < Prev, it means SUCTION/MAINTENANCE occurred. 
+                # We cannot calculate Decay Rate from a suction event.
+                # Only calculate if pressure INCREASED (Decay).
+                if last['vacuum_value_mtorr'] > prev['vacuum_value_mtorr']:
+                    diff = last['vacuum_value_mtorr'] - prev['vacuum_value_mtorr']
+                    rate = diff / days
+                    
+                    # OUTLIER FILTER: 
+                    # Normal decay is slow. If rate > 1 mTorr/day, it's likely a LEAK or bad sensor, not normal decay.
+                    # We only want to average "Normal Decay" for manufacturer stats.
+                    if 0 < rate < 2.0: 
+                        tank_rates.append({
+                            'isotank_id': int(iso_id),
+                            'manufacturer': str(last['manufacturer']) if last['manufacturer'] else 'Unknown',
+                            'rate': float(rate),
+                            'current_val': float(last['vacuum_value_mtorr'])
+                        })
+                else:
+                    # Value dropped (Suction occurred). 
+                    # We ignore this period for "Rise Rate" calculation.
+                    pass 
+        except Exception as e:
+             pass 
     
     df_rates = pd.DataFrame(tank_rates)
     
@@ -192,21 +204,28 @@ def analyze_vacuum(conn, db_type):
     
     if not df_rates.empty:
         try:
-            avg_rise_rate = df_rates['rate'].mean()
-            avg_rise_rate_str = f"{avg_rise_rate:.2f} mTorr/d"
+            avg_rise_rate = df_rates['rate'].mean() * 30 # Convert to Monthly Rate for readability? Or keep daily.
+            # User rarely sees daily movement. Let's stick to Daily but precise.
+            # Actually, per year check -> values change by 1-3 mTorr per YEAR.
+            # Rate per day will be tiny (0.005). 
+            # Let's display Rate per MONTH (x30) or YEAR (x365)?
+            # Let's use Year for better readability given the annual check context.
+            avg_rise_rate_year = df_rates['rate'].mean() * 365
+            avg_rise_rate_str = f"{avg_rise_rate_year:.2f} mTorr/yr"
             
-            manu_perf = df_rates.groupby('manufacturer')['rate'].mean().reset_index()
-            manu_perf = manu_perf.sort_values('rate', ascending=False)
-            manu_perf = manu_perf.replace({np.nan: None})
+            # Manufacturer Performance (Lower rate is better)
+            df_rates['rate_yearly'] = df_rates['rate'] * 365
+            manu_perf = df_rates.groupby('manufacturer')['rate_yearly'].mean().reset_index()
+            manu_perf = manu_perf.sort_values('rate_yearly', ascending=True) # Ascending: Lower is better
+            manu_perf = manu_perf.head(10) # Top 10 best
             
             stats['manufacturers'] = {
                 'labels': manu_perf['manufacturer'].tolist(),
-                'data': manu_perf['rate'].round(2).tolist()
+                'data': manu_perf['rate_yearly'].round(2).tolist()
             }
             
-            manu_grp = df_rates.groupby('manufacturer')['rate'].mean()
-            if not manu_grp.empty:
-                best_manu = manu_grp.idxmin()
+            if not manu_perf.empty:
+                best_manu = manu_perf.iloc[0]['manufacturer']
         except:
              stats['manufacturers'] = {'labels': [], 'data': []}
     else:
