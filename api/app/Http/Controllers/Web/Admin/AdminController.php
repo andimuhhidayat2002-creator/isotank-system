@@ -416,8 +416,9 @@ class AdminController extends Controller
             $analytics = json_decode($output, true) ?? [];
             
             // PHP Fallbacks (Vital KPIs) - Force DB Source of Truth
-            $analytics['total_open'] = \App\Models\MaintenanceJob::where('status', 'open')->count();
+            $analytics['total_open'] = \App\Models\MaintenanceJob::whereIn('status', ['open', 'on_progress'])->count();
             $analytics['deferred'] = \App\Models\MaintenanceJob::where('priority', 'deferred')->count();
+
             $analytics['completed_30d'] = \App\Models\MaintenanceJob::where('status', 'closed')
                 ->where('completed_at', '>=', now()->subDays(30))->count();
 
