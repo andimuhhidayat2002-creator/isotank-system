@@ -575,31 +575,42 @@ class AdminController extends Controller
         $pythonCmd = (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') ? 'python' : '/usr/bin/python3';
         $scriptPath = base_path('scripts/analytics_detail.py');
         
-        $process = new \Symfony\Component\Process\Process([$pythonCmd, $scriptPath, 'inspector']);
-        $process->run();
-        
         $analytics = [];
         
-        if ($process->isSuccessful()) {
-            $output = $process->getOutput();
-            // Remove BOM and trim
-            $output = preg_replace('/^\xEF\xBB\xBF/', '', $output);
-            $output = trim($output);
-            $analytics = json_decode($output, true) ?? [];
+        try {
+            $process = new \Symfony\Component\Process\Process([$pythonCmd, $scriptPath, 'inspector']);
+            $process->setTimeout(120); // Increase timeout to 120 seconds
+            $process->run();
             
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                \Illuminate\Support\Facades\Log::error('Inspector Analytics JSON Error: ' . json_last_error_msg());
+            if ($process->isSuccessful()) {
+                $output = $process->getOutput();
+                // Remove BOM and trim
+                $output = preg_replace('/^\xEF\xBB\xBF/', '', $output);
+                $output = trim($output);
+                $analytics = json_decode($output, true) ?? [];
+                
+                if (json_last_error() !== JSON_ERROR_NONE) {
+                    \Illuminate\Support\Facades\Log::error('Inspector Analytics JSON Error: ' . json_last_error_msg());
+                }
+            } else {
+                 \Illuminate\Support\Facades\Log::error('Inspector Analytics Failed: ' . $process->getErrorOutput());
             }
-        } else {
-             \Illuminate\Support\Facades\Log::error('Inspector Analytics Failed: ' . $process->getErrorOutput());
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Inspector Analytics Exception: ' . $e->getMessage());
         }
 
         // Recent Inspections List
-        // Note: Temporarily disabled inspector relation to prevent 500 error if column missing
-        $recentInspections = \App\Models\InspectionLog::with('isotank')
-            ->latest()
-            ->limit(20)
-            ->get();
+        // Improved: Try to load inspector relation, but catch if it fails (rare)
+        try {
+            $recentInspections = \App\Models\InspectionLog::with(['isotank', 'inspector'])
+                ->latest()
+                ->limit(20)
+                ->get();
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Recent Inspections Query Error: ' . $e->getMessage());
+            // Fallback without relations if something is critical
+            $recentInspections = \App\Models\InspectionLog::latest()->limit(20)->get();
+        }
 
         return view('admin.dashboard.inspector_performance', compact('analytics', 'recentInspections'));
     }

@@ -42,11 +42,11 @@
                 @forelse($recentInspections as $inspection)
                 <tr>
                     <td class="fw-bold">{{ optional($inspection->isotank)->iso_number ?? 'N/A' }}</td>
-                    <td><span class="badge bg-primary bg-opacity-20 text-primary">Unknown (Fixing)</span></td>
+                    <td><span class="badge bg-primary bg-opacity-20 text-primary">{{ optional($inspection->inspector)->name ?? 'System/Unknown' }}</span></td>
                     <td>{{ optional($inspection->created_at)->format('d M Y') ?? '-' }}</td>
-                    <td>{{ $inspection->inspection_type ?? 'General' }}</td>
+                    <td>{{ ucwords(str_replace('_', ' ', $inspection->inspection_type ?? 'General')) }}</td>
                     <td>
-                        <a href="{{ route('admin.inspection-logs.show', $inspection->id) }}" class="btn btn-sm btn-outline-info">
+                        <a href="{{ route('admin.reports.inspection.show', $inspection->id) }}" class="btn btn-sm btn-outline-info">
                             <i class="bi bi-eye"></i> View
                         </a>
                     </td>

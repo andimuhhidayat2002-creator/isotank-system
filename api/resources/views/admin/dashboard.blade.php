@@ -149,7 +149,7 @@
                             <i class="bi bi-person-badge text-primary fs-4"></i>
                         </div>
                         <div>
-                            <h5 class="fw-bold text-white mb-1">Inspector Status</h5>
+                            <h5 class="fw-bold text-white mb-1">Inspector Performance</h5>
                             <div class="text-secondary small">Review performance & activity logs</div>
                         </div>
                     </div>
