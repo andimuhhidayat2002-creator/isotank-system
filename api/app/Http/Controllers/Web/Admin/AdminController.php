@@ -432,40 +432,36 @@ class AdminController extends Controller
 
             $analytics['completed_30d'] = $closedJobs30d->count();
 
-            // PHP Fallback for AVG MTTR (if N/A or empty)
-            if (empty($analytics['avg_mttr']) || $analytics['avg_mttr'] === 'N/A') {
-                if ($closedJobs30d->count() > 0) {
-                    $totalSeconds = 0;
-                    $validCount = 0;
-                    foreach($closedJobs30d as $job) {
-                        if ($job->completed_at && $job->created_at) {
-                            $start = Carbon::parse($job->created_at);
-                            $end = Carbon::parse($job->completed_at);
-                            
-                            // CRITICAL FIX: Ignore invalid dates (completed before created) 
-                            // and negative durations which cause "negative hrs"
-                            if ($end->gt($start)) {
-                                $totalSeconds += $end->diffInSeconds($start);
-                                $validCount++;
-                            }
+            // FORCE PHP Calculation for AVG MTTR (Override Python to prevent negative values)
+            $analytics['avg_mttr'] = 'N/A'; // Reset default
+            
+            if ($closedJobs30d->count() > 0) {
+                $totalSeconds = 0;
+                $validCount = 0;
+                foreach($closedJobs30d as $job) {
+                    if ($job->completed_at && $job->created_at) {
+                        $start = Carbon::parse($job->created_at);
+                        $end = Carbon::parse($job->completed_at);
+                        
+                        // CRITICAL FIX: Ignore invalid dates (completed before created) 
+                        // and negative durations which cause "negative hrs"
+                        if ($end->gt($start)) {
+                            $totalSeconds += $end->diffInSeconds($start);
+                            $validCount++;
                         }
                     }
-
-                    
-                    if ($validCount > 0) {
-                        $avgDays = ($totalSeconds / $validCount) / 86400; // Convert seconds to days
-                        if ($avgDays < 1) {
-                            $analytics['avg_mttr'] = number_format($avgDays * 24, 1) . ' hrs';
-                        } else {
-                            $analytics['avg_mttr'] = number_format($avgDays, 1) . ' days';
-                        }
+                }
+                
+                if ($validCount > 0) {
+                    $avgDays = ($totalSeconds / $validCount) / 86400; // Convert seconds to days
+                    if ($avgDays < 1) {
+                        $analytics['avg_mttr'] = number_format($avgDays * 24, 1) . ' hrs';
                     } else {
-                        $analytics['avg_mttr'] = 'N/A';
+                        $analytics['avg_mttr'] = number_format($avgDays, 1) . ' days';
                     }
-                } else {
-                    $analytics['avg_mttr'] = 'N/A';
                 }
             }
+
 
             
             if (empty($analytics['top_faults'])) {
