@@ -443,23 +443,25 @@ class AdminController extends Controller
                         $start = Carbon::parse($job->created_at);
                         $end = Carbon::parse($job->completed_at);
                         
-                        // CRITICAL FIX: Ignore invalid dates (completed before created) 
-                        // and negative durations which cause "negative hrs"
                         if ($end->gt($start)) {
-                            $totalSeconds += $end->diffInSeconds($start);
+                            $diff = $end->diffInSeconds($start);
+                            $totalSeconds += $diff;
                             $validCount++;
+                            // \Illuminate\Support\Facades\Log::info("Job ID {$job->id}: {$diff}s");
                         }
                     }
                 }
                 
                 if ($validCount > 0) {
-                    $avgDays = ($totalSeconds / $validCount) / 86400; // Convert seconds to days
+                    $avgDays = abs($totalSeconds / $validCount) / 86400; // Use abs() to guarantee positive
+                    
                     if ($avgDays < 1) {
                         $analytics['avg_mttr'] = number_format($avgDays * 24, 1) . ' hrs';
                     } else {
                         $analytics['avg_mttr'] = number_format($avgDays, 1) . ' days';
                     }
                 }
+
             }
 
 
