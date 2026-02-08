@@ -175,14 +175,14 @@ def analyze_vacuum(conn, db_type):
                 # If Last < Prev, it means SUCTION/MAINTENANCE occurred. 
                 # We cannot calculate Decay Rate from a suction event.
                 # Only calculate if pressure INCREASED (Decay).
-                if last['vacuum_value_mtorr'] > prev['vacuum_value_mtorr']:
+                if last['vacuum_value_mtorr'] >= prev['vacuum_value_mtorr']:
                     diff = last['vacuum_value_mtorr'] - prev['vacuum_value_mtorr']
                     rate = diff / days
                     
                     # OUTLIER FILTER: 
-                    # Normal decay is slow. If rate > 1 mTorr/day, it's likely a LEAK or bad sensor, not normal decay.
-                    # We only want to average "Normal Decay" for manufacturer stats.
-                    if 0 < rate < 2.0: 
+                    # Accept stable readings (0 change) as BEST performance.
+                    # Normal decay is usually < 2 mTorr/day.
+                    if 0 <= rate < 5.0:  # Relax upper bound slightly to catch more data
                         tank_rates.append({
                             'isotank_id': int(iso_id),
                             'manufacturer': str(last['manufacturer']) if last['manufacturer'] else 'Unknown',
