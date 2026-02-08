@@ -432,37 +432,65 @@ class AdminController extends Controller
 
             $analytics['completed_30d'] = $closedJobs30d->count();
 
-            // FORCE PHP Calculation for AVG MTTR (Override Python to prevent negative values)
-            $analytics['avg_mttr'] = 'N/A'; // Reset default
-            
-            if ($closedJobs30d->count() > 0) {
-                $totalSeconds = 0;
-                $validCount = 0;
-                foreach($closedJobs30d as $job) {
-                    if ($job->completed_at && $job->created_at) {
-                        $start = Carbon::parse($job->created_at);
-                        $end = Carbon::parse($job->completed_at);
+            // PHP Fallback for AVG MTTR (Only if Python fails or returns N/A)
+            if (empty($analytics['avg_mttr']) || $analytics['avg_mttr'] === 'N/A') {
+                if ($closedJobs30d->count() > 0) {
+                    $totalSeconds = 0;
+                    $validCount = 0;
+                    
+                    foreach($closedJobs30d as $job) {
+                        if ($job->completed_at && $job->created_at) {
+                            $start = Carbon::parse($job->created_at);
+                            $end = Carbon::parse($job->completed_at);
+                            
+                            if ($end->gt($start)) {
+                                $diff = $end->diffInSeconds($start);
+                                $totalSeconds += $diff;
+                                $validCount++;
+                            }
+                        }
+                    }
+
+                    if ($validCount > 0) {
+                        $avgDays = abs($totalSeconds / $validCount) / 86400; 
                         
-                        if ($end->gt($start)) {
-                            $diff = $end->diffInSeconds($start);
-                            $totalSeconds += $diff;
-                            $validCount++;
-                            // \Illuminate\Support\Facades\Log::info("Job ID {$job->id}: {$diff}s");
+                        if ($avgDays < 1) {
+                            $analytics['avg_mttr'] = number_format($avgDays * 24, 1) . ' hrs';
+                        } else {
+                            $analytics['avg_mttr'] = number_format($avgDays, 1) . ' days';
                         }
                     }
                 }
+            }
+
+            // PHP Fallback for TREND CHART (If Python fails)
+            if (empty($analytics['trend']) || empty($analytics['trend']['labels'])) {
+                $trendData = \App\Models\MaintenanceJob::where('status', 'closed')
+                    ->where('completed_at', '>=', now()->subMonths(12))
+                    ->select(
+                        \Illuminate\Support\Facades\DB::raw("DATE_FORMAT(completed_at, '%Y-%m') as month_key"),
+                        \Illuminate\Support\Facades\DB::raw("DATE_FORMAT(completed_at, '%M %Y') as month_label"),
+                        \Illuminate\Support\Facades\DB::raw('count(*) as count')
+                    )
+                    ->groupBy('month_key', 'month_label')
+                    ->orderBy('month_key', 'asc')
+                    ->get();
+
+                $labels = [];
+                $data = [];
                 
-                if ($validCount > 0) {
-                    $avgDays = abs($totalSeconds / $validCount) / 86400; // Use abs() to guarantee positive
-                    
-                    if ($avgDays < 1) {
-                        $analytics['avg_mttr'] = number_format($avgDays * 24, 1) . ' hrs';
-                    } else {
-                        $analytics['avg_mttr'] = number_format($avgDays, 1) . ' days';
-                    }
+                // Fill gaps manually or just push existing data
+                foreach ($trendData as $row) {
+                    $labels[] = $row->month_label;
+                    $data[] = $row->count;
                 }
 
+                $analytics['trend'] = [
+                    'labels' => $labels,
+                    'data' => $data
+                ];
             }
+
 
 
             
