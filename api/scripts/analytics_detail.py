@@ -82,17 +82,19 @@ def analyze_maintenance(conn, db_type):
     try:
         q_trend = f"""
             SELECT 
-                DATE_FORMAT(completion_date, '%Y-%m') as month,
+                DATE_FORMAT(completed_at, '%Y-%m') as month,
                 COUNT(*) as total_jobs,
                 SUM(total_cost) as total_spend,
-                AVG(DATEDIFF(completion_date, created_at)) as avg_mttr
+                AVG(DATEDIFF(completed_at, created_at)) as avg_mttr
+
             FROM maintenance_jobs
-            WHERE status='closed' AND completion_date >= {date_filter}
+            WHERE status='closed' AND completed_at >= {date_filter}
             GROUP BY month
             ORDER BY month ASC
         """
         if db_type == 'sqlite':
-            q_trend = f"SELECT strftime('%Y-%m', completion_date) as month, COUNT(*) as total_jobs, SUM(total_cost) as total_spend, AVG(julianday(completion_date) - julianday(created_at)) as avg_mttr FROM maintenance_jobs WHERE status='closed' AND completion_date >= {date_filter} GROUP BY month ORDER BY month ASC"
+            q_trend = f"SELECT strftime('%Y-%m', completed_at) as month, COUNT(*) as total_jobs, SUM(total_cost) as total_spend, AVG(julianday(completed_at) - julianday(created_at)) as avg_mttr FROM maintenance_jobs WHERE status='closed' AND completed_at >= {date_filter} GROUP BY month ORDER BY month ASC"
+
             
         df_trend = pd.read_sql_query(q_trend, conn)
         df_trend = df_trend.replace({np.nan: None})

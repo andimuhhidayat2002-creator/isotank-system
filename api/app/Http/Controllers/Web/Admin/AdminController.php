@@ -415,6 +415,23 @@ class AdminController extends Controller
             $output = trim($output);
             $analytics = json_decode($output, true) ?? [];
             
+            // PHP Fallbacks (Vital KPIs) - Force DB Source of Truth
+            $analytics['total_open'] = \App\Models\MaintenanceJob::where('status', 'open')->count();
+            $analytics['deferred'] = \App\Models\MaintenanceJob::where('priority', 'deferred')->count();
+            $analytics['completed_30d'] = \App\Models\MaintenanceJob::where('status', 'closed')
+                ->where('completed_at', '>=', now()->subDays(30))->count();
+
+            
+            if (empty($analytics['top_faults'])) {
+                $analytics['top_faults'] = \App\Models\MaintenanceJob::where('status', 'closed')
+                    ->select('source_item', \Illuminate\Support\Facades\DB::raw('count(*) as count'))
+                    ->groupBy('source_item')
+                    ->orderByDesc('count')
+                    ->limit(10)
+                    ->get()
+                    ->toArray();
+            }
+
             if (json_last_error() !== JSON_ERROR_NONE) {
                 \Illuminate\Support\Facades\Log::error('Maintenance Analytics JSON Error: ' . json_last_error_msg());
                 \Illuminate\Support\Facades\Log::error('Raw Output: ' . $output);
@@ -457,7 +474,8 @@ class AdminController extends Controller
         }
 
         // Detailed Lists
-        $exceedList = \App\Models\MasterIsotankMeasurementStatus::where('vacuum_mtorr', '>', 5)
+        // Use whereRaw to ensure numeric comparison for string column
+        $exceedList = \App\Models\MasterIsotankMeasurementStatus::whereRaw('CAST(vacuum_mtorr AS DECIMAL(10,4)) > 5')
             ->with('isotank:id,iso_number,location')
             ->orderByDesc('vacuum_mtorr')
             ->limit(50)
@@ -465,7 +483,7 @@ class AdminController extends Controller
 
         // Fallback: Ensure consistency between Card (Python) and Table (PHP)
         // If Python fails or returns 0 inconsistently, use PHP count
-        $criticalCount = \App\Models\MasterIsotankMeasurementStatus::where('vacuum_mtorr', '>', 5)->count();
+        $criticalCount = \App\Models\MasterIsotankMeasurementStatus::whereRaw('CAST(vacuum_mtorr AS DECIMAL(10,4)) > 5')->count();
         $totalMonitored = \App\Models\MasterIsotank::count();
         
         if (empty($analytics['summary']['critical_tanks']) || ($analytics['summary']['critical_tanks'] == 0 && $criticalCount > 0)) {
