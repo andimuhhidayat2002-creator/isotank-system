@@ -25,8 +25,8 @@ class AuthController extends Controller
 
             $user = Auth::user();
 
-            // Allow Admin, Management, Inspector, and Yard Operator to login
-            $allowedRoles = ['admin', 'management', 'inspector', 'yard_operator'];
+            // Allow Admin, Management, Inspector, Maintenance, and Yard Operator to login
+            $allowedRoles = ['admin', 'management', 'inspector', 'maintenance', 'yard_operator'];
             
             if (!in_array($user->role, $allowedRoles)) {
                 Auth::logout();
