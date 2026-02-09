@@ -117,8 +117,9 @@
                                 <div class="col-6">
                                     <ul class="list-group">
                                         <li class="list-group-item bg-dark bg-opacity-50 border-secondary d-flex justify-content-between"><span class="text-white">Vacuum</span> <strong class="text-white">{{ $log->vacuum_value ? (float)$log->vacuum_value : '-' }}</strong></li>
-                                        <li class="list-group-item bg-dark bg-opacity-50 border-secondary d-flex justify-content-between"><span class="text-white">Pressure</span> <strong class="text-white">{{ $log->pressure_1 ? (float)$log->pressure_1 : '-' }}</strong></li>
-                                        <li class="list-group-item bg-dark bg-opacity-50 border-secondary d-flex justify-content-between"><span class="text-white">Level</span> <strong class="text-white">{{ $log->level_1 ? (float)$log->level_1 : '-' }}</strong></li>
+                                        <li class="list-group-item bg-dark bg-opacity-50 border-secondary d-flex justify-content-between"><span class="text-white">Pressure PG</span> <strong class="text-white">{{ $log->pressure_1 ? (float)$log->pressure_1 : '-' }}</strong></li>
+                                        <li class="list-group-item bg-dark bg-opacity-50 border-secondary d-flex justify-content-between"><span class="text-white">Level LG</span> <strong class="text-white">{{ $log->level_1 ? (float)$log->level_1 : '-' }}</strong></li>
+                                        <li class="list-group-item bg-dark bg-opacity-50 border-secondary d-flex justify-content-between"><span class="text-white">Temp (Digital)</span> <strong class="text-white">{{ $log->ibox_temperature_1 ?? $log->ibox_temperature ?? '-' }}</strong></li>
                                     </ul>
                                 </div> <!-- Close col-6 -->
                             </div> <!-- Close internal row -->
@@ -302,12 +303,13 @@
                                                 @endforeach
                                             @endif
 
-                                            @if($tankCat == 'T75')
                                             <!-- SECTION D: IBOX -->
                                             <tr class="table-secondary"><th colspan="2" class="text-white">D. IBOX SYSTEM</th></tr>
                                             <tr><td class="ps-3">IBOX Condition</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->ibox_condition])</td></tr>
                                             <tr><td class="ps-3">Battery</td><td class="text-center">{{ $log->ibox_battery_percent ? $log->ibox_battery_percent.' %' : '-' }}</td></tr>
                                             <tr><td class="ps-3">Pressure (Digital)</td><td class="text-center">{{ $log->ibox_pressure ? $log->ibox_pressure . ' MPa' : '-' }}</td></tr>
+                                            
+                                            {{-- Temperature Stage 1 & 2 --}}
                                             <tr><td class="ps-3">Temperature #1 (Digital)</td><td class="text-center">{{ $log->ibox_temperature_1 ?? $log->ibox_temperature ?? '-' }}</td></tr>
                                             @if($log->ibox_temperature_1_timestamp || $log->ibox_temperature_timestamp)
                                             <tr><td class="ps-3 text-muted" style="font-size:0.85em; padding-left: 20px !important;"> — Time (Temp 1)</td><td class="text-center text-muted" style="font-size:0.85em">{{ $log->ibox_temperature_1_timestamp ?? $log->ibox_temperature_timestamp }}</td></tr>
@@ -320,9 +322,29 @@
 
                                             @if($tankCat == 'T75')
                                             <!-- SECTION E: INSTRUMENTS -->
-                                            <tr class="bg-dark bg-opacity-50"><th colspan="2" class="text-white ps-3">E. INSTRUMENTS</th></tr>
-                                            <tr><td class="ps-3">Pressure Gauge</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->pressure_gauge_condition])</td></tr>
-                                            <tr><td class="ps-3">Level Gauge</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->level_gauge_condition])</td></tr>
+                                            <tr class="table-secondary"><th colspan="2" class="text-white">E. INSTRUMENTS</th></tr>
+                                            
+                                            {{-- Pressure Gauge Stage 1 & 2 --}}
+                                            <tr><td class="ps-3">Pressure Gauge Condition</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->pressure_gauge_condition])</td></tr>
+                                            <tr><td class="ps-3">PG Pressure #1</td><td class="text-center">{{ $log->pressure_1 ? $log->pressure_1 . ' MPa' : '-' }}</td></tr>
+                                            @if($log->pressure_1_timestamp)
+                                            <tr><td class="ps-3 text-muted" style="font-size:0.85em; padding-left: 20px !important;"> — Time (PG 1)</td><td class="text-center text-muted" style="font-size:0.85em">{{ $log->pressure_1_timestamp }}</td></tr>
+                                            @endif
+                                            <tr><td class="ps-3">PG Pressure #2</td><td class="text-center">{{ $log->pressure_2 ? $log->pressure_2 . ' MPa' : '-' }}</td></tr>
+                                            @if($log->pressure_2_timestamp)
+                                            <tr><td class="ps-3 text-muted" style="font-size:0.85em; padding-left: 20px !important;"> — Time (PG 2)</td><td class="text-center text-muted" style="font-size:0.85em">{{ $log->pressure_2_timestamp }}</td></tr>
+                                            @endif
+
+                                            {{-- Level Gauge Stage 1 & 2 --}}
+                                            <tr class="border-top border-secondary"><td class="ps-3">Level Gauge Condition</td><td class="text-center">@include('admin.reports.partials.badge', ['status' => $log->level_gauge_condition])</td></tr>
+                                            <tr><td class="ps-3">LG Level #1</td><td class="text-center">{{ $log->level_1 ? $log->level_1 . ' %' : '-' }}</td></tr>
+                                            @if($log->level_1_timestamp)
+                                            <tr><td class="ps-3 text-muted" style="font-size:0.85em; padding-left: 20px !important;"> — Time (LG 1)</td><td class="text-center text-muted" style="font-size:0.85em">{{ $log->level_1_timestamp }}</td></tr>
+                                            @endif
+                                            <tr><td class="ps-3">LG Level #2</td><td class="text-center">{{ $log->level_2 ? $log->level_2 . ' %' : '-' }}</td></tr>
+                                            @if($log->level_2_timestamp)
+                                            <tr><td class="ps-3 text-muted" style="font-size:0.85em; padding-left: 20px !important;"> — Time (LG 2)</td><td class="text-center text-muted" style="font-size:0.85em">{{ $log->level_2_timestamp }}</td></tr>
+                                            @endif
                                             @endif
 
                                             @if($tankCat == 'T75')
