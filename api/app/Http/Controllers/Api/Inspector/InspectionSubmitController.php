@@ -303,8 +303,8 @@ class InspectionSubmitController extends Controller
                 ->where('is_draft', true)
                 ->first();
 
-            // PRE-SUBMIT LOGIC: Handle Timestamps & Stage 2 Validation for Outgoing
-            if ($job->activity_type === 'outgoing_inspection') {
+            // PRE-SUBMIT LOGIC: Handle Timestamps & Stage 2 Validation
+            if (true) { // Enabled for all inspection types (Incoming & Outgoing)
                 $currentTime = now();
                 
                 // PG
