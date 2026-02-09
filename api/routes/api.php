@@ -90,8 +90,8 @@ Route::middleware(['auth:sanctum', 'log.activity'])->group(function () {
         Route::post('/jobs/{id}/submit', [InspectionSubmitController::class, 'submit']);
     });
     
-    // Maintenance routes
-    Route::middleware('role:maintenance')->prefix('maintenance')->group(function () {
+    // Maintenance routes (Multi-role: Inspector can also perform maintenance tasks)
+    Route::middleware('role:inspector,maintenance')->prefix('maintenance')->group(function () {
         Route::get('/jobs', [MaintenanceJobController::class, 'index']);
         Route::get('/jobs/{id}', [MaintenanceJobController::class, 'show']);
         Route::put('/jobs/{id}/status', [MaintenanceJobController::class, 'updateStatus']);
