@@ -81,14 +81,18 @@ class MasterIsotankController extends Controller
         $isotank = MasterIsotank::with([
             'classSurveys',
             'itemStatuses',
+            'components', // Added for calibration tab
             'lastInspectionLog.inspector',
             'lastMaintenanceJob',
             'lastVacuumLog',
+            'vacuumLogs' => function($q) {
+                $q->latest()->take(20); // Added for vacuum history tab
+            },
             'inspectionLogs' => function($q) {
                 $q->with('inspector')->latest()->take(10);
             },
             'maintenanceJobs' => function($q) {
-                $q->latest()->take(20); // Increased to 20 for better history visibility
+                $q->latest()->take(20); 
             }
         ])->findOrFail($id);
 
@@ -143,6 +147,7 @@ class MasterIsotankController extends Controller
              $finalConditions[] = [
                  'item_name' => $item->code,
                  'description' => $item->label,
+                 'category' => $item->category, // Added for grouping
                  'condition' => $val ?? 'na',
                  'last_inspection_date' => $log->inspection_date ?? $isotank->updated_at,
              ];
