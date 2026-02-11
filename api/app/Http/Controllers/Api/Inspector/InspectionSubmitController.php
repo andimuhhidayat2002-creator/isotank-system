@@ -698,6 +698,20 @@ class InspectionSubmitController extends Controller
             'psv1_condition', 'psv2_condition', 'psv3_condition', 'psv4_condition',
         ];
 
+        // ADD DYNAMIC ITEMS to maintenance trigger list
+        try {
+            if (class_exists(\App\Models\InspectionItem::class)) {
+                $dynamicCodes = \App\Models\InspectionItem::where('is_active', true)->pluck('code')->toArray();
+                foreach ($dynamicCodes as $code) {
+                    // Match the key transformation done in validation
+                    $inputKey = str_replace([' ', '.', '/'], '_', $code);
+                    if (!in_array($inputKey, $maintenanceItems)) {
+                        $maintenanceItems[] = $inputKey;
+                    }
+                }
+            }
+        } catch (\Exception $e) {}
+
         // Get previous condition from master_isotank_item_status
         $previousStatuses = MasterIsotankItemStatus::where('isotank_id', $isotankId)
             ->get()
