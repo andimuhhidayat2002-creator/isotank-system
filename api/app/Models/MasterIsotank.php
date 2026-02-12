@@ -9,7 +9,8 @@ class MasterIsotank extends Model
 {
     protected $fillable = [
         'iso_number',
-        'owner', // Added
+        'tank_category',
+        'owner',
         'product', // Added
         'manufacturer',
         'model_type', // New

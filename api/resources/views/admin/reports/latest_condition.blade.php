@@ -64,6 +64,7 @@
                 <table class="table table-sm table-dark table-borderless mb-0">
                     <tr><th class="text-white">Manufacturer</th><td class="text-white">{{ $isotank->manufacturer ?? '-' }}</td></tr>
                     <tr><th class="text-white">Serial No</th><td class="text-white">{{ $isotank->manufacturer_serial_number ?? '-' }}</td></tr>
+                    <tr><th class="text-white">Isotank Type</th><td class="fw-bold text-info">{{ $isotank->tank_category ?? 'T75' }}</td></tr>
                     <tr><th class="text-white">Model Type</th><td class="text-white">{{ $isotank->model_type ?? '-' }}</td></tr>
                     <tr><th class="text-white">Capacity</th><td class="text-white">{{ $isotank->capacity ? $isotank->capacity.' L' : '-' }}</td></tr>
                     <tr><th class="text-white">Tare Weight</th><td class="text-white">{{ $isotank->tare_weight ? $isotank->tare_weight.' Kg' : '-' }}</td></tr>
