@@ -1468,15 +1468,11 @@ class InspectionSubmitController extends Controller
                ->orWhere('category', 'external');
         });
     } else {
-        // FOR RECEIVER: We apply strict lists
-        if ($category === 'T11') {
-            $dynamicItemsQuery->whereIn('code', \App\Services\PdfGenerationService::getT11ReceiverCodes());
-        } elseif ($category === 'T50') {
-            $dynamicItemsQuery->whereIn('code', \App\Services\PdfGenerationService::getT50ReceiverCodes());
-        } else {
-            // For others: Show everything tagged
-            $dynamicItemsQuery->whereJsonContains('applicable_categories', $category);
-        }
+        // FOR T11, T50, Others:
+        // Use dynamic filtering based on category + input_type='condition'
+        // This ensures ANY item added to DB for this category is automatically included in confirmation
+        $dynamicItemsQuery->whereJsonContains('applicable_categories', $category)
+                          ->where('input_type', 'condition');
     }
 
     $dynamicItems = $dynamicItemsQuery->orderBy('order')->get();

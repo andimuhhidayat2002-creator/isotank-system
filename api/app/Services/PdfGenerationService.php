@@ -269,12 +269,12 @@ class PdfGenerationService
                         $q->whereIn('category', ['b', 'external', 'general'])
                           ->orWhere('category', 'like', 'b%');
                     });
-                } elseif ($tankCat === 'T11') {
-                    // ONLY the 14 items from the photo
-                    $query->whereIn('code', self::getT11ReceiverCodes());
-                } elseif ($tankCat === 'T50') {
-                    // ONLY the 16 items from the provided T50 receiver checklist
-                    $query->whereIn('code', self::getT50ReceiverCodes());
+                } else {
+                    // FOR T11, T50, and Others:
+                    // Automatically include ALL items with input_type = 'condition' 
+                    // that belong to this category.
+                    // This creates a dynamic, future-proof list 
+                    // that updates automatically when you add new items to DB.
                 }
                 
                 $dynamicItems = $query->orderBy('order', 'asc')
