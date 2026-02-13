@@ -37,12 +37,34 @@
         .page-break { page-break-after: always; }
         .clearfix::after { content: ""; clear: both; display: table; }
 
-        /* Photo Grid */
-        .photo-page-title { text-align: center; font-weight: bold; font-size: 10pt; margin-bottom: 10px; padding: 5px; border-bottom: 2px solid #333; }
-        .photo-grid { width: 100%; text-align: center; }
-        .photo-item { width: 48%; display: inline-block; vertical-align: top; margin-bottom: 10px; margin-right: 1%; margin-left:1%; box-sizing: border-box; border: 1px solid #ddd; padding: 5px; background: #fff; border-radius: 4px; }
-        .photo-item img { width: 100%; height: 160px; object-fit: contain; background-color: #fcfcfc; border: 1px solid #eee; margin-bottom: 5px; }
-        .photo-label { font-weight: bold; font-size: 8pt; color: #444; }
+        /* Photo Grid - Optimized for 8 photos per page (2 columns x 4 rows) */
+        .photo-page-title { text-align: center; font-weight: bold; font-size: 10pt; margin-bottom: 5px; padding: 2px; border-bottom: 1px solid #333; }
+        .photo-grid { width: 100%; text-align: center; font-size: 0; } /* Font size 0 to remove whitespace between inline-blocks */
+        .photo-item { 
+            width: 49%; 
+            display: inline-block; 
+            vertical-align: top; 
+            margin-bottom: 5px; 
+            box-sizing: border-box; 
+            padding: 2px; 
+            background: #fff; 
+            /* No border for cleaner look, or light border */
+        }
+        .photo-item img { 
+            width: 100%; 
+            height: 220px; /* Increased height for better visibility */
+            object-fit: contain; 
+            background-color: #f9f9f9; 
+            border: 1px solid #eee; 
+        }
+        .photo-label { 
+            font-weight: bold; 
+            font-size: 8pt; 
+            color: #333; 
+            margin-top: 2px; 
+            display: block;
+            line-height: 1.2;
+        }
         
         /* Compact mode classes for T75 incoming */
         .compact-mode .section-title { margin-top: 1px !important; margin-bottom: 0px !important; }
@@ -577,15 +599,20 @@
                         }
                     @endphp
                      @if($fullPath)
-                    <div class="photo-item">
-                         <img src="{{ $fullPath }}" alt="Receiver Photo">
-                         <div class="photo-label">Receiver: {{ \App\Services\PdfGenerationService::getItemDisplayName($key) }}</div>
-                    </div>
-                    @endif
-                @endif
-             @endforeach
-        @endif
-    </div>
+                         <div class="photo-item">
+                             @php 
+                                 $imgData = base64_encode(file_get_contents($fullPath));
+                                 $src = 'data:image/jpeg;base64,'.$imgData;
+                             @endphp
+                             {{-- Use Base64 to ensure rendering in some PDF engines, though file path usually works --}}
+                             <img src="{{ $fullPath }}" alt="Receiver Photo">
+                             <div class="photo-label">Receiver: {{ \App\Services\PdfGenerationService::getItemDisplayName($key) }}</div>
+                         </div>
+                     @endif
+                 @endif
+              @endforeach
+         @endif
+     </div>
 
 </body>
 </html>

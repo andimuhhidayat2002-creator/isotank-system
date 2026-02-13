@@ -1311,12 +1311,10 @@ class InspectionSubmitController extends Controller
                 }
             }
 
-            // Handle Receiver Signature (REQUIRED for Outgoing Inspection)
+            // Handle Receiver Signature (OPTIONAL)
             $receiverSignaturePath = null;
             if ($request->hasFile('receiver_signature')) {
                 $receiverSignaturePath = $request->file('receiver_signature')->store('receiver_signatures', 'public');
-            } else {
-                 throw new \Exception("Receiver signature is required.");
             }
 
             // Update inspection log with receiver confirmation timestamp, name and signature
