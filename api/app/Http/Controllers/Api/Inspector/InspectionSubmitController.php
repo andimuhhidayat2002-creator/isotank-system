@@ -846,6 +846,7 @@ class InspectionSubmitController extends Controller
                 ->update([
                     'status' => 'closed',
                     'completed_at' => now(),
+                    'completed_by' => $request->user()->id,
                     'after_photo' => $photoPath,
                     'sparepart' => $repairData['sparepart'] ?? null,
                     'qty' => $repairData['qty'] ?? 1,
@@ -866,6 +867,7 @@ class InspectionSubmitController extends Controller
                 'before_photo' => null,
                 'after_photo' => $photoPath, // The repair photo acts as proof/after photo
                 'completed_at' => now(),
+                'completed_by' => $request->user()->id,
                 'closed_note' => "Quick repair recorded during inspection.",
             ]);
         }

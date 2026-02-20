@@ -9,8 +9,13 @@
                 <th>Loc</th>
                 <th>Priority</th>
                 <th>Status</th>
-                <th>Assigned To</th>
-                <th>Last Update</th>
+                <th>{{ $context === 'closed' ? 'Technician' : 'Assigned To' }}</th>
+                @if($context === 'closed')
+                    <th>Opened</th>
+                    <th>Closed</th>
+                @else
+                    <th>Last Update</th>
+                @endif
                 <th class="text-end">Actions</th>
             </tr>
         </thead>
@@ -50,11 +55,24 @@
                     </span>
                 </td>
                 <td class="text-white small">
-                    {{ $job->assignee->name ?? '-' }}
+                    @if($context === 'closed')
+                        {{ $job->completedBy->name ?? 'System' }}
+                    @else
+                        {{ $job->assignee->name ?? '-' }}
+                    @endif
                 </td>
-                <td class="text-white small">
-                    {{ $job->updated_at->format('Y-m-d H:i') }}
-                </td>
+                @if($context === 'closed')
+                    <td class="text-white small">
+                        {{ $job->created_at->format('Y-m-d H:i') }}
+                    </td>
+                    <td class="text-success small fw-bold">
+                        {{ $job->completed_at ? $job->completed_at->format('Y-m-d H:i') : '-' }}
+                    </td>
+                @else
+                    <td class="text-white small">
+                        {{ $job->updated_at->format('Y-m-d H:i') }}
+                    </td>
+                @endif
                 <td class="text-end">
                     <a href="{{ route('admin.reports.maintenance.show', $job->id) }}" class="btn btn-sm btn-outline-secondary">
                         View

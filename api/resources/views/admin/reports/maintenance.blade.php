@@ -99,6 +99,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 $(id).DataTable().clear().destroy();
             }
             
+            var isHistory = (id === '#tableHistory');
             $(id).DataTable({
                 dom: 'Bfrtip',
                 buttons: [
@@ -107,13 +108,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     { extend: 'print', className: 'btn btn-info btn-sm', text: '<i class="bi bi-printer"></i> Print' }
                 ],
                 pageLength: 25,
-                order: [[8, 'desc']],
+                order: [[isHistory ? 9 : 8, 'desc']],
                 stateSave: false,
                 destroy: true,
                 ordering: true,
                 columnDefs: [
-                    { orderable: true, targets: 8 },  // Only Last Update column is sortable
-                    { orderable: false, targets: '_all' }  // Disable sorting on all other columns
+                    { orderable: true, targets: isHistory ? [8, 9] : 8 },  
+                    { orderable: false, targets: '_all' } 
                 ]
             });
         });

@@ -515,7 +515,11 @@ class AdminController extends Controller
         }
 
         // Fallback or Supplemental PHP Data
-        $recentJobs = MaintenanceJob::with(['isotank', 'completedBy'])->latest()->limit(50)->get();
+        $recentJobs = MaintenanceJob::where('status', 'closed')
+            ->with(['isotank', 'completedBy'])
+            ->orderBy('completed_at', 'desc')
+            ->limit(50)
+            ->get();
 
         return view('admin.dashboard.maintenance_stats', compact('analytics', 'recentJobs'));
     }
@@ -1109,10 +1113,10 @@ class AdminController extends Controller
             ->latest('updated_at')
             ->get();
             
-        $closedJobs = MaintenanceJob::with(['isotank', 'assignee'])
+        $closedJobs = MaintenanceJob::with(['isotank', 'assignee', 'completedBy'])
             ->whereIn('status', ['closed', 'completed']) // Handle both status variations
             ->tap($filter)
-            ->latest('updated_at') // Sort by closure time, not creation time
+            ->latest('completed_at') // Sort by closure time, not creation time
             ->limit(100) // Limit for performance
             ->get();
             
