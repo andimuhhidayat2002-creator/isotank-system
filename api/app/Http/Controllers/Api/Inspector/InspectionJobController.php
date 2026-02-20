@@ -97,7 +97,16 @@ class InspectionJobController extends Controller
             ->first();
 
         if ($draftLog) {
-            $defaultValues = (object)$draftLog->toArray();
+            $logArray = $draftLog->toArray();
+            
+            // UNWRAP inspection_data for drafts
+            if (!empty($logArray['inspection_data']) && is_array($logArray['inspection_data'])) {
+                foreach ($logArray['inspection_data'] as $k => $v) {
+                    $logArray[$k] = $v;
+                }
+            }
+            
+            $defaultValues = (object)$logArray;
             
             // TRANSFORM PHOTOS TO SIGNED URLS FOR DRAFT
             foreach ($defaultValues as $key => $value) {
@@ -146,7 +155,6 @@ class InspectionJobController extends Controller
 
             if ($lastIncomingInspection) {
                 // Map fields from the last incoming inspection
-                // UPDATED: Use toArray() to ensure ALL columns (including dynamic ones) are copied
                 $logArray = $lastIncomingInspection->toArray();
                 
                 // Exclude fields that shouldn't be copied
@@ -158,17 +166,20 @@ class InspectionJobController extends Controller
                     unset($logArray[$field]);
                 }
                 
+                // UNWRAP inspection_data into root for frontend compatibility
+                if (!empty($logArray['inspection_data']) && is_array($logArray['inspection_data'])) {
+                    foreach ($logArray['inspection_data'] as $k => $v) {
+                        $logArray[$k] = $v;
+                    }
+                }
+                
                 // Merge into data
                 $data = $logArray;
                 
-                // TRANSFORM PHOTOS TO SIGNED URLS FOR RETRIEVED DATA (so form pre-filling works with image preview)
+                // TRANSFORM PHOTOS TO SIGNED URLS
                 foreach ($data as $key => $value) {
                      if (str_starts_with($key, 'photo_') && is_string($value) && !empty($value)) {
-                         // Check if file is private
                          if (Storage::disk('local')->exists($value)) {
-                             // Use URL Facade properly with named route
-                             // Route must be named 'media.show' in api.php
-                             // We are using hardcoded route name here based on my previous step plan
                              $data[$key] = URL::signedRoute('media.show', ['path' => $value], now()->addHours(4));
                          } elseif (Storage::disk('public')->exists($value)) {
                              $data[$key] = asset('storage/' . $value);
