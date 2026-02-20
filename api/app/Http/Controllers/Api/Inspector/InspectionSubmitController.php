@@ -191,6 +191,9 @@ class InspectionSubmitController extends Controller
             
             // Dynamic Data
             'inspection_data' => 'nullable',
+            
+            // INTANT REPAIRS (JSON Encoded or Array)
+            'performed_repairs' => 'nullable',
         ];
 
         // DYNAMIC RULES: Add validation for active InspectionItems
@@ -585,6 +588,11 @@ class InspectionSubmitController extends Controller
 
             // CRITICAL: Maintenance & Calibration Triggered ONLY on FINAL Submit
             if (!$isDraft) {
+                // 1. PROCESS INSTANT REPAIRS (Before triggering new maintenance)
+                if (!empty($validated['performed_repairs'])) {
+                    $this->processInstantRepairs($job->isotank_id, $validated['performed_repairs'], $inspectionLog, $request);
+                }
+
                 // 2. TRIGGER MAINTENANCE (ONLY if condition meaning changed)
                 $this->triggerMaintenance($job->isotank_id, $validated, $inspectionLog, $allInput);
 
@@ -805,6 +813,43 @@ class InspectionSubmitController extends Controller
                     \Log::error("Failed to send Maintenance Job Email: " . $e->getMessage());
                 }
             }
+        }
+    }
+
+    /**
+     * PROCESS INSTANT REPAIRS (Quick Repair)
+     * Creates CLOSED maintenance jobs for items repaired during inspection.
+     */
+    private function processInstantRepairs($isotankId, $repairsRaw, $inspectionLog, $request)
+    {
+        $repairs = is_string($repairsRaw) ? json_decode($repairsRaw, true) : $repairsRaw;
+        
+        if (!is_array($repairs)) return;
+
+        foreach ($repairs as $itemCode => $repairData) {
+            $photoKey = "photo_repair_{$itemCode}";
+            $photoPath = null;
+            
+            // Handle Photo Upload
+            if ($request->hasFile($photoKey)) {
+                $photoPath = $request->file($photoKey)->store('maintenance', 'local');
+            } elseif (isset($request->all()[$photoKey]) && is_string($request->all()[$photoKey])) {
+                $photoPath = $request->all()[$photoKey];
+            }
+
+            // Create Closed Maintenance Job
+            MaintenanceJob::create([
+                'isotank_id' => $isotankId,
+                'source_item' => $itemCode,
+                'description' => "Instant repair during inspection: " . ($repairData['sparepart'] ?? 'General Repair'),
+                'sparepart' => $repairData['sparepart'] ?? null,
+                'qty' => $repairData['qty'] ?? 1,
+                'status' => 'closed', // Immediately closed
+                'triggered_by_inspection_log_id' => $inspectionLog->id,
+                'before_photo' => null, // Didn't capture before state, usually
+                'after_photo' => $photoPath, // The repair photo acts as proof/after photo
+                'completed_at' => now(),
+            ]);
         }
     }
 
