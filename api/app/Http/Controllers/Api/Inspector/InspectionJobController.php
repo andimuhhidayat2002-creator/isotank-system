@@ -323,11 +323,14 @@ class InspectionJobController extends Controller
             $item = $defect->source_item;
             if (empty($item)) continue;
 
-            // Mapping: Active repair/defect -> NOT GOOD, Deferred/Partial -> NEED ATTENTION
-            if ($defect->status === 'deferred') {
-                $defaultValues->$item = 'need_attention';
-            } else {
-                $defaultValues->$item = 'not_good';
+            // Normalize item key (lowercase + underscore) to match Flutter's form keys
+            $itemKey = strtolower(str_replace([' ', '.', '/'], '_', trim($item)));
+            $status = ($defect->status === 'deferred') ? 'need_attention' : 'not_good';
+
+            // Apply to both original and normalized keys for maximum compatibility
+            $defaultValues->$item = $status;
+            if ($itemKey !== $item) {
+                $defaultValues->$itemKey = $status;
             }
         }
         // --------------------------------------
