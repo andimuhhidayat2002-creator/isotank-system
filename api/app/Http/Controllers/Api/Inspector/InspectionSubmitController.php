@@ -819,6 +819,7 @@ class InspectionSubmitController extends Controller
     /**
      * PROCESS INSTANT REPAIRS (Quick Repair)
      * Creates CLOSED maintenance jobs for items repaired during inspection.
+     * ALSO closes any existing open maintenance jobs for the same source_item.
      */
     private function processInstantRepairs($isotankId, $repairsRaw, $inspectionLog, $request)
     {
@@ -837,7 +838,23 @@ class InspectionSubmitController extends Controller
                 $photoPath = $request->all()[$photoKey];
             }
 
-            // Create Closed Maintenance Job
+            // AUTO-CLOSE existing open maintenance jobs for the same item
+            // This allows inspector to resolve maintenance directly from the inspection form
+            $closedCount = MaintenanceJob::where('isotank_id', $isotankId)
+                ->where('source_item', $itemCode)
+                ->whereIn('status', ['open', 'on_progress', 'not_complete', 'deferred'])
+                ->update([
+                    'status' => 'closed',
+                    'completed_at' => now(),
+                    'after_photo' => $photoPath,
+                    'sparepart' => $repairData['sparepart'] ?? null,
+                    'qty' => $repairData['qty'] ?? 1,
+                    'closed_note' => "Closed via inspection form repair by inspector. Log ID: {$inspectionLog->id}",
+                ]);
+
+            \Log::info("Auto-closed {$closedCount} open maintenance job(s) for isotank {$isotankId}, item: {$itemCode}");
+
+            // Create a new Closed Maintenance Job as a repair record/proof
             MaintenanceJob::create([
                 'isotank_id' => $isotankId,
                 'source_item' => $itemCode,
@@ -846,9 +863,10 @@ class InspectionSubmitController extends Controller
                 'qty' => $repairData['qty'] ?? 1,
                 'status' => 'closed', // Immediately closed
                 'triggered_by_inspection_log_id' => $inspectionLog->id,
-                'before_photo' => null, // Didn't capture before state, usually
+                'before_photo' => null,
                 'after_photo' => $photoPath, // The repair photo acts as proof/after photo
                 'completed_at' => now(),
+                'closed_note' => "Quick repair recorded during inspection.",
             ]);
         }
     }
