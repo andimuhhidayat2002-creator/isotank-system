@@ -31,6 +31,7 @@ class VacuumSuctionActivity extends Model
         
         'notes',
         'recorded_by',
+        'status',
         'completed_at',
     ];
 
@@ -60,5 +61,10 @@ class VacuumSuctionActivity extends Model
     public function recorder(): BelongsTo
     {
         return $this->belongsTo(User::class, 'recorded_by');
+    }
+
+    public function logs()
+    {
+        return $this->hasMany(VacuumMonitoringLog::class, 'vacuum_suction_activity_id');
     }
 }

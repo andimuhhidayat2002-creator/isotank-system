@@ -175,4 +175,119 @@ class VacuumSuctionController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * GET ACTIVE EVENT (Flutter Compatible)
+     */
+    public function getActiveEvent($isotankId)
+    {
+        $activity = VacuumSuctionActivity::with('logs')
+            ->where('isotank_id', $isotankId)
+            ->whereNull('completed_at')
+            ->latest()
+            ->first();
+
+        if (!$activity) return response()->json(['success' => true, 'data' => null]);
+
+        // Map to Flutter model structure
+        $data = [
+            'id' => $activity->id,
+            'isotank_id' => $activity->isotank_id,
+            'start_time' => $activity->created_at->toDateTimeString(),
+            'status' => $activity->status ?? 'ongoing',
+            'pre_portable_vacuum' => $activity->portable_vacuum_value ?? 0,
+            'pre_isotank_temp' => $activity->temperature ?? 0,
+            'start_machine_vacuum' => $activity->machine_vacuum_at_start ?? 0,
+            'end_machine_vacuum' => $activity->machine_vacuum_at_stop,
+            'post_portable_vacuum' => $activity->portable_vacuum_when_machine_stops,
+            'post_isotank_temp' => $activity->temperature_at_machine_stop,
+            'logs' => $activity->logs->map(function($l) {
+                return [
+                    'id' => $l->id,
+                    'reading_at' => $l->reading_at->toDateTimeString(),
+                    'vacuum_value' => $l->vacuum_value,
+                    'temperature' => $l->temperature,
+                    'period' => $l->period,
+                ];
+            }),
+        ];
+
+        return response()->json(['success' => true, 'data' => $data]);
+    }
+
+    /**
+     * START SUCTION (Flutter Compatible)
+     */
+    public function startSuction(Request $request)
+    {
+        $validated = $request->validate([
+            'isotank_id' => 'required|exists:master_isotanks,id',
+            'pre_portable_vacuum' => 'required|numeric',
+            'pre_isotank_temp' => 'required|numeric',
+            'start_machine_vacuum' => 'required|numeric',
+        ]);
+
+        $activity = VacuumSuctionActivity::create([
+            'isotank_id' => $validated['isotank_id'],
+            'day_number' => 1,
+            'status' => 'ongoing',
+            'portable_vacuum_value' => $validated['pre_portable_vacuum'],
+            'temperature' => $validated['pre_isotank_temp'],
+            'machine_vacuum_at_start' => $validated['start_machine_vacuum'],
+            'recorded_by' => $request->user()->id,
+        ]);
+
+        return $this->getActiveEvent($activity->isotank_id);
+    }
+
+    /**
+     * FINISH SUCTION (Flutter Compatible)
+     */
+    public function finishSuction(Request $request, $id)
+    {
+        $activity = VacuumSuctionActivity::findOrFail($id);
+        
+        $validated = $request->validate([
+            'end_machine_vacuum' => 'required|numeric',
+            'post_portable_vacuum' => 'required|numeric',
+            'post_isotank_temp' => 'required|numeric',
+        ]);
+
+        $activity->update([
+            'machine_vacuum_at_stop' => $validated['end_machine_vacuum'],
+            'portable_vacuum_when_machine_stops' => $validated['post_portable_vacuum'],
+            'temperature_at_machine_stop' => $validated['post_isotank_temp'],
+            'status' => 'monitoring',
+        ]);
+
+        return response()->json(['success' => true, 'message' => 'Suction finished, monitoring phase started.']);
+    }
+
+    /**
+     * ADD MONITORING LOG (Flutter Compatible)
+     */
+    public function addMonitoringLog(Request $request)
+    {
+        $validated = $request->validate([
+            'suction_event_id' => 'required|exists:vacuum_suction_activities,id',
+            'vacuum_value' => 'required|numeric',
+            'temperature' => 'required|numeric',
+            'period' => 'required|string',
+        ]);
+
+        $activity = VacuumSuctionActivity::findOrFail($validated['suction_event_id']);
+
+        \App\Models\VacuumMonitoringLog::create([
+            'vacuum_suction_activity_id' => $activity->id,
+            'vacuum_value' => $validated['vacuum_value'],
+            'temperature' => $validated['temperature'],
+            'period' => $validated['period'],
+            'reading_at' => now(),
+        ]);
+
+        // If it's a final log or user marks complete, business logic could go here.
+        // For now, it just adds to history.
+
+        return response()->json(['success' => true, 'message' => 'Log added successfully']);
+    }
 }

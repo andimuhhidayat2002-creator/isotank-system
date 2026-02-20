@@ -97,10 +97,18 @@ Route::middleware(['auth:sanctum', 'log.activity'])->group(function () {
         Route::put('/jobs/{id}/status', [MaintenanceJobController::class, 'updateStatus']);
         Route::get('/jobs/isotank/{isotankId}/history', [MaintenanceJobController::class, 'history']);
         
-        // Vacuum Suction
+        // Vacuum Suction (Legacy & New compatible)
         Route::get('/vacuum-activities', [VacuumSuctionController::class, 'index']);
         Route::get('/vacuum-activities/{id}', [VacuumSuctionController::class, 'show']);
         Route::put('/vacuum-activities/{id}', [VacuumSuctionController::class, 'update']);
+
+        // New Vacuum Suction Protocol (Flutter Compatible)
+        Route::prefix('vacuum')->group(function() {
+            Route::get('/suction/{isotankId}/active', [VacuumSuctionController::class, 'getActiveEvent']);
+            Route::post('/suction/start', [VacuumSuctionController::class, 'startSuction']);
+            Route::post('/suction/{id}/finish', [VacuumSuctionController::class, 'finishSuction']);
+            Route::post('/monitoring/add', [VacuumSuctionController::class, 'addMonitoringLog']);
+        });
         
         // Calibration
         Route::get('/calibration', [\App\Http\Controllers\Api\Maintenance\CalibrationController::class, 'index']);
