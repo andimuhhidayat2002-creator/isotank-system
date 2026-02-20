@@ -92,7 +92,7 @@ class MasterIsotankController extends Controller
                 $q->with('inspector')->latest()->take(10);
             },
             'maintenanceJobs' => function($q) {
-                $q->latest()->take(20); 
+                $q->with('completedBy')->latest()->take(20); 
             }
         ])->findOrFail($id);
 
