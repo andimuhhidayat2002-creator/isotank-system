@@ -47,7 +47,12 @@
                         <div class="mb-3">
                             <label class="form-label">Choose Excel/CSV File</label>
                             <input type="file" name="file" class="form-control" required accept=".csv, .xlsx, .xls">
-                            <small class="text-muted">Format must match the Export structure (ISOs + Components).</small>
+                            <div class="d-flex justify-content-between mt-1">
+                                <small class="text-muted">Format must match the official template.</small>
+                                <a href="{{ route('admin.templates.calibration') }}" class="small text-primary text-decoration-none">
+                                    <i class="bi bi-download"></i> Download Template
+                                </a>
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer">

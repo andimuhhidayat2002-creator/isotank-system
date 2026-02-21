@@ -12,56 +12,60 @@ class TemplateController extends Controller
 {
     public function downloadCalibrationTemplate()
     {
-        $spreadsheet = new Spreadsheet();
-        $sheet = $spreadsheet->getActiveSheet();
-
-        // Headers
-        // Row 1: Headers
-        $headers = [
-            'ISO Number', 
-            'Planned Date', 
-            'Vendor', 
-            'Description', 
-            'SN Pressure Gauge', 
-            'SN PSV 1', 
-            'SN PSV 2', 
-            'SN PSV 3', 
-            'SN PSV 4'
-        ];
+        $fileName = 'calibration_master_template.csv';
         
-        $sheet->fromArray([$headers], NULL, 'A1');
-
-        // Example Row
-        $example = [
-            'ISO123456',
-            date('Y-m-d'),
-            'Test Vendor',
-            'Annual Calibration',
-            'SN-PG-001',
-            'SN-PSV-101',
-            '', // Empty means skip
-            '',
-            ''
+        $headers = [
+            'Content-type'        => 'text/csv',
+            'Content-Disposition' => "attachment; filename=$fileName",
+            'Pragma'              => 'no-cache',
+            'Cache-Control'       => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires'             => '0'
         ];
-        $sheet->fromArray([$example], NULL, 'A2');
 
-        // Styles
-        $sheet->getStyle('A1:I1')->getFont()->setBold(true);
-        foreach(range('A','I') as $col) {
-            $sheet->getColumnDimension($col)->setAutoSize(true);
+        $columns = ['Isotank Number', 'Location'];
+        
+        // Define standard structure
+        $struct = [
+            'PG' => ['Main'],
+            'PSV' => [1, 2, 3, 4],
+            'PRV' => [1, 2, 3, 4, 5, 6, 7]
+        ];
+
+        // Build Header
+        foreach ($struct as $type => $positions) {
+            foreach ($positions as $pos) {
+                // Short codes for header
+                $p = $type . ($pos === 'Main' ? '' : $pos); // e.g., PG, PSV1
+                $columns[] = "$p SN";
+                $columns[] = "$p Cert";
+                if ($type !== 'PG') $columns[] = "$p Press";
+                $columns[] = "$p Cal Date";
+                $columns[] = "$p Exp";
+            }
         }
 
-        $writer = new Xlsx($spreadsheet);
-        
-        $response = new StreamedResponse(function() use ($writer) {
-            $writer->save('php://output');
-        });
+        $callback = function() use ($columns) {
+            $file = fopen('php://output', 'w');
+            
+            // Add BOM for Excel UTF-8 recognition
+            fwrite($file, "\xEF\xBB\xBF");
+            
+            // Use SEMICOLON (;) as delimiter for consistency with export or COMMA (,)?
+            // Export uses semicolon. Let's use semicolon.
+            fputcsv($file, $columns, ';');
 
-        $response->headers->set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        $response->headers->set('Content-Disposition', 'attachment;filename="calibration_template.xlsx"');
-        $response->headers->set('Cache-Control', 'max-age=0');
+            // Add one sample row
+            $sample = ['JSDU123456-7', 'LYG'];
+            // Fill remaining with blanks or dummy
+            for ($i = 0; $i < (count($columns) - 2); $i++) {
+                $sample[] = '';
+            }
+            fputcsv($file, $sample, ';');
 
-        return $response;
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 
     public function downloadInspectionTemplate()
