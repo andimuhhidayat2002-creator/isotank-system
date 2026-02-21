@@ -15,13 +15,23 @@ class CalibrationMasterController extends Controller
      */
     public function import(Request $request) 
     {
+        if (!$request->hasFile('file')) {
+            return back()->with('error', 'No file was uploaded. Please check your file size or connection.');
+        }
+
+        $file = $request->file('file');
+        
+        if (!$file->isValid()) {
+            return back()->with('error', 'Upload failed: ' . $file->getErrorMessage() . ' (Code: ' . $file->getError() . ')');
+        }
+
         $request->validate([
-            'file' => 'required|file|mimes:csv,xlsx,xls'
+            'file' => 'required|file|mimes:csv,xlsx,xls,txt'
         ]);
 
         try {
             $import = new \App\Imports\CalibrationMasterImport();
-            $import->import($request->file('file')); // Calling directly, avoiding Facade
+            $import->import($file);
 
             $msg = "Processed {$import->successCount} rows.";
             if ($import->errorCount > 0) {
@@ -31,6 +41,7 @@ class CalibrationMasterController extends Controller
             return back()->with('success', $msg);
 
         } catch (\Exception $e) {
+            \Log::error('Calibration Import Error: ' . $e->getMessage());
             return back()->with('error', 'Import Failed: ' . $e->getMessage());
         }
     }
