@@ -4,6 +4,7 @@
             <tr>
                 <th>ISO Number</th>
                 <th>Item</th>
+                <th>Remark</th>
                 <th>Part Damage</th>
                 <th>Type</th>
                 <th>Loc</th>
@@ -28,6 +29,7 @@
                     </a>
                 </td>
                 <td class="text-uppercase small fw-bold text-white">{{ str_replace('_', ' ', $job->source_item) }}</td>
+                <td class="small text-white">{{ Str::limit($job->description, 50, '...') }}</td>
                 <td class="small text-white">{{ $job->part_damage ?? '-' }}</td>
                 <td class="small text-white">{{ $job->damage_type ?? '-' }}</td>
                 <td class="small text-white">{{ $job->location ?? '-' }}</td>
