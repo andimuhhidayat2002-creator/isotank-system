@@ -290,4 +290,71 @@ class VacuumSuctionController extends Controller
 
         return response()->json(['success' => true, 'message' => 'Log added successfully']);
     }
+
+    /**
+     * Get grouped monitoring sessions (Flutter Dashboard)
+     */
+    public function monitoring()
+    {
+        $allActivities = VacuumSuctionActivity::with(['isotank', 'recorder'])
+            ->orderBy('isotank_id')
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        $sessions = [];
+        $tempSessions = [];
+
+        foreach ($allActivities as $activity) {
+            $isoId = $activity->isotank_id;
+            
+            // Logic: A new session starts IF it's Day 1 OR we don't have an active session for this ISO.
+            $shouldStartNew = $activity->day_number == 1 || !isset($tempSessions[$isoId]);
+
+            if ($shouldStartNew) {
+                if (isset($tempSessions[$isoId])) {
+                    $sessions[] = $tempSessions[$isoId];
+                }
+                
+                $tempSessions[$isoId] = [
+                    'isotank' => $activity->isotank,
+                    'days' => [ (int)$activity->day_number => $activity ],
+                    'is_completed' => (bool)$activity->completed_at,
+                    'latest_date' => $activity->created_at,
+                    'start_date' => $activity->created_at,
+                    'day1_summary' => [
+                        'portable_vacuum' => $activity->portable_vacuum_value,
+                        'temp' => $activity->temperature,
+                        'mch_stop' => $activity->machine_vacuum_at_stop,
+                    ]
+                ];
+            } else {
+                $tempSessions[$isoId]['days'][(int)$activity->day_number] = $activity;
+                if ($activity->completed_at) {
+                    $tempSessions[$isoId]['is_completed'] = true;
+                }
+                $tempSessions[$isoId]['latest_date'] = $activity->created_at;
+                
+                if (!$tempSessions[$isoId]['day1_summary']['portable_vacuum'] && $activity->portable_vacuum_value) {
+                    $tempSessions[$isoId]['day1_summary']['portable_vacuum'] = $activity->portable_vacuum_value;
+                }
+                if (!$tempSessions[$isoId]['day1_summary']['mch_stop'] && $activity->machine_vacuum_at_stop) {
+                    $tempSessions[$isoId]['day1_summary']['mch_stop'] = $activity->machine_vacuum_at_stop;
+                }
+            }
+        }
+        
+        foreach($tempSessions as $sess) {
+            $sessions[] = $sess;
+        }
+
+        // Sort by latest activity date descending
+        usort($sessions, function($a, $b) {
+            return $b['latest_date'] <=> $a['latest_date'];
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => $sessions,
+        ]);
+    }
 }
