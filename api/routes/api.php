@@ -109,6 +109,7 @@ Route::middleware(['auth:sanctum', 'log.activity'])->group(function () {
             Route::post('/suction/start', [VacuumSuctionController::class, 'startSuction']);
             Route::post('/suction/{id}/finish', [VacuumSuctionController::class, 'finishSuction']);
             Route::post('/monitoring/add', [VacuumSuctionController::class, 'addMonitoringLog']);
+            Route::post('/monitoring/{id}/complete', [VacuumSuctionController::class, 'completeMonitoring']);
             Route::get('/monitoring', [VacuumSuctionController::class, 'monitoring']);
         });
         

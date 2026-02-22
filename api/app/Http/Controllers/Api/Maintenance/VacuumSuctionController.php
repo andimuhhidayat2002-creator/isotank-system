@@ -222,9 +222,10 @@ class VacuumSuctionController extends Controller
     {
         $validated = $request->validate([
             'isotank_id' => 'required|exists:master_isotanks,id',
-            'pre_portable_vacuum' => 'required|numeric',
+            'pre_portable_vacuum' => 'required|string',
+            'pre_portable_unit' => 'nullable|string|in:mtorr,scientific',
             'pre_isotank_temp' => 'required|numeric',
-            'start_machine_vacuum' => 'required|numeric',
+            'start_machine_vacuum' => 'required|string',
         ]);
 
         $activity = VacuumSuctionActivity::create([
@@ -232,8 +233,10 @@ class VacuumSuctionController extends Controller
             'day_number' => 1,
             'status' => 'ongoing',
             'portable_vacuum_value' => $validated['pre_portable_vacuum'],
+            'portable_vacuum_unit' => $validated['pre_portable_unit'] ?? 'mtorr',
             'temperature' => $validated['pre_isotank_temp'],
             'machine_vacuum_at_start' => $validated['start_machine_vacuum'],
+            'machine_start_time' => now(),
             'recorded_by' => $request->user()->id,
         ]);
 
@@ -248,15 +251,18 @@ class VacuumSuctionController extends Controller
         $activity = VacuumSuctionActivity::findOrFail($id);
         
         $validated = $request->validate([
-            'end_machine_vacuum' => 'required|numeric',
-            'post_portable_vacuum' => 'required|numeric',
+            'end_machine_vacuum' => 'required|string',
+            'post_portable_vacuum' => 'required|string',
+            'post_portable_unit' => 'nullable|string|in:mtorr,scientific',
             'post_isotank_temp' => 'required|numeric',
         ]);
 
         $activity->update([
             'machine_vacuum_at_stop' => $validated['end_machine_vacuum'],
             'portable_vacuum_when_machine_stops' => $validated['post_portable_vacuum'],
+            'portable_vacuum_stop_unit' => $validated['post_portable_unit'] ?? 'mtorr',
             'temperature_at_machine_stop' => $validated['post_isotank_temp'],
+            'machine_stop_time' => now(),
             'status' => 'monitoring',
         ]);
 
@@ -270,7 +276,8 @@ class VacuumSuctionController extends Controller
     {
         $validated = $request->validate([
             'suction_event_id' => 'required|exists:vacuum_suction_activities,id',
-            'vacuum_value' => 'required|numeric',
+            'vacuum_value' => 'required|string',
+            'vacuum_unit' => 'nullable|string|in:mtorr,scientific',
             'temperature' => 'required|numeric',
             'period' => 'required|string',
         ]);
@@ -311,12 +318,16 @@ class VacuumSuctionController extends Controller
         $updates = ['recorded_by' => $request->user()->id];
         $periodReq = strtolower($validated['period']);
 
+        $unitReq = $validated['vacuum_unit'] ?? 'mtorr';
+
         if (str_contains($periodReq, 'morning') || str_contains($periodReq, 'am')) {
             $updates['morning_vacuum_value'] = $validated['vacuum_value'];
+            $updates['morning_vacuum_unit'] = $unitReq;
             $updates['morning_temperature'] = $validated['temperature'];
             $updates['morning_timestamp'] = now()->toDateTimeString();
         } else {
             $updates['evening_vacuum_value'] = $validated['vacuum_value'];
+            $updates['evening_vacuum_unit'] = $unitReq;
             $updates['evening_temperature'] = $validated['temperature'];
             $updates['evening_timestamp'] = now()->toDateTimeString();
         }
@@ -333,6 +344,70 @@ class VacuumSuctionController extends Controller
         // For now, it just adds to history.
 
         return response()->json(['success' => true, 'message' => 'Log added successfully']);
+    }
+
+    /**
+     * COMPLETE MONITORING EARLY (Flutter Compatible)
+     * Finishes 5-day cycle early on Day 2, 3, or 4 and registers final log.
+     */
+    public function completeMonitoring(Request $request, $id)
+    {
+        $baseActivity = VacuumSuctionActivity::findOrFail($id);
+        
+        // Find ALL activities in this session to mark as complete
+        $activities = VacuumSuctionActivity::where('isotank_id', $baseActivity->isotank_id)
+            ->whereNull('completed_at')
+            ->get();
+            
+        if ($activities->isEmpty()) {
+            return response()->json(['success' => false, 'message' => 'No active session found.'], 404);
+        }
+
+        // Get the absolute latest record chronologically to use as the final result
+        $latestRecord = $activities->sortByDesc('id')->first();
+        
+        // Mark all as completed
+        foreach($activities as $act) {
+            $act->completed_at = now();
+            $act->status = 'completed';
+            $act->save();
+        }
+        
+        // Determine final vacuum value for History Log
+        $finalVacuum = $latestRecord->evening_vacuum_value 
+            ?? $latestRecord->morning_vacuum_value 
+            ?? $latestRecord->portable_vacuum_when_machine_stops;
+            
+        $finalUnit = $latestRecord->evening_vacuum_unit 
+            ?? $latestRecord->morning_vacuum_unit 
+            ?? $latestRecord->portable_vacuum_stop_unit
+            ?? 'mtorr';
+            
+        $finalTemp = $latestRecord->evening_temperature 
+            ?? $latestRecord->morning_temperature 
+            ?? $latestRecord->temperature_at_machine_stop;
+            
+        // Use 0 as default if scientific notation parser is needed down the line,
+        // but store the raw string for exact records
+        $numericVacuum = is_numeric($finalVacuum) ? (float) $finalVacuum : 0;
+
+        if ($finalVacuum) {
+            \App\Models\VacuumLog::create([
+                'isotank_id' => $latestRecord->isotank_id,
+                'vacuum_value_raw' => $finalVacuum,
+                'vacuum_unit_raw' => $finalUnit,
+                'vacuum_value_mtorr' => $numericVacuum, 
+                'temperature' => $finalTemp,
+                'check_datetime' => now(),
+                'source' => 'suction',
+                'description' => 'Monitoring Phase Completed (Day ' . $latestRecord->day_number . ')'
+            ]);
+            
+            // Note: master_isotank_measurement_status updater logic usually follows here
+            // but keeping it simple based on our plan
+        }
+        
+        return response()->json(['success' => true, 'message' => 'Monitoring session completed successfully.']);
     }
 
     /**
