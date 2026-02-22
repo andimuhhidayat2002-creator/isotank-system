@@ -1317,6 +1317,8 @@ class InspectionSubmitController extends Controller
             $rules["confirmations.{$item}.photo"] = 'nullable|image|max:5120';
         }
 
+        $rules['receiver_signature'] = 'nullable|image|max:5120';
+
         $validated = $request->validate($rules);
 
         DB::beginTransaction();
