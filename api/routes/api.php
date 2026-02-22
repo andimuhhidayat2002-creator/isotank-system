@@ -104,6 +104,7 @@ Route::middleware(['auth:sanctum', 'log.activity'])->group(function () {
 
         // New Vacuum Suction Protocol (Flutter Compatible)
         Route::prefix('vacuum')->group(function() {
+            Route::get('/isotanks/pending', [VacuumSuctionController::class, 'getPendingIsotanks']);
             Route::get('/suction/{isotankId}/active', [VacuumSuctionController::class, 'getActiveEvent']);
             Route::post('/suction/start', [VacuumSuctionController::class, 'startSuction']);
             Route::post('/suction/{id}/finish', [VacuumSuctionController::class, 'finishSuction']);

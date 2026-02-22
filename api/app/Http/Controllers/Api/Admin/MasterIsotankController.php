@@ -29,7 +29,13 @@ class MasterIsotankController extends Controller
             });
         }
 
-        $isotanks = $query->orderBy('iso_number')->paginate(20);
+        $query->orderBy('iso_number');
+
+        if ($request->query('limit') === 'all') {
+            $isotanks = $query->get();
+        } else {
+            $isotanks = $query->paginate(20);
+        }
 
         return response()->json([
             'success' => true,

@@ -275,7 +275,53 @@ class VacuumSuctionController extends Controller
             'period' => 'required|string',
         ]);
 
-        $activity = VacuumSuctionActivity::findOrFail($validated['suction_event_id']);
+        $baseActivity = VacuumSuctionActivity::findOrFail($validated['suction_event_id']);
+
+        // FIND DAY 1 ACTIVITY FOR THIS SESSION to calculate offset correctly
+        $day1Activity = VacuumSuctionActivity::where('isotank_id', $baseActivity->isotank_id)
+            ->whereNull('completed_at')
+            ->where('day_number', 1)
+            ->first() ?? $baseActivity;
+
+        // Calculate Day Number based on Day 1's created_at to stay consistent with web logic
+        $startDate = \Carbon\Carbon::parse($day1Activity->created_at)->startOfDay();
+        $todayDate = now()->startOfDay();
+        $dayNumber = 1 + $startDate->diffInDays($todayDate);
+
+        // Ensure we operate on the current active session
+        $activity = VacuumSuctionActivity::firstOrCreate(
+            [
+                'isotank_id' => $baseActivity->isotank_id,
+                'day_number' => $dayNumber,
+                'completed_at' => null 
+            ],
+            [
+                'recorded_by' => $request->user()->id,
+                'status' => 'monitoring',
+                // Carry over Day 1 data
+                'portable_vacuum_value' => $baseActivity->portable_vacuum_value,
+                'temperature' => $baseActivity->temperature,
+                'machine_vacuum_at_start' => $baseActivity->machine_vacuum_at_start,
+                'portable_vacuum_when_machine_stops' => $baseActivity->portable_vacuum_when_machine_stops,
+                'machine_vacuum_at_stop' => $baseActivity->machine_vacuum_at_stop,
+                'temperature_at_machine_stop' => $baseActivity->temperature_at_machine_stop,
+            ]
+        );
+
+        $updates = ['recorded_by' => $request->user()->id];
+        $periodReq = strtolower($validated['period']);
+
+        if (str_contains($periodReq, 'morning') || str_contains($periodReq, 'am')) {
+            $updates['morning_vacuum_value'] = $validated['vacuum_value'];
+            $updates['morning_temperature'] = $validated['temperature'];
+            $updates['morning_timestamp'] = now()->toDateTimeString();
+        } else {
+            $updates['evening_vacuum_value'] = $validated['vacuum_value'];
+            $updates['evening_temperature'] = $validated['temperature'];
+            $updates['evening_timestamp'] = now()->toDateTimeString();
+        }
+
+        $activity->update($updates);
 
         \App\Models\VacuumMonitoringLog::create([
             'vacuum_suction_activity_id' => $activity->id,
@@ -284,8 +330,6 @@ class VacuumSuctionController extends Controller
             'period' => $validated['period'],
             'reading_at' => now(),
         ]);
-
-        // If it's a final log or user marks complete, business logic could go here.
         // For now, it just adds to history.
 
         return response()->json(['success' => true, 'message' => 'Log added successfully']);
@@ -355,6 +399,22 @@ class VacuumSuctionController extends Controller
         return response()->json([
             'success' => true,
             'data' => $sessions,
+        ]);
+    }
+
+    /**
+     * Get Isotanks that have an ongoing/pending vacuum suction activity
+     * This is used by the Flutter app to only show relevant isotanks.
+     */
+    public function getPendingIsotanks()
+    {
+        $isotanks = \App\Models\MasterIsotank::whereHas('vacuumSuctionActivities', function($q) {
+            $q->whereNull('completed_at');
+        })->orderBy('iso_number')->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $isotanks,
         ]);
     }
 }
