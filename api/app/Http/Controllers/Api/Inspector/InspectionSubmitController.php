@@ -224,9 +224,9 @@ class InspectionSubmitController extends Controller
             }
         } catch (\Exception $e) {}
 
-        // Also allow dynamic photos from items if any
+        // Allow dynamic photos from items, and override hardcoded rules for draft photo URLs
         foreach ($request->all() as $key => $value) {
-            if (str_starts_with($key, 'photo_') && !isset($rules[$key])) {
+            if (str_starts_with($key, 'photo_')) {
                 if ($request->hasFile($key)) {
                     $rules[$key] = 'nullable|image|max:5120';
                 } else {
