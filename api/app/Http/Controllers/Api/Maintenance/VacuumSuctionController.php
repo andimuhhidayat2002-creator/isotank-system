@@ -280,6 +280,7 @@ class VacuumSuctionController extends Controller
             'vacuum_unit' => 'nullable|string|in:mtorr,scientific',
             'temperature' => 'required|numeric',
             'period' => 'required|string',
+            'day_number' => 'nullable|integer|min:2|max:10', // New: Explicit Day Selection
         ]);
 
         $baseActivity = VacuumSuctionActivity::findOrFail($validated['suction_event_id']);
@@ -290,10 +291,13 @@ class VacuumSuctionController extends Controller
             ->where('day_number', 1)
             ->first() ?? $baseActivity;
 
-        // Calculate Day Number based on Day 1's created_at to stay consistent with web logic
+        // Calculate Day Number based on Day 1's created_at (Fallback)
         $startDate = \Carbon\Carbon::parse($day1Activity->created_at)->startOfDay();
         $todayDate = now()->startOfDay();
-        $dayNumber = 1 + $startDate->diffInDays($todayDate);
+        $calcDayNumber = 1 + $startDate->diffInDays($todayDate);
+
+        // Preference explicitly from Frontend, else fallback to calculation
+        $dayNumber = $validated['day_number'] ?? $calcDayNumber;
 
         // Ensure we operate on the current active session
         $activity = VacuumSuctionActivity::firstOrCreate(

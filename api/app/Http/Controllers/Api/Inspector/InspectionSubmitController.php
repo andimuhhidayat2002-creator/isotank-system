@@ -227,7 +227,11 @@ class InspectionSubmitController extends Controller
         // Also allow dynamic photos from items if any
         foreach ($request->all() as $key => $value) {
             if (str_starts_with($key, 'photo_') && !isset($rules[$key])) {
-                $rules[$key] = 'nullable|image|max:5120';
+                if ($request->hasFile($key)) {
+                    $rules[$key] = 'nullable|image|max:5120';
+                } else {
+                    $rules[$key] = 'nullable|string';
+                }
             }
         }
 
