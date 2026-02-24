@@ -294,7 +294,17 @@ class InspectionSubmitController extends Controller
                     $allInput[$key] = $path; // Important: Update allInput so triggerMaintenance receives the string path
                 } else {
                     // It's likely a string (existing path from draft), keep it
-                    $validated[$key] = $value;
+                    if (is_string($value) && (str_starts_with($value, 'http://') || str_starts_with($value, 'https://'))) {
+                        $parsedPath = parse_url($value, PHP_URL_PATH);
+                        if ($parsedPath && preg_match('/(?:media|storage)\/(inspections\/.*)/', $parsedPath, $matches)) {
+                            $validated[$key] = $matches[1];
+                        } else {
+                            $validated[$key] = $value;
+                        }
+                    } else {
+                        $validated[$key] = $value;
+                    }
+                    $allInput[$key] = $validated[$key]; // Update $allInput with the parsed path
                 }
             }
         }
